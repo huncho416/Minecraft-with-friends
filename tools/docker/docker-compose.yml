@@ -1,0 +1,176 @@
+name: mythicpvp
+
+x-folia-base: &folia-base
+  build:
+    context: ../..
+    dockerfile: tools/docker/Dockerfile.folia
+  restart: unless-stopped
+  stop_grace_period: 60s
+  tty: true
+  stdin_open: true
+  environment:
+    JAVA_OPTS: >-
+      -Xms2G -Xmx4G
+      -XX:+UseG1GC -XX:+ParallelRefProcEnabled
+      -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions
+      -XX:+DisableExplicitGC -XX:+AlwaysPreTouch
+    STDB_URI: http://spacetimedb:3000
+    STDB_MODULE: mythicpvp
+  depends_on:
+    stdb-publish:
+      condition: service_completed_successfully
+  networks: [mythicnet]
+
+services:
+  spacetimedb:
+    image: clockworklabs/spacetime:latest
+    container_name: mythic-stdb
+    restart: unless-stopped
+    ports: ["3000:3000"]
+    volumes:
+      - stdb-data:/stdb
+    environment:
+      SPACETIMEDB_LOG_LEVEL: info
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks: [mythicnet]
+
+  stdb-publish:
+    build:
+      context: ../..
+      dockerfile: tools/docker/Dockerfile.stdb-publish
+    container_name: mythic-stdb-publish
+    restart: "no"
+    environment:
+      STDB_HOST: http://spacetimedb:3000
+      STDB_MODULE: mythicpvp
+    depends_on:
+      spacetimedb:
+        condition: service_healthy
+    networks: [mythicnet]
+
+  mythiccord:
+    build:
+      context: ../..
+      dockerfile: tools/docker/Dockerfile.mythiccord
+    container_name: mythic-cord
+    restart: unless-stopped
+    ports:
+      - "25565:25565"
+      - "8080:8080"
+    environment:
+      STDB_URI: http://spacetimedb:3000
+      STDB_MODULE: mythicpvp
+      MYTHIC_SHARD_ID: proxy-dev-1
+      MYTHIC_ROLE: HUB
+      MYTHIC_REGION: us-east
+      MYTHIC_ADDRESS: mythiccord:25565
+      MYTHIC_MAX_PLAYERS: "500"
+      MYTHIC_ADMIN_BIND: 0.0.0.0:8080
+      MYTHIC_LOG_FORMAT: json
+      RUST_LOG: info,mythiccord=debug
+    depends_on:
+      stdb-publish:
+        condition: service_completed_successfully
+    networks: [mythicnet]
+
+  hub:
+    <<: *folia-base
+    container_name: mythic-hub
+    hostname: hub
+    environment:
+      JAVA_OPTS: >-
+        -Xms2G -Xmx4G
+        -XX:+UseG1GC -XX:+ParallelRefProcEnabled
+        -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions
+        -XX:+DisableExplicitGC -XX:+AlwaysPreTouch
+      STDB_URI: http://spacetimedb:3000
+      STDB_MODULE: mythicpvp
+      SERVER_TYPE: hub
+      SHARD_ID: hub-1
+      VIEW_DISTANCE: "8"
+    ports: ["25566:25565"]
+    volumes:
+      - hub-data:/data
+      - ./folia/plugins:/data/plugins:ro
+
+  skyblock-1:
+    <<: *folia-base
+    container_name: mythic-sb1
+    hostname: skyblock-1
+    environment:
+      JAVA_OPTS: >-
+        -Xms3G -Xmx6G
+        -XX:+UseG1GC -XX:+ParallelRefProcEnabled
+        -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions
+        -XX:+DisableExplicitGC -XX:+AlwaysPreTouch
+      STDB_URI: http://spacetimedb:3000
+      STDB_MODULE: mythicpvp
+      SERVER_TYPE: skyblock
+      SHARD_ID: sb-1
+      VIEW_DISTANCE: "6"
+    ports: ["25567:25565"]
+    volumes:
+      - sb1-data:/data
+      - ./folia/plugins:/data/plugins:ro
+
+  api:
+    build:
+      context: ../..
+      dockerfile: tools/docker/Dockerfile.api
+    container_name: mythic-api
+    restart: unless-stopped
+    ports: ["8081:8080"]
+    environment:
+      STDB_URI: http://spacetimedb:3000
+      STDB_MODULE: mythicpvp
+    depends_on:
+      stdb-publish:
+        condition: service_completed_successfully
+    networks: [mythicnet]
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mythic-prometheus
+    restart: unless-stopped
+    ports: ["9090:9090"]
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --web.enable-lifecycle
+    networks: [mythicnet]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mythic-grafana
+    restart: unless-stopped
+    ports: ["3001:3000"]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-mythic}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on: [prometheus]
+    networks: [mythicnet]
+
+volumes:
+  stdb-data:
+  hub-data:
+  sb1-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  mythicnet:
+    driver: bridge

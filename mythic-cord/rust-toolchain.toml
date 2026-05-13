@@ -1,0 +1,5 @@
+[toolchain]
+# Matches Infrarust v2.0.0-alpha.6 MSRV (edition 2024).
+channel = "1.94"
+components = ["clippy", "rustfmt"]
+targets = ["wasm32-unknown-unknown"]

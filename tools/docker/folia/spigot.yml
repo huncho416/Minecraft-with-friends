@@ -1,0 +1,36 @@
+settings:
+  bungeecord: false
+  late-bind: false
+  sample-count: 12
+  player-shuffle: 0
+  user-cache-size: 1000
+  save-user-cache-on-stop-only: false
+  moved-wrongly-threshold: 0.0625
+  moved-too-quickly-multiplier: 10.0
+  netty-threads: 4
+world-settings:
+  default:
+    verbose: false
+    view-distance: default
+    mob-spawn-range: 6
+    entity-activation-range:
+      animals: 16
+      monsters: 24
+      raiders: 48
+      misc: 8
+      water: 8
+      villagers: 16
+      flying-monsters: 32
+    entity-tracking-range:
+      players: 48
+      animals: 48
+      monsters: 48
+      misc: 32
+      other: 64
+    tick-inactive-villagers: false
+    nerf-spawner-mobs: false
+    item-despawn-rate: 6000
+    arrow-despawn-rate: 1200
+    merge-radius:
+      item: 2.5
+      exp: 3.0

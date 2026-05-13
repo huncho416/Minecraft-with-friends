@@ -563,14 +563,41 @@ erDiagram
 
 ### Phase 2 — MythicCord + Geyser + Docker (Weeks 9–12)
 
-| Task | Owner |
-|------|-------|
-| Clone SpacerCord → refactor to `net.mythicpvp.cord.*` | Dev A |
-| SpacetimeDB modules: sessions, routing, punishments, registry | Dev A |
-| Geyser integration + Bedrock resource pack conversion | Dev B |
-| SimpleVoice-Geyser deployment + proximity config | Dev B |
-| Docker Compose: full network + dev variant | Dev A |
-| Monitoring stack: Prometheus + Grafana + Sentry | Dev B |
+| Task | Owner | Status |
+|------|-------|--------|
+| **Fork from Infrarust** (not SpacerCord — clean rebase, refactored as `mythic-cord/`) | Dev A | ✅ |
+| SpacetimeDB module: sessions, routing, punishments, registry, economy, social, gameplay | Dev A | ✅ |
+| Java mirror in `suite-database/schema/` (constants, DTOs, typed reducer client, version check) | Dev A | ✅ |
+| MythicCord workspace: `stdb-bridge`, `plugin-routing`, `proxy` crates | Dev A | ✅ |
+| Pterodactyl egg JSON + management surface (admin HTTP, SIGTERM drain, JSON logs) | Dev A | ✅ |
+| Docker Compose: full network + dev variant (STDB, proxy, Folia, API, monitoring) | Dev A | ✅ |
+| `stdb-publish` container — auto-publishes WASM module on `compose up` | Dev A | ✅ |
+| Monitoring stack: Prometheus + Grafana provisioning, starter dashboard | Dev B | ✅ |
+| Vendor `infrarust/` subtree via `mythic-cord/tools/vendor-infrarust.{sh,ps1}` | Dev A | ⏳ pending bootstrap |
+| Geyser integration + Bedrock resource pack conversion | Dev B | ⏳ |
+| SimpleVoice-Geyser deployment + proximity config | Dev B | ⏳ |
+| Sentry integration in Java suite | Dev B | ⏳ |
+
+#### Deliverables landed
+
+| Module | Path | Notes |
+|---|---|---|
+| **STDB schema** | [`mythic-cord/stdb/`](mythic-cord/stdb/) | 9 modules, 24 tables, 31 reducers, `SCHEMA_VERSION=1` |
+| **Java mirror** | [`mythic-suite/suite-database/schema/`](mythic-suite/suite-database/src/main/java/net/mythicpvp/suite/database/schema/) | 28 files (5 enums, 18 DTO records, `MythicSchema` typed client, `SchemaVersion` boot check) — **17 new tests, all green** |
+| **Rust bridge** | [`mythic-cord/stdb-bridge/`](mythic-cord/stdb-bridge/) | Driver thread + `StdbHandle` + `MythicStdbClient` (typed reducer wrappers) |
+| **Routing plugin** | [`mythic-cord/plugin-routing/`](mythic-cord/plugin-routing/) | `pick_shard` (mirrors STDB pure fn), `RegistryView`, heartbeat task, Infrarust event hooks (gated by `with-infrarust` feature) |
+| **Proxy binary** | [`mythic-cord/proxy/`](mythic-cord/proxy/) | Standalone build today (registry citizen + admin HTTP); flips to full proxy after vendor script runs |
+| **Pterodactyl egg** | [`mythic-cord/pterodactyl/egg-mythiccord.json`](mythic-cord/pterodactyl/egg-mythiccord.json) | 11 env variables, install script downloads musl release, default config seeded on first install |
+| **Docker scaffold** | [`tools/docker/`](tools/docker/) | `docker-compose{,dev}.yml`, 4 Dockerfiles, monitoring + provisioning, up/down scripts |
+
+#### Design decisions
+
+- **Forked Infrarust directly, not SpacerCord.** SpacerCord stays a reference — its driver-thread / clone-able-handle pattern is cherry-picked into [`stdb-bridge`](mythic-cord/stdb-bridge/), not its `module_bindings/` (which would conflict with our schema).
+- **AGPL-3.0** carries from Infrarust. The proxy stack is AGPL-3.0-or-later with the upstream plugin exception preserved (closed-source plugins still permitted). The Java suite under `mythic-suite/` is licensed separately at the repo root.
+- **Two operating modes via one cargo feature** (`with-infrarust`). Default standalone build works today (no Infrarust subtree needed). Full proxy is one `--features with-infrarust` away after the vendor script runs. Means the workspace stays buildable through the rebase process instead of being broken-by-design.
+- **Schema versioning is a strict gate.** `SCHEMA_VERSION` is asserted on both the Java side (`SchemaVersion.assertMatches`) and the Rust side (`assert_schema_version`) at boot. Mismatched suite vs STDB module refuses to start.
+- **`pick_shard` lives twice** — once in [`mythic-stdb`](mythic-cord/stdb/src/sessions.rs) for cross-shard transfers, once in [`plugin-routing`](mythic-cord/plugin-routing/src/router.rs) for the proxy hot path. Identical formula, both unit-tested, no network round-trip per login.
+- **Pterodactyl integration is real**, not a placeholder. SIGTERM/SIGINT triggers drain → status flip → 500ms grace → final offline heartbeat → exit 0. Admin HTTP exposes `/health`, `/metrics`, `POST /admin/drain` for manual rolling deploys.
 
 ---
 
@@ -628,7 +655,7 @@ erDiagram
 | Phase | Name | Weeks | Key Deliverables |
 |-------|------|-------|-----------------|
 | **1** | **Mythic Suite** ⭐ | 1–8 | All 23 foundation APIs, YAML-configurable text surfaces, tested and documented |
-| **2** | MythicCord + Docker | 9–12 | Proxy fork, Geyser, voice, Docker Compose, monitoring |
+| **2** | **MythicCord + Docker** 🚧 | 9–12 | STDB schema ✅, Java mirror ✅, Rust bridge ✅, routing plugin ✅, standalone proxy ✅, Pterodactyl egg ✅, Docker scaffold + monitoring ✅. Geyser, voice, Sentry pending; Infrarust subtree vendored on first bootstrap |
 | **3** | Core + Hub | 13–16 | Base plugin, friends/party, hub, Tebex, resource pack |
 | **4** | Skyblock Core | 17–24 | Islands, economy, enchants, quests |
 | **5** | PvP & Events | 25–30 | PvP zones, KOTH, airdrops, points |

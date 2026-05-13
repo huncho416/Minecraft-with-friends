@@ -1,0 +1,3 @@
+# Mojang EULA acceptance is required to run a Minecraft server.
+# By setting eula=true you agree to https://aka.ms/MinecraftEULA
+eula=true

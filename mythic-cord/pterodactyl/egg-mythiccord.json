@@ -1,0 +1,142 @@
+{
+  "_comment": "MythicCord Pterodactyl egg. Import via Admin > Nests > Import Egg. The proxy ships with a runnable standalone build that connects to mythic-stdb without serving Minecraft traffic; flip the WITH_INFRARUST variable on once the upstream subtree is vendored.",
+  "meta": {
+    "version": "PTDL_v2",
+    "update_url": null
+  },
+  "exported_at": "2026-05-13T00:00:00+00:00",
+  "name": "MythicCord",
+  "author": "ops@mythicpvp.net",
+  "description": "MythicCord — Rust Minecraft proxy (Infrarust fork) wired to mythic-stdb. Manages routing, sessions, registry heartbeats, and Pterodactyl-friendly graceful shutdown.",
+  "features": [],
+  "docker_images": {
+    "ghcr.io/mythicpvp/mythiccord:latest": "ghcr.io/mythicpvp/mythiccord:latest"
+  },
+  "file_denylist": [],
+  "startup": "./mythiccord ./mythiccord.toml",
+  "config": {
+    "files": "{}",
+    "startup": "{\r\n    \"done\": \"mythiccord starting\"\r\n}",
+    "logs": "{}",
+    "stop": "^^C"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/ash\nset -eu\napk add --no-cache curl tar ca-certificates\n\ncd /mnt/server\n\nVERSION=\"${MYTHICCORD_VERSION:-latest}\"\nARCH=$(uname -m)\ncase \"$ARCH\" in\n  x86_64) TARGET=\"x86_64-unknown-linux-musl\" ;;\n  aarch64) TARGET=\"aarch64-unknown-linux-musl\" ;;\n  *) echo \"unsupported arch: $ARCH\" >&2; exit 1 ;;\nesac\n\nif [ \"$VERSION\" = \"latest\" ]; then\n  URL=\"https://github.com/mythicpvp/mythic-cord/releases/latest/download/mythiccord-${TARGET}.tar.gz\"\nelse\n  URL=\"https://github.com/mythicpvp/mythic-cord/releases/download/${VERSION}/mythiccord-${TARGET}.tar.gz\"\nfi\n\necho \"[install] downloading ${URL}\"\ncurl -fsSL \"$URL\" | tar -xz\nchmod +x ./mythiccord\n\nif [ ! -f ./mythiccord.toml ]; then\n  cat > ./mythiccord.toml <<'TOML'\n[stdb]\nuri = \"http://spacetimedb:3000\"\nmodule = \"mythicpvp\"\n\n[identity]\nshard_id = \"proxy-1\"\nrole = \"HUB\"\nregion = \"us-east\"\naddress = \"127.0.0.1:25565\"\nmax_players = 500\n\n[admin]\nbind = \"0.0.0.0:8080\"\n\n[log]\nformat = \"json\"\nfilter = \"info,mythiccord=debug\"\nTOML\n  echo \"[install] wrote default mythiccord.toml\"\nfi\n\necho \"[install] done\"\n",
+      "container": "ghcr.io/pterodactyl/installers:alpine",
+      "entrypoint": "ash"
+    }
+  },
+  "variables": [
+    {
+      "name": "MythicCord version",
+      "description": "Release tag to install. 'latest' tracks the most recent GitHub release.",
+      "env_variable": "MYTHICCORD_VERSION",
+      "default_value": "latest",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|max:32",
+      "field_type": "text"
+    },
+    {
+      "name": "SpacetimeDB URI",
+      "description": "Base URL for the SpacetimeDB host. http(s) — protocol is rewritten to ws(s) internally.",
+      "env_variable": "STDB_URI",
+      "default_value": "http://spacetimedb:3000",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string",
+      "field_type": "text"
+    },
+    {
+      "name": "SpacetimeDB module",
+      "description": "Published module name. Must match `spacetime publish <module>`.",
+      "env_variable": "STDB_MODULE",
+      "default_value": "mythicpvp",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string",
+      "field_type": "text"
+    },
+    {
+      "name": "Shard ID",
+      "description": "Globally-unique id for THIS proxy instance (e.g. proxy-us-1).",
+      "env_variable": "MYTHIC_SHARD_ID",
+      "default_value": "proxy-1",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|max:64",
+      "field_type": "text"
+    },
+    {
+      "name": "Role",
+      "description": "What kind of traffic this proxy serves. One of HUB, SKYBLOCK, PVP, EVENT.",
+      "env_variable": "MYTHIC_ROLE",
+      "default_value": "HUB",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|in:HUB,SKYBLOCK,PVP,EVENT",
+      "field_type": "text"
+    },
+    {
+      "name": "Region",
+      "description": "Geo-routing tag. Players in matching regions are preferred at routing time.",
+      "env_variable": "MYTHIC_REGION",
+      "default_value": "us-east",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|max:32",
+      "field_type": "text"
+    },
+    {
+      "name": "Public address",
+      "description": "host:port other proxies/backends would dial to reach this proxy.",
+      "env_variable": "MYTHIC_ADDRESS",
+      "default_value": "0.0.0.0:25565",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string",
+      "field_type": "text"
+    },
+    {
+      "name": "Max players",
+      "description": "Soft cap reported to the registry. Routing avoids proxies at capacity.",
+      "env_variable": "MYTHIC_MAX_PLAYERS",
+      "default_value": "500",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|integer|min:1",
+      "field_type": "text"
+    },
+    {
+      "name": "Admin HTTP bind",
+      "description": "host:port for /health, /metrics, /admin/drain.",
+      "env_variable": "MYTHIC_ADMIN_BIND",
+      "default_value": "0.0.0.0:8080",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string",
+      "field_type": "text"
+    },
+    {
+      "name": "Log format",
+      "description": "json (recommended for Pterodactyl) or pretty.",
+      "env_variable": "MYTHIC_LOG_FORMAT",
+      "default_value": "json",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|in:json,pretty",
+      "field_type": "text"
+    },
+    {
+      "name": "Log filter",
+      "description": "tracing-subscriber EnvFilter directive. Default is sensible.",
+      "env_variable": "RUST_LOG",
+      "default_value": "info,mythiccord=debug",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string",
+      "field_type": "text"
+    }
+  ]
+}

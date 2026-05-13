@@ -1,0 +1,44 @@
+[package]
+name = "mythiccord-plugin-routing"
+description = "Infrarust plugin: wires player lifecycle and routing into mythic-stdb"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]  # cdylib for hot-loaded plugin form
+
+[dependencies]
+mythiccord-stdb-bridge = { path = "../stdb-bridge" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+async-trait = { workspace = true }
+parking_lot = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+
+# Infrarust hooks land behind the `with-infrarust` feature.
+#
+# Cargo eagerly resolves `path = ...` dependencies even when behind
+# `optional = true`, so we can't list them here until the subtree
+# exists on disk. `tools/vendor-infrarust.{sh,ps1}` un-comments the
+# block below as part of the vendor step — see VENDOR.md.
+#
+# >>> BEGIN VENDOR-MANAGED BLOCK
+# infrarust-api  = { path = "../infrarust/crates/infrarust-api",  optional = true }
+# infrarust-core = { path = "../infrarust/crates/infrarust-core", optional = true }
+# >>> END VENDOR-MANAGED BLOCK
+
+[features]
+default = []
+# The vendor script flips `with-infrarust` to depend on the un-commented
+# infrarust-api / infrarust-core entries above.
+with-infrarust = []
+
+[lints]
+workspace = true

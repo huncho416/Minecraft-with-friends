@@ -1,0 +1,88 @@
+_version: 29
+proxies:
+  velocity:
+    # Switch to true and set secret once MythicCord modern-forwarding is wired up.
+    enabled: false
+    online-mode: true
+    secret: "change-me-to-a-shared-secret"
+  bungee-cord:
+    online-mode: false
+chunk-loading-basic:
+  player-max-chunk-generate-rate: -1.0
+  player-max-chunk-load-rate: 100.0
+  player-max-chunk-send-rate: 75.0
+chunk-system:
+  gen-parallelism: default
+  io-threads: -1
+  worker-threads: -1
+collisions:
+  enable-player-collisions: false
+  send-full-pos-for-hard-colliding-entities: true
+commands:
+  fix-target-selector-tag-completion: true
+  ride-command-allow-player-as-vehicle: false
+  suggest-player-names-when-null-tab-completions: true
+  time-command-affects-all-worlds: false
+console:
+  enable-brigadier-completions: true
+  enable-brigadier-highlighting: true
+  has-all-permissions: false
+item-validation:
+  display-name: 8192
+  loc-name: 8192
+  lore-line: 8192
+logging:
+  deprecated-verbose: default
+  use-rgb-for-named-text-colors: true
+messages:
+  kick:
+    authentication-servers-down: ""
+    connection-throttle: Connection throttled! Please wait before reconnecting.
+    flying-player: Flying is not enabled on this server
+    flying-vehicle: Flying is not enabled on this server
+  no-permission: <red>I'm sorry, but you do not have permission to perform this command.
+  use-display-name-in-quit-message: false
+misc:
+  chat-threads:
+    chat-executor-core-size: -1
+    chat-executor-max-size: -1
+  compression-level: default
+  fix-entity-position-desync: true
+  load-permissions-yml-before-plugins: true
+  max-joins-per-tick: 5
+  region-file-cache-size: 256
+  use-alternative-luck-formula: false
+  use-dimension-type-for-custom-spawners: false
+packet-limiter:
+  all-packets:
+    action: KICK
+    interval: 7.0
+    max-packet-rate: 500.0
+  kick-message: <red><lang:disconnect.exceeded_packet_rate>
+  overrides:
+    ServerboundPlaceRecipePacket:
+      action: DROP
+      interval: 4.0
+      max-packet-rate: 5.0
+player-auto-save:
+  max-per-tick: -1
+  rate: -1
+scoreboards:
+  save-empty-scoreboard-teams: false
+  track-plugin-scoreboards: false
+spam-limiter:
+  incoming-packet-threshold: 300
+  recipe-spam-increment: 1
+  recipe-spam-limit: 20
+  tab-spam-increment: 1
+  tab-spam-limit: 500
+unsupported-settings:
+  allow-grindstone-overstacking: false
+  allow-headless-pistons: false
+  allow-permanent-block-break-exploits: false
+  allow-piston-duplication: false
+  compression-format: ZLIB
+  perform-username-validation: true
+watchdog:
+  early-warning-delay: 10000
+  early-warning-every: 5000

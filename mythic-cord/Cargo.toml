@@ -1,0 +1,58 @@
+[workspace]
+resolver = "2"
+members = [
+    "stdb",
+    "stdb-bridge",
+    "plugin-routing",
+    "proxy",
+    # "infrarust/crates/*",   # added by tools/vendor-infrarust.sh after `init`
+]
+exclude = [
+    # Avoid pulling Infrarust's own examples into our workspace until we
+    # explicitly opt in.
+    "infrarust/plugins",
+    "infrarust/tools",
+    "infrarust/examples",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+# Infrarust is AGPL-3.0 (plugin exception). Forking obliges us to publish
+# proxy source under the same license. Closed-source plugins are still OK.
+license = "AGPL-3.0-or-later"
+authors = ["MythicPvP"]
+repository = "https://github.com/mythicpvp/mythic-cord"
+
+[workspace.dependencies]
+tokio = { version = "1.51", features = ["full"] }
+tokio-util = "0.7"
+async-trait = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+parking_lot = "0.12"
+crossbeam-channel = "0.5"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true

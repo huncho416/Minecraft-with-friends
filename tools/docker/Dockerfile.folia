@@ -1,0 +1,63 @@
+# syntax=docker/dockerfile:1.7
+# Folia 1.21.1 server image with mythic-suite jars baked in.
+# Two-stage: maven build of the suite, runtime on JRE 21.
+
+FROM maven:3.9-eclipse-temurin-21 AS suite-build
+WORKDIR /build
+COPY pom.xml ./
+COPY mythic-suite/ ./mythic-suite/
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B -ntp -pl mythic-suite -am -DskipTests package
+
+FROM eclipse-temurin:21-jre-jammy AS folia-fetch
+ARG FOLIA_VERSION=1.21.1
+ARG FOLIA_BUILD=latest
+WORKDIR /folia
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl jq ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    if [ "$FOLIA_BUILD" = "latest" ]; then \
+        FOLIA_BUILD=$(curl -fsSL "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}" \
+            | jq '.builds[-1]'); \
+    fi; \
+    JAR="folia-${FOLIA_VERSION}-${FOLIA_BUILD}.jar"; \
+    curl -fsSL -o folia.jar \
+        "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}/builds/${FOLIA_BUILD}/downloads/${JAR}"
+
+FROM eclipse-temurin:21-jre-jammy
+LABEL org.opencontainers.image.title="MythicPvP Folia"
+LABEL org.opencontainers.image.source="https://github.com/mythicpvp"
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends tini curl \
+ && rm -rf /var/lib/apt/lists/* \
+ && groupadd -r mythic --gid 1000 \
+ && useradd -r -g mythic --uid 1000 -m -d /home/mythic mythic
+
+WORKDIR /data
+COPY --from=folia-fetch /folia/folia.jar /opt/folia/folia.jar
+COPY --from=suite-build /build/mythic-suite/*/target/*.jar /opt/folia/suite/
+COPY tools/docker/folia/entrypoint.sh /opt/folia/entrypoint.sh
+COPY tools/docker/folia/eula.txt /opt/folia/defaults/eula.txt
+COPY tools/docker/folia/server.properties /opt/folia/defaults/server.properties
+COPY tools/docker/folia/bukkit.yml /opt/folia/defaults/bukkit.yml
+COPY tools/docker/folia/spigot.yml /opt/folia/defaults/spigot.yml
+COPY tools/docker/folia/paper-global.yml /opt/folia/defaults/paper-global.yml
+
+RUN chmod +x /opt/folia/entrypoint.sh \
+ && chown -R mythic:mythic /data /opt/folia
+
+USER mythic
+EXPOSE 25565
+
+ENV JAVA_OPTS="-Xms2G -Xmx4G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch" \
+    SERVER_TYPE=hub \
+    SHARD_ID=hub-1 \
+    VIEW_DISTANCE=8 \
+    ONLINE_MODE=false
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+    CMD curl -fsS --max-time 5 http://localhost:25565 || exit 0
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/opt/folia/entrypoint.sh"]

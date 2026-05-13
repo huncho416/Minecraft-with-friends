@@ -1,13 +1,31 @@
+# Build output
 target/
+**/target/
 *.class
 *.jar
 *.war
-*.log
+
+# Project-local toolchains (Maven, JDK, Rust were extracted here for ad-hoc builds)
+.build-tools/
+
+# IDE / editor
 .idea/
 *.iml
-.DS_Store
-Thumbs.db
 .settings/
 .classpath
 .project
 .vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Rust
+**/Cargo.lock.bak
+
+# NOTE: mythic-cord/infrarust/ is intentionally NOT ignored — the vendored
+# subtree is committed so fresh clones and CI build without re-running the
+# vendor script. Re-baselining is `tools/vendor-infrarust.{sh,ps1} <ref>`.

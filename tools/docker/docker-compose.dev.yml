@@ -1,0 +1,72 @@
+name: mythicpvp-dev
+
+services:
+  spacetimedb:
+    image: clockworklabs/spacetime:latest
+    container_name: mythic-stdb-dev
+    restart: unless-stopped
+    ports: ["3000:3000"]
+    volumes:
+      - stdb-dev-data:/stdb
+    environment:
+      SPACETIMEDB_LOG_LEVEL: debug
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks: [mythicnet-dev]
+
+  stdb-publish:
+    build:
+      context: ../..
+      dockerfile: tools/docker/Dockerfile.stdb-publish
+    container_name: mythic-stdb-publish-dev
+    restart: "no"
+    environment:
+      STDB_HOST: http://spacetimedb:3000
+      STDB_MODULE: mythicpvp
+    depends_on:
+      spacetimedb:
+        condition: service_healthy
+    networks: [mythicnet-dev]
+
+  hub:
+    build:
+      context: ../..
+      dockerfile: tools/docker/Dockerfile.folia
+    container_name: mythic-hub-dev
+    hostname: hub
+    restart: unless-stopped
+    stop_grace_period: 60s
+    tty: true
+    stdin_open: true
+    ports: ["25565:25565"]
+    environment:
+      JAVA_OPTS: >-
+        -Xms1G -Xmx2G
+        -XX:+UseG1GC -XX:+ParallelRefProcEnabled
+        -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions
+        -XX:+DisableExplicitGC -XX:+AlwaysPreTouch
+      STDB_URI: http://spacetimedb:3000
+      STDB_MODULE: mythicpvp
+      SERVER_TYPE: hub
+      SHARD_ID: hub-dev
+      VIEW_DISTANCE: "6"
+      ONLINE_MODE: "false"
+    volumes:
+      - hub-dev-data:/data
+      - ./folia/plugins:/data/plugins:ro
+    depends_on:
+      stdb-publish:
+        condition: service_completed_successfully
+    networks: [mythicnet-dev]
+
+volumes:
+  stdb-dev-data:
+  hub-dev-data:
+
+networks:
+  mythicnet-dev:
+    driver: bridge

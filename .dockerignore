@@ -1,0 +1,16 @@
+# Repo-root .dockerignore. Compose files in tools/docker/ build with
+# context: ../.. — Docker resolves the dockerignore relative to the
+# build context, so this file (not tools/docker/.dockerignore) is what
+# matters for those builds.
+.git
+.idea
+.vscode
+*.iml
+target/
+**/target/
+node_modules/
+**/node_modules/
+TexturePack/
+docs/
+**/*.log
+**/.DS_Store

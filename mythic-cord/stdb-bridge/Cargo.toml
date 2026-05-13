@@ -1,0 +1,27 @@
+[package]
+name = "mythiccord-stdb-bridge"
+description = "Driver thread and typed reducer client for the mythic-stdb module"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+tokio = { workspace = true }
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+futures-util = "0.3"
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+parking_lot = { workspace = true }
+crossbeam-channel = { workspace = true }
+async-trait = { workspace = true }
+
+[lints]
+workspace = true

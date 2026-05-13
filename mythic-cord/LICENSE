@@ -1,0 +1,21 @@
+                    GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+The MythicCord proxy is a fork of Infrarust (https://github.com/Shadowner/Infrarust),
+released under AGPL-3.0-or-later with the upstream plugin exception preserved.
+
+You can obtain the full license text at:
+  https://www.gnu.org/licenses/agpl-3.0.txt
+
+Plugin exception (verbatim from upstream Infrarust):
+  Plugins that link against the published `infrarust-api` / `mythiccord-api`
+  surfaces using the documented dynamic-loading or trait-object mechanisms
+  are considered separate works and may be licensed under terms of the
+  plugin author's choosing, including proprietary terms.
+
+Run `cargo about generate about.hbs` from `mythic-cord/` to produce a
+full third-party attribution report before shipping a release build.

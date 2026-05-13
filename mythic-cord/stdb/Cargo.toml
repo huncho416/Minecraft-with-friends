@@ -1,0 +1,21 @@
+[package]
+name = "mythic-stdb"
+description = "MythicPvP SpacetimeDB module — schema and reducers"
+version.workspace = true
+# Pinned to edition 2021 — SpacetimeDB's macro emitters target 2021.
+# The rest of the workspace can run edition 2024.
+edition = "2021"
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+spacetimedb = "1.0"
+log = "0.4"
+
+[lints]
+workspace = true

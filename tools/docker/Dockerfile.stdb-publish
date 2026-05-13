@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1.7
+# Build the mythic-stdb WASM module and publish it to the running STDB.
+# Run-once container: exits 0 after `spacetime publish` succeeds.
+
+FROM rust:1.78-slim-bookworm AS build
+WORKDIR /src
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends pkg-config libssl-dev \
+ && rm -rf /var/lib/apt/lists/* \
+ && rustup target add wasm32-unknown-unknown
+COPY mythic-cord/ ./mythic-cord/
+WORKDIR /src/mythic-cord
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/src/mythic-cord/target \
+    cargo build --release -p mythic-stdb --target wasm32-unknown-unknown \
+ && cp target/wasm32-unknown-unknown/release/mythic_stdb.wasm /tmp/mythic_stdb.wasm
+
+FROM clockworklabs/spacetime:latest
+COPY --from=build /tmp/mythic_stdb.wasm /tmp/mythic_stdb.wasm
+COPY tools/docker/stdb/publish.sh /usr/local/bin/publish.sh
+RUN chmod +x /usr/local/bin/publish.sh
+ENTRYPOINT ["/usr/local/bin/publish.sh"]
