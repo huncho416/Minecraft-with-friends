@@ -41,10 +41,13 @@ public final class PermissionManager {
 
     public boolean hasPermission(@NotNull UUID player, @NotNull String permission) {
         Rank rank = getPlayerRank(player);
-        return hasPermissionRecursive(rank, permission);
+        return hasPermissionRecursive(rank, permission, new HashSet<>());
     }
 
-    private boolean hasPermissionRecursive(@NotNull Rank rank, @NotNull String permission) {
+    private boolean hasPermissionRecursive(@NotNull Rank rank, @NotNull String permission, @NotNull Set<String> visited) {
+        if (!visited.add(rank.getName().toLowerCase())) {
+            return false;
+        }
         if (rank.getPermissions().contains("*")) return true;
         if (rank.getPermissions().contains(permission)) return true;
 
@@ -58,7 +61,7 @@ public final class PermissionManager {
 
         if (rank.getParent() != null) {
             Rank parent = ranks.get(rank.getParent().toLowerCase());
-            if (parent != null) return hasPermissionRecursive(parent, permission);
+            if (parent != null) return hasPermissionRecursive(parent, permission, visited);
         }
 
         return false;

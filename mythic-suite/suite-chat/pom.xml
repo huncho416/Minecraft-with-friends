@@ -7,6 +7,8 @@
         <dependency><groupId>net.mythicpvp</groupId><artifactId>suite-hex</artifactId></dependency>
         <dependency><groupId>net.mythicpvp</groupId><artifactId>suite-api</artifactId></dependency>
         <dependency><groupId>net.mythicpvp</groupId><artifactId>suite-permission</artifactId></dependency>
+        <dependency><groupId>net.mythicpvp</groupId><artifactId>suite-disguise</artifactId></dependency>
+        <dependency><groupId>net.mythicpvp</groupId><artifactId>suite-config</artifactId></dependency>
         <dependency><groupId>io.papermc.paper</groupId><artifactId>paper-api</artifactId></dependency>
         <dependency><groupId>org.jetbrains</groupId><artifactId>annotations</artifactId></dependency>
     </dependencies>

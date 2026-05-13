@@ -78,6 +78,15 @@ public final class MythicHex {
     }
 
     @NotNull
+    public static Component font(@NotNull String fontKey, @NotNull String text) {
+        Component component = colorize(text);
+        if (fontKey.isBlank()) {
+            return component;
+        }
+        return component.font(net.kyori.adventure.key.Key.key(fontKey));
+    }
+
+    @NotNull
     public static String toLegacy(@NotNull Component component) {
         return LEGACY_SERIALIZER.serialize(component);
     }

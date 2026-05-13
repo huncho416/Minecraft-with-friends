@@ -1,6 +1,9 @@
 package net.mythicpvp.suite.nametag;
 
+import net.mythicpvp.suite.disguise.DisguiseManager;
+import net.mythicpvp.suite.config.ConfigText;
 import net.mythicpvp.suite.hex.MythicHex;
+import net.mythicpvp.suite.packet.PacketAction;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -24,26 +27,45 @@ public final class NametagManager {
     }
 
     public void setNametag(@NotNull Player player, @NotNull String prefix, @NotNull String suffix, int sortWeight) {
-        nametags.put(player.getUniqueId(), new NametagData(prefix, suffix, sortWeight));
+        setNametag(player, prefix, suffix, sortWeight, null);
+    }
+
+    public void setNametag(@NotNull Player player, @NotNull String prefix, @NotNull String suffix, int sortWeight, @Nullable String glowColor) {
+        nametags.put(player.getUniqueId(), new NametagData(prefix, suffix, sortWeight, glowColor));
         applyToAll(player);
+    }
+
+    public void loadNametag(@NotNull Player player, @NotNull ConfigText text, @NotNull String key) {
+        setNametag(
+                player,
+                text.raw(key + ".prefix", ""),
+                text.raw(key + ".suffix", ""),
+                Integer.parseInt(text.raw(key + ".sort-weight", "999")),
+                text.raw(key + ".glow-color", "")
+        );
     }
 
     public void setPrefix(@NotNull Player player, @NotNull String prefix) {
         NametagData data = nametags.getOrDefault(player.getUniqueId(), NametagData.EMPTY);
-        nametags.put(player.getUniqueId(), new NametagData(prefix, data.suffix(), data.sortWeight()));
+        nametags.put(player.getUniqueId(), new NametagData(prefix, data.suffix(), data.sortWeight(), data.glowColor()));
         applyToAll(player);
     }
 
     public void setSuffix(@NotNull Player player, @NotNull String suffix) {
         NametagData data = nametags.getOrDefault(player.getUniqueId(), NametagData.EMPTY);
-        nametags.put(player.getUniqueId(), new NametagData(data.prefix(), suffix, data.sortWeight()));
+        nametags.put(player.getUniqueId(), new NametagData(data.prefix(), suffix, data.sortWeight(), data.glowColor()));
+        applyToAll(player);
+    }
+
+    public void setGlowColor(@NotNull Player player, @Nullable String glowColor) {
+        NametagData data = nametags.getOrDefault(player.getUniqueId(), NametagData.EMPTY);
+        nametags.put(player.getUniqueId(), new NametagData(data.prefix(), data.suffix(), data.sortWeight(), glowColor));
         applyToAll(player);
     }
 
     private void applyToAll(@NotNull Player target) {
         NametagData data = nametags.get(target.getUniqueId());
         if (data == null) return;
-
         for (Player viewer : target.getServer().getOnlinePlayers()) {
             applyFor(viewer, target, data);
         }
@@ -57,22 +79,31 @@ public final class NametagManager {
 
     private void applyFor(@NotNull Player viewer, @NotNull Player target, @NotNull NametagData data) {
         Scoreboard board = viewer.getScoreboard();
-        String teamName = String.format("%03d_%s", data.sortWeight(), target.getName());
-        if (teamName.length() > 16) {
-            teamName = teamName.substring(0, 16);
-        }
-
+        String teamName = teamName(data.sortWeight(), target.getUniqueId());
         Team team = board.getTeam(teamName);
         if (team == null) {
             team = board.registerNewTeam(teamName);
         }
-
         team.prefix(MythicHex.colorize(data.prefix()));
         team.suffix(MythicHex.colorize(data.suffix()));
-
         if (!team.hasEntry(target.getName())) {
             team.addEntry(target.getName());
         }
+        String displayName = DisguiseManager.getInstance().getVisibleName(viewer.getUniqueId(), target.getUniqueId(), target.getName());
+        PacketAction.send(viewer, new PacketAction.NametagState(
+                "nametag:" + target.getUniqueId(),
+                target.getUniqueId(),
+                MythicHex.colorize(data.prefix()),
+                MythicHex.colorize(data.suffix()),
+                data.sortWeight(),
+                data.glowColor(),
+                displayName
+        ));
+    }
+
+    @NotNull
+    private String teamName(int sortWeight, @NotNull UUID uuid) {
+        return ("%03d_%s".formatted(sortWeight, uuid.toString().replace("-", ""))).substring(0, 16);
     }
 
     public void remove(@NotNull Player player) {
@@ -96,7 +127,11 @@ public final class NametagManager {
         return nametags.get(player.getUniqueId());
     }
 
-    public record NametagData(@NotNull String prefix, @NotNull String suffix, int sortWeight) {
-        public static final NametagData EMPTY = new NametagData("", "", 999);
+    public void clear() {
+        nametags.clear();
+    }
+
+    public record NametagData(@NotNull String prefix, @NotNull String suffix, int sortWeight, @Nullable String glowColor) {
+        public static final NametagData EMPTY = new NametagData("", "", 999, null);
     }
 }

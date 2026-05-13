@@ -2,6 +2,7 @@ package net.mythicpvp.suite.item;
 
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.suite.hex.MythicHex;
+import net.mythicpvp.suite.resourcepack.ResourcePackManager;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -129,6 +130,18 @@ public class MythicItem {
     }
 
     @NotNull
+    public MythicItem model(@NotNull String modelId) {
+        ResourcePackManager.CustomModel model = ResourcePackManager.getInstance().getModel(modelId);
+        if (model == null) {
+            throw new IllegalArgumentException("Unknown custom model: " + modelId);
+        }
+        if (itemStack.getType() != model.material()) {
+            throw new IllegalArgumentException("Model " + modelId + " requires " + model.material());
+        }
+        return customModelData(model.customModelData());
+    }
+
+    @NotNull
     public <T, Z> MythicItem persistentData(@NotNull JavaPlugin plugin, @NotNull String key, @NotNull PersistentDataType<T, Z> type, @NotNull Z value) {
         ItemMeta meta = itemStack.getItemMeta();
         meta.getPersistentDataContainer().set(new NamespacedKey(plugin, key), type, value);
@@ -150,7 +163,6 @@ public class MythicItem {
     @NotNull
     public MythicItem skullTexture(@NotNull String base64) {
         if (itemStack.getType() != Material.PLAYER_HEAD) return this;
-        // skull texture via profile API handled in suite-skin
         return this;
     }
 

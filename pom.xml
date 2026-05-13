@@ -19,14 +19,16 @@
     <properties>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
 
         <paper.version>1.21.1-R0.1-SNAPSHOT</paper.version>
         <adventure.version>4.17.0</adventure.version>
         <gson.version>2.11.0</gson.version>
         <snakeyaml.version>2.2</snakeyaml.version>
         <annotations.version>24.1.0</annotations.version>
+        <junit.version>5.13.4</junit.version>
+        <mockito.version>5.20.0</mockito.version>
+        <mockbukkit.version>3.133.2</mockbukkit.version>
     </properties>
 
     <repositories>
@@ -87,6 +89,11 @@
             </dependency>
             <dependency>
                 <groupId>net.mythicpvp</groupId>
+                <artifactId>suite-packet</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.mythicpvp</groupId>
                 <artifactId>suite-hex</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -130,6 +137,34 @@
                 <artifactId>suite-economy</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>net.mythicpvp</groupId>
+                <artifactId>suite-resourcepack</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.mythicpvp</groupId>
+                <artifactId>suite-disguise</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.github.seeseemelk</groupId>
+                <artifactId>MockBukkit-v1.21</artifactId>
+                <version>${mockbukkit.version}</version>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -141,9 +176,16 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.13.0</version>
                     <configuration>
-                        <source>${java.version}</source>
-                        <target>${java.version}</target>
+                        <release>${java.version}</release>
                         <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.4</version>
+                    <configuration>
+                        <useModulePath>false</useModulePath>
                     </configuration>
                 </plugin>
                 <plugin>

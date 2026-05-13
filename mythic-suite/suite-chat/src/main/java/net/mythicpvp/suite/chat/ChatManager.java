@@ -1,6 +1,9 @@
 package net.mythicpvp.suite.chat;
 
 import net.mythicpvp.suite.hex.MythicHex;
+import net.mythicpvp.suite.disguise.DisguiseManager;
+import net.kyori.adventure.text.Component;
+import net.mythicpvp.suite.config.ConfigText;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +21,7 @@ public final class ChatManager {
     private ChatManager() {
         blockedPatterns.add(Pattern.compile("(?i)(https?://|www\\.)\\S+"));
         blockedPatterns.add(Pattern.compile("(?i)\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b"));
-        blockedPatterns.add(Pattern.compile("(?i)\\.com|\\.net|\\.org|\\.gg|\\.io"));
+        blockedPatterns.add(Pattern.compile("(?i)\\b(?:[a-z0-9-]+\\.)+(?:com|net|org|gg|io)\\b"));
     }
 
     @NotNull
@@ -28,6 +31,10 @@ public final class ChatManager {
 
     public void setChatFormat(@NotNull String format) {
         this.chatFormat = format;
+    }
+
+    public void loadFormat(@NotNull ConfigText text) {
+        this.chatFormat = text.raw("chat.format", "%prefix% %player%&7: &f%message%");
     }
 
     @NotNull
@@ -46,6 +53,16 @@ public final class ChatManager {
 
     public void addBlockedPattern(@NotNull Pattern pattern) {
         blockedPatterns.add(pattern);
+    }
+
+    @NotNull
+    public Component format(@NotNull Player player, @NotNull String prefix, @NotNull String message) {
+        String visibleName = DisguiseManager.getInstance().getDisplayName(player.getUniqueId(), player.getName());
+        String formatted = chatFormat
+                .replace("%prefix%", prefix)
+                .replace("%player%", visibleName)
+                .replace("%message%", filter(message));
+        return MythicHex.colorize(formatted);
     }
 
     @NotNull

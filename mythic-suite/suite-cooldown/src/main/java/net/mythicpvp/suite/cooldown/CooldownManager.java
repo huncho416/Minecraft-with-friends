@@ -20,6 +20,9 @@ public final class CooldownManager {
     }
 
     public void set(@NotNull UUID player, @NotNull String name, long duration, @NotNull TimeUnit unit) {
+        if (duration < 0) {
+            throw new IllegalArgumentException("Cooldown duration cannot be negative");
+        }
         String key = player.toString() + ":" + name;
         cooldowns.put(key, System.currentTimeMillis() + unit.toMillis(duration));
     }
@@ -63,5 +66,9 @@ public final class CooldownManager {
     public void cleanup() {
         long now = System.currentTimeMillis();
         cooldowns.entrySet().removeIf(e -> e.getValue() <= now);
+    }
+
+    public void clear() {
+        cooldowns.clear();
     }
 }

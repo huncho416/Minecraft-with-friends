@@ -15,6 +15,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>net.mythicpvp</groupId>
+            <artifactId>suite-hex</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
         </dependency>

@@ -101,8 +101,9 @@ The **HexAPI** parses `&#RRGGBB` tags across all text surfaces. The custom **Myt
 mythicpvp/
 ├── pom.xml                              # Parent Maven POM
 │
-├── mythic-suite/                        # ══ THE FOUNDATION SUITE (22 modules) ══
+├── mythic-suite/                        # ══ THE FOUNDATION SUITE (23 modules) ══
 │   ├── suite-api/                       # Core interfaces & contracts
+│   ├── suite-packet/                    # Internal packet abstraction
 │   ├── suite-hex/                       # HexAPI — hex color parsing
 │   ├── suite-command/                   # CommandAPI — Aikar ACF-style
 │   ├── suite-tab/                       # TabAPI — per-player tab list
@@ -111,7 +112,7 @@ mythicpvp/
 │   ├── suite-menu/                      # MenuAPI — chest GUI builder
 │   ├── suite-hologram/                  # HologramAPI — floating displays
 │   ├── suite-skin/                      # SkinAPI — skin fetching/caching
-│   ├── suite-config/                    # ConfigAPI — YAML hot-reload
+│   ├── suite-config/                    # ConfigAPI — YAML hot-reload + all text/message surfaces
 │   ├── suite-database/                  # DatabaseAPI — SpacetimeDB Java client
 │   ├── suite-protocol/                  # ProtocolAPI — cross-server messaging
 │   ├── suite-scheduler/                 # SchedulerAPI — Folia-safe scheduling
@@ -156,37 +157,42 @@ mythicpvp/
 
 ---
 
-## 🏛️ THE MYTHIC SUITE — Foundation (22 Modules)
+## 🏛️ THE MYTHIC SUITE — Foundation (23 Modules)
 
 > **The suite must be complete before any gameplay code.** Every future gamemode builds on these APIs.
 
-### Modules 1–22
+### Modules 1–23
 
 | # | Module | Purpose | Status |
 |---|--------|---------|--------|
 | 1 | `suite-api` | Core interfaces, ServiceRegistry, Currency, MythicPlayer | ✅ Done |
-| 2 | `suite-hex` | `&#RRGGBB` parsing, gradients, MiniMessage integration | ✅ Done |
-| 3 | `suite-command` | Aikar-style annotations, auto tab-complete, context resolvers | ✅ Done |
-| 4 | `suite-tab` | Per-player tab with hex, rank sorting, custom font support | ✅ Done |
-| 5 | `suite-scoreboard` | Packet-based per-player boards, animated titles, custom font | ✅ Done |
-| 6 | `suite-nametag` | Packet-level nametags with hex prefix/suffix, glow colors | ✅ Done |
-| 7 | `suite-menu` | Chest GUI builder, pagination, click cooldowns | ✅ Done |
-| 8 | `suite-hologram` | Packet holograms, per-player, animated, leaderboard type | ✅ Done |
-| 9 | `suite-skin` | Mojang fetch + cache, NPC skins, head textures | ✅ Done |
-| 10 | `suite-config` | YAML config wrapper, hot-reload, multi-file manager | ✅ Done |
-| 11 | `suite-format` | Money shorthand (1K/1M/1.5B/1T), duration, time ago, date/time | ✅ Done |
-| 12 | `suite-database` | SpacetimeDB Java WS client, subscriptions, reducers | ✅ Done |
-| 13 | `suite-protocol` | Cross-server messaging via pub/sub | ✅ Done |
-| 14 | `suite-scheduler` | Folia RegionScheduler/EntityScheduler abstraction | ✅ Done |
-| 15 | `suite-economy` | Coins/Points/Gems, multi-currency management | ✅ Done |
-| 16 | `suite-permission` | Ranks with hex colors, inheritance, wildcards | ✅ Done |
-| 17 | `suite-item` | Fluent builder, hex lore, custom model data, PDC helpers | ✅ Done |
-| 18 | `suite-cooldown` | Named cooldowns, per-player, thread-safe | ✅ Done |
-| 19 | `suite-event` | Custom event bus, priorities, cancellation | ✅ Done |
-| 20 | `suite-chat` | Channels, hex formatting, spam/ad/toxicity filter | ✅ Done |
-| 21 | `suite-resourcepack` | Custom model/font registry, pack URL management | ✅ Done |
-| 22 | `suite-cosmetic` | Hats, titles, particles, ownership/equip system | ✅ Done |
-| — | `suite-disguise` | Skin/name/rank override state management | ✅ Done |
+| 2 | `suite-packet` | Internal packet action/session abstraction for display and disguise modules | ✅ Done |
+| 3 | `suite-hex` | `&#RRGGBB` parsing, gradients, MiniMessage integration, custom fonts | ✅ Done |
+| 4 | `suite-command` | Aikar-style annotations, auto tab-complete, context resolvers | ✅ Done |
+| 5 | `suite-tab` | Per-player tab with hex, rank sorting, custom font support | ✅ Done |
+| 6 | `suite-scoreboard` | Packet-based per-player boards, animated titles, custom font | ✅ Done |
+| 7 | `suite-nametag` | Packet-level nametags with hex prefix/suffix, glow colors | ✅ Done |
+| 8 | `suite-menu` | Chest GUI builder, pagination, click cooldowns | ✅ Done |
+| 9 | `suite-hologram` | Packet holograms, per-player, animated, leaderboard type | ✅ Done |
+| 10 | `suite-skin` | Mojang fetch + cache, NPC skins, head textures | ✅ Done |
+| 11 | `suite-config` | YAML config wrapper, hot-reload, multi-file manager, configurable text surfaces | ✅ Done |
+| 12 | `suite-format` | Money shorthand (1K/1M/1.5B/1T), duration, time ago, date/time | ✅ Done |
+| 13 | `suite-database` | SpacetimeDB Java WS client, subscriptions, reducers | ✅ Done |
+| 14 | `suite-protocol` | Cross-server messaging via pub/sub | ✅ Done |
+| 15 | `suite-scheduler` | Folia RegionScheduler/EntityScheduler abstraction | ✅ Done |
+| 16 | `suite-economy` | Coins/Points/Gems, multi-currency management | ✅ Done |
+| 17 | `suite-permission` | Ranks with hex colors, inheritance, wildcards | ✅ Done |
+| 18 | `suite-item` | Fluent builder, hex lore, custom model data, PDC helpers | ✅ Done |
+| 19 | `suite-cooldown` | Named cooldowns, per-player, thread-safe | ✅ Done |
+| 20 | `suite-event` | Custom event bus, priorities, cancellation | ✅ Done |
+| 21 | `suite-chat` | Channels, hex formatting, spam/ad/toxicity filter | ✅ Done |
+| 22 | `suite-resourcepack` | Custom model/font registry, pack URL management | ✅ Done |
+| 23 | `suite-cosmetic` | Hats, titles, particles, ownership/equip system | ✅ Done |
+| — | `suite-disguise` | Skin/name/rank override state management and integrations | ✅ Done |
+
+### ConfigAPI Text Contract
+
+Every player-facing message and display surface must be configurable through YAML. This includes chat formats, chat prefixes, scoreboard titles and lines, tab headers/footers, nametags, hologram lines, menu labels, resource-pack prompts, cooldown/economy/permission feedback, command responses, disguise text, and any future gameplay messages. Modules should resolve text through `ConfigText` or a module-specific YAML wrapper and provide sensible defaults that are written when keys are missing.
 
 ### NEW Module 19: `suite-format` — FormatAPI
 
@@ -537,13 +543,13 @@ erDiagram
 
 ### Phase 1 — Mythic Suite (Weeks 1–8) ✅ COMPLETE
 
-> **All 25 reactor modules compile — BUILD SUCCESS.**
+> **All 26 reactor modules compile and test — BUILD SUCCESS.**
 
 | Week | Dev A | Dev B | Status |
 |------|-------|-------|--------|
 | 1–2 | `suite-database` (CRITICAL PATH) | `suite-hex`, `suite-config`, `suite-format` | ✅ |
 | 2–3 | `suite-database` (continued), `suite-scheduler` | `suite-item`, `suite-menu` | ✅ |
-| 3–4 | `suite-command`, `suite-event` | `suite-tab`, `suite-scoreboard` | ✅ |
+| 3–4 | `suite-command`, `suite-event`, `suite-packet` | `suite-tab`, `suite-scoreboard` | ✅ |
 | 4–5 | `suite-economy`, `suite-permission` | `suite-nametag`, `suite-hologram` | ✅ |
 | 5–6 | `suite-protocol`, `suite-cooldown` | `suite-resourcepack`, `suite-skin` | ✅ |
 | 6–7 | `suite-chat` (incl. filtering) | `suite-cosmetic` | ✅ |
@@ -617,7 +623,7 @@ erDiagram
 
 | Phase | Name | Weeks | Key Deliverables |
 |-------|------|-------|-----------------|
-| **1** | **Mythic Suite** ⭐ | 1–8 | All 21 foundation APIs, tested and documented |
+| **1** | **Mythic Suite** ⭐ | 1–8 | All 23 foundation APIs, YAML-configurable text surfaces, tested and documented |
 | **2** | MythicCord + Docker | 9–12 | Proxy fork, Geyser, voice, Docker Compose, monitoring |
 | **3** | Core + Hub | 13–16 | Base plugin, friends/party, hub, Tebex, resource pack |
 | **4** | Skyblock Core | 17–24 | Islands, economy, enchants, quests |

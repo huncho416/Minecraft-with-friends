@@ -28,17 +28,28 @@ public final class EconomyManager {
     }
 
     public void deposit(@NotNull UUID player, @NotNull Currency currency, long amount) {
-        if (amount <= 0) return;
-        balances.merge(key(player, currency), amount, Long::sum);
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Deposit amount must be positive");
+        }
+        balances.compute(key(player, currency), (ignored, current) -> Math.addExact(current == null ? 0L : current, amount));
     }
 
     public boolean withdraw(@NotNull UUID player, @NotNull Currency currency, long amount) {
-        if (amount <= 0) return false;
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Withdraw amount must be positive");
+        }
         String key = key(player, currency);
-        long current = balances.getOrDefault(key, 0L);
-        if (current < amount) return false;
-        balances.put(key, current - amount);
-        return true;
+        long[] result = new long[1];
+        balances.compute(key, (ignored, current) -> {
+            long balance = current == null ? 0L : current;
+            if (balance < amount) {
+                result[0] = 0;
+                return balance;
+            }
+            result[0] = 1;
+            return balance - amount;
+        });
+        return result[0] == 1;
     }
 
     public boolean has(@NotNull UUID player, @NotNull Currency currency, long amount) {

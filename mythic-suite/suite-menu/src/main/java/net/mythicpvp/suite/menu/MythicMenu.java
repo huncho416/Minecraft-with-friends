@@ -12,14 +12,17 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public class MythicMenu implements InventoryHolder {
 
     private final Inventory inventory;
     private final Map<Integer, Consumer<InventoryClickEvent>> clickHandlers = new HashMap<>();
+    private final Map<UUID, Long> clickCooldowns = new HashMap<>();
     private Consumer<InventoryClickEvent> globalClickHandler;
     private boolean cancelClicks = true;
+    private long clickCooldownMillis;
 
     private MythicMenu(int rows, @NotNull String title) {
         this.inventory = Bukkit.createInventory(this, rows * 9, MythicHex.colorize(title));
@@ -80,8 +83,22 @@ public class MythicMenu implements InventoryHolder {
         return this;
     }
 
+    @NotNull
+    public MythicMenu clickCooldown(long millis) {
+        this.clickCooldownMillis = Math.max(0, millis);
+        return this;
+    }
+
     public void handleClick(@NotNull InventoryClickEvent event) {
         if (cancelClicks) event.setCancelled(true);
+        if (event.getWhoClicked() instanceof Player player && clickCooldownMillis > 0) {
+            long now = System.currentTimeMillis();
+            long nextClick = clickCooldowns.getOrDefault(player.getUniqueId(), 0L);
+            if (now < nextClick) {
+                return;
+            }
+            clickCooldowns.put(player.getUniqueId(), now + clickCooldownMillis);
+        }
 
         Consumer<InventoryClickEvent> slotHandler = clickHandlers.get(event.getRawSlot());
         if (slotHandler != null) {

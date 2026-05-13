@@ -16,6 +16,10 @@
             <artifactId>suite-hex</artifactId>
         </dependency>
         <dependency>
+            <groupId>net.mythicpvp</groupId>
+            <artifactId>suite-resourcepack</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
         </dependency>

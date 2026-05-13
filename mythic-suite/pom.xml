@@ -17,6 +17,7 @@
 
     <modules>
         <module>suite-api</module>
+        <module>suite-packet</module>
         <module>suite-hex</module>
         <module>suite-config</module>
         <module>suite-format</module>
@@ -40,4 +41,22 @@
         <module>suite-cosmetic</module>
         <module>suite-disguise</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.seeseemelk</groupId>
+            <artifactId>MockBukkit-v1.21</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
