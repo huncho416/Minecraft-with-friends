@@ -20,10 +20,13 @@ public final class CommandManager {
     private final JavaPlugin plugin;
     private final Map<String, RegisteredCommand> commands = new ConcurrentHashMap<>();
     private final Map<Class<?>, Function<String, ?>> resolvers = new ConcurrentHashMap<>();
+    private final CommandBlocker commandBlocker;
 
     public CommandManager(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
         registerDefaultResolvers();
+        this.commandBlocker = new CommandBlocker(plugin, this);
+        plugin.getServer().getPluginManager().registerEvents(commandBlocker, plugin);
     }
 
     private void registerDefaultResolvers() {
@@ -41,6 +44,11 @@ public final class CommandManager {
 
     public <T> void registerResolver(@NotNull Class<T> type, @NotNull Function<String, T> resolver) {
         resolvers.put(type, resolver);
+    }
+
+    @NotNull
+    public CommandBlocker getCommandBlocker() {
+        return commandBlocker;
     }
 
     public void register(@NotNull MythicCommand command) {
@@ -65,7 +73,9 @@ public final class CommandManager {
             }
         }
 
-        commands.put(primaryAlias, registered);
+        for (String alias : aliases) {
+            commands.put(alias.toLowerCase(), registered);
+        }
 
         Command bukkitCommand = new Command(primaryAlias, "", "", Arrays.asList(aliases)) {
             @Override
@@ -81,6 +91,9 @@ public final class CommandManager {
             }
         };
 
+        if (registered.getPermission() != null) {
+            bukkitCommand.setPermission(registered.getPermission());
+        }
         plugin.getServer().getCommandMap().register(plugin.getName().toLowerCase(), bukkitCommand);
     }
 
@@ -89,7 +102,7 @@ public final class CommandManager {
         if (registered == null) return;
 
         if (registered.getPermission() != null && !sender.hasPermission(registered.getPermission())) {
-            sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFYou don't have permission."));
+            commandBlocker.sendDenied(sender);
             return;
         }
 
@@ -102,7 +115,7 @@ public final class CommandManager {
             if (handler != null) {
                 CommandPermission subPerm = handler.getAnnotation(CommandPermission.class);
                 if (subPerm != null && !sender.hasPermission(subPerm.value())) {
-                    sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFYou don't have permission."));
+                    commandBlocker.sendDenied(sender);
                     return;
                 }
                 handlerArgs = Arrays.copyOfRange(args, 1, args.length);
@@ -178,14 +191,33 @@ public final class CommandManager {
     private List<String> handleTabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
         RegisteredCommand registered = commands.get(alias);
         if (registered == null) return Collections.emptyList();
+        if (!commandBlocker.canSee(sender, alias)) return Collections.emptyList();
 
         if (args.length == 1) {
             return registered.getSubcommandNames().stream()
                     .filter(s -> s.startsWith(args[0].toLowerCase()))
+                    .filter(s -> {
+                        String permission = getSubcommandPermission(alias, s);
+                        return permission == null || sender.hasPermission(permission);
+                    })
                     .collect(Collectors.toList());
         }
 
         return Collections.emptyList();
+    }
+
+    String getPermission(@NotNull String command) {
+        RegisteredCommand registered = commands.get(CommandBlocker.normalizeCommand(command));
+        return registered == null ? null : registered.getPermission();
+    }
+
+    String getSubcommandPermission(@NotNull String command, @NotNull String subcommand) {
+        RegisteredCommand registered = commands.get(CommandBlocker.normalizeCommand(command));
+        if (registered == null) return null;
+        Method method = registered.getSubcommand(subcommand.toLowerCase());
+        if (method == null) return null;
+        CommandPermission permission = method.getAnnotation(CommandPermission.class);
+        return permission == null ? null : permission.value();
     }
 
     private static class RegisteredCommand {

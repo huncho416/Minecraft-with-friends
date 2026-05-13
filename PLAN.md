@@ -105,7 +105,7 @@ mythicpvp/
 │   ├── suite-api/                       # Core interfaces & contracts
 │   ├── suite-packet/                    # Internal packet abstraction
 │   ├── suite-hex/                       # HexAPI — hex color parsing
-│   ├── suite-command/                   # CommandAPI — Aikar ACF-style
+│   ├── suite-command/                   # CommandAPI — Aikar ACF-style + command blocker
 │   ├── suite-tab/                       # TabAPI — per-player tab list
 │   ├── suite-scoreboard/               # ScoreboardAPI — per-player boards
 │   ├── suite-nametag/                   # NametagAPI — rank prefixes, hex
@@ -168,7 +168,7 @@ mythicpvp/
 | 1 | `suite-api` | Core interfaces, ServiceRegistry, Currency, MythicPlayer | ✅ Done |
 | 2 | `suite-packet` | Internal packet action/session abstraction for display and disguise modules | ✅ Done |
 | 3 | `suite-hex` | `&#RRGGBB` parsing, gradients, MiniMessage integration, custom fonts | ✅ Done |
-| 4 | `suite-command` | Aikar-style annotations, auto tab-complete, context resolvers | ✅ Done |
+| 4 | `suite-command` | Aikar-style annotations, permission-hidden tab-complete, command blocker config | ✅ Done |
 | 5 | `suite-tab` | Per-player tab with hex, rank sorting, custom font support | ✅ Done |
 | 6 | `suite-scoreboard` | Packet-based per-player boards, animated titles, custom font | ✅ Done |
 | 7 | `suite-nametag` | Packet-level nametags with hex prefix/suffix, glow colors | ✅ Done |
@@ -193,6 +193,10 @@ mythicpvp/
 ### ConfigAPI Text Contract
 
 Every player-facing message and display surface must be configurable through YAML. This includes chat formats, chat prefixes, scoreboard titles and lines, tab headers/footers, nametags, hologram lines, menu labels, resource-pack prompts, cooldown/economy/permission feedback, command responses, disguise text, and any future gameplay messages. Modules should resolve text through `ConfigText` or a module-specific YAML wrapper and provide sensible defaults that are written when keys are missing.
+
+### Command Visibility Contract
+
+Players must only be able to run, see, or tab-complete commands they have permission to use. `suite-command` filters registered command aliases, subcommands, root `/` tab-completion, and command list packets by permission before the client can discover them. It also owns `command-blocker.yml`, which can explicitly block or permission-gate commands such as `/pl`, `/plugins`, `/bukkit:pl`, `/?`, `/bukkit:?`, `/help`, and version aliases. Blocked commands return the configurable blocked message and are removed from tab-complete unless the sender has the configured command permission or bypass permission.
 
 ### NEW Module 19: `suite-format` — FormatAPI
 
@@ -549,7 +553,7 @@ erDiagram
 |------|-------|-------|--------|
 | 1–2 | `suite-database` (CRITICAL PATH) | `suite-hex`, `suite-config`, `suite-format` | ✅ |
 | 2–3 | `suite-database` (continued), `suite-scheduler` | `suite-item`, `suite-menu` | ✅ |
-| 3–4 | `suite-command`, `suite-event`, `suite-packet` | `suite-tab`, `suite-scoreboard` | ✅ |
+| 3–4 | `suite-command` + command blocker, `suite-event`, `suite-packet` | `suite-tab`, `suite-scoreboard` | ✅ |
 | 4–5 | `suite-economy`, `suite-permission` | `suite-nametag`, `suite-hologram` | ✅ |
 | 5–6 | `suite-protocol`, `suite-cooldown` | `suite-resourcepack`, `suite-skin` | ✅ |
 | 6–7 | `suite-chat` (incl. filtering) | `suite-cosmetic` | ✅ |
