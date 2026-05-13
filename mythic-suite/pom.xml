@@ -19,6 +19,7 @@
         <module>suite-api</module>
         <module>suite-hex</module>
         <module>suite-config</module>
+        <module>suite-format</module>
         <module>suite-scheduler</module>
         <module>suite-database</module>
         <module>suite-event</module>

@@ -101,7 +101,7 @@ The **HexAPI** parses `&#RRGGBB` tags across all text surfaces. The custom **Myt
 mythicpvp/
 ├── pom.xml                              # Parent Maven POM
 │
-├── mythic-suite/                        # ══ THE FOUNDATION SUITE (21 modules) ══
+├── mythic-suite/                        # ══ THE FOUNDATION SUITE (22 modules) ══
 │   ├── suite-api/                       # Core interfaces & contracts
 │   ├── suite-hex/                       # HexAPI — hex color parsing
 │   ├── suite-command/                   # CommandAPI — Aikar ACF-style
@@ -121,6 +121,7 @@ mythicpvp/
 │   ├── suite-cooldown/                  # CooldownAPI — universal cooldowns
 │   ├── suite-event/                     # EventAPI — custom event bus
 │   ├── suite-chat/                      # ChatAPI — channels, filtering, hex
+│   ├── suite-format/                    # FormatAPI — money/time/duration formatting
 │   ├── suite-resourcepack/             # ResourcePackAPI — custom textures/fonts
 │   ├── suite-cosmetic/                  # CosmeticAPI — hats, titles, particles
 │   └── suite-disguise/                  # DisguiseAPI — skin/name/tab spoofing
@@ -155,7 +156,7 @@ mythicpvp/
 
 ---
 
-## 🏛️ THE MYTHIC SUITE — Foundation (21 Modules)
+## 🏛️ THE MYTHIC SUITE — Foundation (22 Modules)
 
 > **The suite must be complete before any gameplay code.** Every future gamemode builds on these APIs.
 
@@ -181,8 +182,28 @@ mythicpvp/
 | 16 | `suite-cooldown` | Named cooldowns, visual countdown, cross-server sync |
 | 17 | `suite-event` | Custom event bus, priorities, async, cross-server relay |
 | 18 | `suite-chat` | Channels, hex formatting, click/hover, spam/ad/toxicity filter |
+| 19 | `suite-format` | Money shorthand (1K/1M/1.5B/1T), duration (3d 2h), time ago, date/time formatting |
 
-### NEW Module 19: `suite-resourcepack` — ResourcePackAPI
+### NEW Module 19: `suite-format` — FormatAPI
+
+Universal number/time/date formatting used by economy, scoreboards, chat, and all display modules.
+
+- **Money shorthand:** `1000` → `1K`, `1500000` → `1.5M`, `1000000000` → `1B`, `1900000000000` → `1.9T`
+- **Full commas:** `1,500,000` for detailed views
+- **Duration:** `3d 2h 15m 30s`, compact `02:15:30`, words `3 days 2 hours`
+- **Time ago:** `5m ago`, `3h ago`, `2d ago`
+- **Date/Time:** `MM/dd/yyyy`, `MM/dd/yyyy HH:mm`, `HH:mm:ss`
+- **Time parsing:** `"30m"` → 1800000ms, `"2d"` → 172800000ms
+- **Percent:** `0.75` → `75%`
+  ```java
+  MythicFormat.money(1500000);    // "$1.5M"
+  MythicFormat.number(2500000000L); // "2.5B"
+  MythicFormat.duration(90061000); // "1d 1h 1m 1s"
+  MythicFormat.timeAgo(timestamp); // "3h ago"
+  MythicFormat.parseTime("30m");   // 1800000
+  ```
+
+### NEW Module 20: `suite-resourcepack` — ResourcePackAPI
 
 Manages the custom texture pack (based on existing `TexturePack/` with `smpd` namespace).
 
@@ -518,7 +539,7 @@ erDiagram
 
 | Week | Dev A | Dev B |
 |------|-------|-------|
-| 1–2 | `suite-database` (CRITICAL PATH) | `suite-hex`, `suite-config` |
+| 1–2 | `suite-database` (CRITICAL PATH) | `suite-hex`, `suite-config`, `suite-format` |
 | 2–3 | `suite-database` (continued), `suite-scheduler` | `suite-item`, `suite-menu` |
 | 3–4 | `suite-command`, `suite-event` | `suite-tab`, `suite-scoreboard` |
 | 4–5 | `suite-economy`, `suite-permission` | `suite-nametag`, `suite-hologram` |
