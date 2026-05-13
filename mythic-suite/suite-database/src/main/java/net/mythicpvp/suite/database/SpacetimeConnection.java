@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
@@ -60,6 +61,7 @@ public final class SpacetimeConnection implements WebSocket.Listener {
     public void disconnect() {
         shouldReconnect = false;
         setConnected(false);
+        failPendingReducers("SpacetimeDB connection closed");
         if (webSocket != null) {
             webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "shutdown");
         }
@@ -79,13 +81,21 @@ public final class SpacetimeConnection implements WebSocket.Listener {
         ensureIdentifier(reducerName, "Reducer name");
         String requestId = UUID.randomUUID().toString();
         CompletableFuture<ReducerResult> future = new CompletableFuture<>();
+        if (!isConnected()) {
+            future.completeExceptionally(new IllegalStateException("SpacetimeDB connection is not connected"));
+            return future;
+        }
         reducerCalls.put(requestId, future);
-        send(new ReducerCall("call", requestId, reducerName, args));
+        if (!send(new ReducerCall("call", requestId, reducerName, args))) {
+            reducerCalls.remove(requestId);
+            future.completeExceptionally(new IllegalStateException("SpacetimeDB connection is not connected"));
+        }
         return future;
     }
 
-    public void callReducer(@NotNull String reducerName, @NotNull String argsJson) {
-        callReducer(reducerName, GSON.fromJson(argsJson, Object.class));
+    @NotNull
+    public CompletableFuture<ReducerResult> callReducer(@NotNull String reducerName, @NotNull String argsJson) {
+        return callReducer(reducerName, GSON.fromJson(argsJson, Object.class));
     }
 
     public void subscribe(@NotNull String tableName, @NotNull Consumer<String> handler) {
@@ -120,10 +130,15 @@ public final class SpacetimeConnection implements WebSocket.Listener {
 
     @Override
     public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
-        messageBuffer.append(data);
-        if (last) {
-            String message = messageBuffer.toString();
-            messageBuffer.setLength(0);
+        String message = null;
+        synchronized (messageBuffer) {
+            messageBuffer.append(data);
+            if (last) {
+                message = messageBuffer.toString();
+                messageBuffer.setLength(0);
+            }
+        }
+        if (message != null) {
             handleMessage(message);
         }
         ws.request(1);
@@ -133,6 +148,7 @@ public final class SpacetimeConnection implements WebSocket.Listener {
     @Override
     public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
         setConnected(false);
+        failPendingReducers("SpacetimeDB connection closed");
         if (shouldReconnect) {
             reconnectExecutor.schedule(this::reconnect, 5, TimeUnit.SECONDS);
         }
@@ -142,9 +158,15 @@ public final class SpacetimeConnection implements WebSocket.Listener {
     @Override
     public void onError(WebSocket ws, Throwable error) {
         setConnected(false);
+        failPendingReducers("SpacetimeDB connection errored");
         if (shouldReconnect) {
             reconnectExecutor.schedule(this::reconnect, 5, TimeUnit.SECONDS);
         }
+    }
+
+    private void failPendingReducers(@NotNull String message) {
+        reducerCalls.forEach((requestId, future) -> future.completeExceptionally(new IllegalStateException(message)));
+        reducerCalls.clear();
     }
 
     private void reconnect() {
@@ -155,16 +177,22 @@ public final class SpacetimeConnection implements WebSocket.Listener {
         });
     }
 
-    private void send(@NotNull Object message) {
+    private boolean send(@NotNull Object message) {
         WebSocket current = webSocket;
         if (!connected || current == null) {
-            return;
+            return false;
         }
         current.sendText(GSON.toJson(message), true);
+        return true;
     }
 
     private void handleMessage(@NotNull String message) {
-        JsonObject root = JsonParser.parseString(message).getAsJsonObject();
+        JsonObject root;
+        try {
+            root = JsonParser.parseString(message).getAsJsonObject();
+        } catch (IllegalStateException | JsonSyntaxException e) {
+            return;
+        }
         if (root.has("requestId")) {
             String requestId = root.get("requestId").getAsString();
             CompletableFuture<ReducerResult> future = reducerCalls.remove(requestId);

@@ -4,10 +4,12 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpacetimeConnectionTest {
 
@@ -19,6 +21,16 @@ class SpacetimeConnectionTest {
         assertEquals("{\"type\":\"call\",\"requestId\":\"abc\",\"reducer\":\"award_points\",\"args\":{\"amount\":10}}", reducer);
         assertEquals("{\"type\":\"subscribe\",\"queryStrings\":[\"SELECT * FROM players\"]}", subscription);
         assertThrows(IllegalArgumentException.class, () -> connection.subscriptionMessage("players;drop"));
+    }
+
+    @Test
+    void disconnectedReducerCallsFailFast() {
+        SpacetimeConnection connection = new SpacetimeConnection("http://localhost:3000", "mythic");
+
+        CompletionException exception = assertThrows(CompletionException.class, () ->
+                connection.callReducer("award_points", Map.of("amount", 10)).join());
+
+        assertTrue(exception.getCause() instanceof IllegalStateException);
     }
 
     @Test
