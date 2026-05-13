@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+GEYSER_BEDROCK_PORT="${GEYSER_BEDROCK_PORT:-19132}"
+GEYSER_REMOTE_ADDRESS="${GEYSER_REMOTE_ADDRESS:-hub}"
+GEYSER_REMOTE_PORT="${GEYSER_REMOTE_PORT:-25565}"
+GEYSER_REMOTE_AUTH_TYPE="${GEYSER_REMOTE_AUTH_TYPE:-online}"
+
+sed \
+  -e "s|\${GEYSER_BEDROCK_PORT}|${GEYSER_BEDROCK_PORT}|g" \
+  -e "s|\${GEYSER_REMOTE_ADDRESS}|${GEYSER_REMOTE_ADDRESS}|g" \
+  -e "s|\${GEYSER_REMOTE_PORT}|${GEYSER_REMOTE_PORT}|g" \
+  -e "s|\${GEYSER_REMOTE_AUTH_TYPE}|${GEYSER_REMOTE_AUTH_TYPE}|g" \
+  /opt/geyser/config.template.yml > /data/config.yml
+
+exec java -jar /opt/geyser/Geyser-Standalone.jar

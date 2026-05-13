@@ -94,12 +94,16 @@ services:
     restart: unless-stopped
     ports:
       - "19132:19132/udp"
+    environment:
+      GEYSER_BEDROCK_PORT: "19132"
+      GEYSER_REMOTE_ADDRESS: ${GEYSER_REMOTE_ADDRESS:-hub}
+      GEYSER_REMOTE_PORT: ${GEYSER_REMOTE_PORT:-25565}
+      GEYSER_REMOTE_AUTH_TYPE: ${GEYSER_REMOTE_AUTH_TYPE:-online}
     volumes:
       - geyser-data:/data
-      - ./geyser/config.yml:/data/config.yml:ro
       - ./geyser/packs:/data/packs:ro
     depends_on:
-      mythiccord:
+      hub:
         condition: service_started
     networks: [mythicnet]
 

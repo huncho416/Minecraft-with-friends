@@ -1,6 +1,6 @@
 bedrock:
   address: 0.0.0.0
-  port: 19132
+  port: ${GEYSER_BEDROCK_PORT}
   clone-remote-port: false
   motd1: "MythicPvP"
   motd2: "Java and Bedrock"
@@ -8,9 +8,9 @@ bedrock:
   compression-level: 6
   enable-proxy-protocol: false
 remote:
-  address: mythiccord
-  port: 25565
-  auth-type: online
+  address: ${GEYSER_REMOTE_ADDRESS}
+  port: ${GEYSER_REMOTE_PORT}
+  auth-type: ${GEYSER_REMOTE_AUTH_TYPE}
   use-proxy-protocol: false
   forward-hostname: true
 floodgate-key-file: key.pem

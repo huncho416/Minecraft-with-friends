@@ -13,7 +13,7 @@ One-command spin-up for the MythicPvP network: SpacetimeDB, MythicCord, Geyser, 
 | `Dockerfile.mythiccord` | Rust proxy image in standalone registry/admin mode by default; enable `MYTHICCORD_FEATURES=with-infrarust` after vendoring Infrarust |
 | `Dockerfile.api` | Ktor gateway image stub that returns `503 not_implemented` until `api-suite/` exists |
 | `folia/` | Server config defaults, voice config, user plugin mount, and entrypoint |
-| `geyser/` | Geyser Standalone config plus `packs/` for Bedrock `.mcpack` files |
+| `geyser/` | Geyser Standalone config template plus `packs/` for Bedrock `.mcpack` files |
 | `monitoring/` | Prometheus scrape config and Grafana datasource/dashboard provisioning |
 | `scripts/` | `up.sh`/`up.ps1`, `down.sh`/`down.ps1` |
 
@@ -61,14 +61,14 @@ copy .env.example .env
 |---|---|
 | SpacetimeDB | Real, using `clockworklabs/spacetime:latest` |
 | Folia + suite jars | Real, boots 1.21.1 servers with suite plugins plus voice plugins |
-| Geyser | Real, standalone container on UDP `19132`, pointed at MythicCord |
+| Geyser | Real, standalone container on UDP `19132`, pointed at Hub by default and switchable to MythicCord when the proxy accepts traffic |
 | Simple Voice Chat | Real, Bukkit/Folia plugin resolved from Modrinth and seeded with proximity defaults |
 | SimpleVoice-Geyser | Real, Bukkit plugin resolved from Modrinth and exposed on the web bridge port |
 | Prometheus + Grafana | Real, datasource and starter dashboard auto-provisioned |
 | MythicCord | Real standalone mode for registry/admin/metrics; Minecraft traffic requires the Infrarust vendored feature |
 | REST API | Stub until `api-suite/` exists |
 
-Until the full Infrarust feature is enabled, connect Java clients directly to `localhost:25566`. Bedrock clients should use `localhost:19132` after Geyser points at a traffic-capable Java endpoint.
+Until the full Infrarust feature is enabled, Java clients can connect directly to `localhost:25566` and Bedrock clients can connect to `localhost:19132`. Set `GEYSER_REMOTE_ADDRESS=mythiccord` after MythicCord is built with traffic support.
 
 ## Folia Config Knobs
 
@@ -80,6 +80,7 @@ Until the full Infrarust feature is enabled, connect Java clients directly to `l
 | `ONLINE_MODE` | Default `false`; set `true` for direct-connect testing |
 | `VOICE_HOST` | External hostname/IP advertised by Simple Voice Chat |
 | `VOICE_PORT` | Backend voice UDP port, default `24454` |
+| `GEYSER_REMOTE_ADDRESS` / `GEYSER_REMOTE_PORT` / `GEYSER_REMOTE_AUTH_TYPE` | Java target rendered into Geyser config at container start |
 | `SENTRY_DSN` / `SENTRY_ENVIRONMENT` / `SENTRY_RELEASE` | Error tracking bootstrap inputs for Java plugins |
 | `JAVA_OPTS` | Heap and GC flags |
 | `STDB_URI` / `STDB_MODULE` | Forwarded to plugins through env |
@@ -88,7 +89,7 @@ User plugins can be dropped into [`folia/plugins/`](folia/plugins/) and are copi
 
 ## Bedrock And Voice
 
-Geyser Standalone reads [`geyser/config.yml`](geyser/config.yml). Bedrock resource packs belong in [`geyser/packs/`](geyser/packs/) as `.mcpack` files. The Java `ResourcePackManager` can run a configured conversion process through `CommandBedrockPackConverter`, while the Docker stack exposes the final pack directory to Geyser.
+Geyser Standalone renders [`geyser/config.template.yml`](geyser/config.template.yml) into `/data/config.yml` at container start. Bedrock resource packs belong in [`geyser/packs/`](geyser/packs/) as `.mcpack` files. The Java `ResourcePackManager` can run a configured conversion process through `CommandBedrockPackConverter`, while the Docker stack exposes the final pack directory to Geyser.
 
 Simple Voice Chat and SimpleVoice-Geyser are resolved during the Folia image build from Modrinth for `FOLIA_VERSION`. Java voice uses UDP `24454`; the Bedrock web bridge is exposed on `8090` for Hub and `8091` for Skyblock #1.
 

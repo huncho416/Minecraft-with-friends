@@ -43,6 +43,7 @@ public final class CommandBedrockPackConverter implements BedrockPackConverter {
             Path output = outputDirectory.resolve(outputName(javaPack));
             Process process = new ProcessBuilder(resolveCommand(javaPack, output))
                     .redirectErrorStream(true)
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                     .start();
             boolean finished = process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
             if (!finished) {

@@ -52,7 +52,7 @@ install_jars() {
             case "${name}" in
                 *-tests.jar|*-sources.jar|*-javadoc.jar) continue ;;
             esac
-            if [ ! -f "${DATA_DIR}/plugins/${name}" ]; then
+            if [ ! -f "${DATA_DIR}/plugins/${name}" ] || ! cmp -s "${jar}" "${DATA_DIR}/plugins/${name}"; then
                 cp "${jar}" "${DATA_DIR}/plugins/${name}"
                 echo "[entrypoint] installed plugin ${name}"
             fi

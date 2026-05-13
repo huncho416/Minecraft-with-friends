@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM maven:3.9-eclipse-temurin-21 AS suite-build
 WORKDIR /build
 COPY pom.xml ./
@@ -24,6 +25,10 @@ RUN set -eux; \
 FROM eclipse-temurin:21-jre-jammy AS voice-plugin-fetch
 ARG FOLIA_VERSION=1.21.1
 ARG VOICE_PLUGINS=true
+ARG SIMPLE_VOICE_CHAT_VERSION=Qnk9puxN
+ARG SIMPLE_VOICE_CHAT_SHA1=bc1e32243e3ef1b4999ac9d15720fdaddc7a3622
+ARG SIMPLEVOICE_GEYSER_VERSION=Shy2qj31
+ARG SIMPLEVOICE_GEYSER_SHA1=2aa3e13ecf5cac45c9f2bd0299c7ad5d90968cb0
 WORKDIR /voice-plugins
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl jq ca-certificates \
@@ -31,21 +36,24 @@ RUN apt-get update \
 RUN set -eux; \
     fetch_modrinth() { \
         project="$1"; \
-        output="$2"; \
-        url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" "https://api.modrinth.com/v2/project/${project}/version?loaders=%5B%22bukkit%22%5D&game_versions=%5B%22${FOLIA_VERSION}%22%5D" \
-            | jq -r '.[0].files[]? | select(.primary == true) | .url' \
+        version="$2"; \
+        sha1="$3"; \
+        output="$4"; \
+        url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" "https://api.modrinth.com/v2/project/${project}/version/${version}" \
+            | jq -r '.files[]? | select(.primary == true) | .url' \
             | head -n 1); \
         if [ -z "${url}" ] || [ "${url}" = "null" ]; then \
-            url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" "https://api.modrinth.com/v2/project/${project}/version?loaders=%5B%22bukkit%22%5D&game_versions=%5B%22${FOLIA_VERSION}%22%5D" \
-                | jq -r '.[0].files[0].url'); \
+            url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" "https://api.modrinth.com/v2/project/${project}/version/${version}" \
+                | jq -r '.files[0].url'); \
         fi; \
         test -n "${url}"; \
         test "${url}" != "null"; \
         curl -fsSL -o "${output}" "${url}"; \
+        echo "${sha1}  ${output}" | sha1sum -c -; \
     }; \
     if [ "${VOICE_PLUGINS}" = "true" ]; then \
-        fetch_modrinth simple-voice-chat simple-voice-chat.jar; \
-        fetch_modrinth simplevoice-geyser simplevoice-geyser.jar; \
+        fetch_modrinth simple-voice-chat "${SIMPLE_VOICE_CHAT_VERSION}" "${SIMPLE_VOICE_CHAT_SHA1}" simple-voice-chat.jar; \
+        fetch_modrinth simplevoice-geyser "${SIMPLEVOICE_GEYSER_VERSION}" "${SIMPLEVOICE_GEYSER_SHA1}" simplevoice-geyser.jar; \
     fi
 
 FROM eclipse-temurin:21-jre-jammy

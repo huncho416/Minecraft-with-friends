@@ -589,7 +589,7 @@ erDiagram
 | **Proxy binary** | [`mythic-cord/proxy/`](mythic-cord/proxy/) | Standalone build today (registry citizen + admin HTTP); flips to full proxy after vendor script runs |
 | **Pterodactyl egg** | [`mythic-cord/pterodactyl/egg-mythiccord.json`](mythic-cord/pterodactyl/egg-mythiccord.json) | 11 env variables, install script downloads musl release, default config seeded on first install |
 | **Docker scaffold** | [`tools/docker/`](tools/docker/) | `docker-compose{,dev}.yml`, 5 Dockerfiles, monitoring + provisioning, up/down scripts |
-| **Geyser deployment** | [`tools/docker/geyser/`](tools/docker/geyser/) | Standalone Bedrock sidecar on UDP `19132`, Geyser config targeting MythicCord, Bedrock pack mount at `geyser/packs/`, process-backed `.mcpack` conversion hook |
+| **Geyser deployment** | [`tools/docker/geyser/`](tools/docker/geyser/) | Standalone Bedrock sidecar on UDP `19132`, runtime-rendered Geyser target defaults to Hub and switches to MythicCord when traffic support is enabled, Bedrock pack mount at `geyser/packs/`, process-backed `.mcpack` conversion hook |
 | **Voice deployment** | [`tools/docker/folia/voicechat-server.properties`](tools/docker/folia/voicechat-server.properties) | Simple Voice Chat + SimpleVoice-Geyser Modrinth resolution baked into Folia image, proximity defaults, UDP/web bridge ports |
 | **Sentry bootstrap** | [`MythicErrorTracker`](mythic-suite/suite-api/src/main/java/net/mythicpvp/suite/api/error/MythicErrorTracker.java) | Shared Java suite Sentry initializer with Docker env wiring and shaded SDK runtime |
 
