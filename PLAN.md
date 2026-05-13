@@ -574,9 +574,9 @@ erDiagram
 | `stdb-publish` container — auto-publishes WASM module on `compose up` | Dev A | ✅ |
 | Monitoring stack: Prometheus + Grafana provisioning, starter dashboard | Dev B | ✅ |
 | Vendor `infrarust/` subtree via `mythic-cord/tools/vendor-infrarust.{sh,ps1}` | Dev A | ⏳ pending bootstrap |
-| Geyser integration + Bedrock resource pack conversion | Dev B | ⏳ |
-| SimpleVoice-Geyser deployment + proximity config | Dev B | ⏳ |
-| Sentry integration in Java suite | Dev B | ⏳ |
+| Geyser integration + Bedrock resource pack conversion | Dev B | ✅ |
+| SimpleVoice-Geyser deployment + proximity config | Dev B | ✅ |
+| Sentry integration in Java suite | Dev B | ✅ |
 
 #### Deliverables landed
 
@@ -588,7 +588,10 @@ erDiagram
 | **Routing plugin** | [`mythic-cord/plugin-routing/`](mythic-cord/plugin-routing/) | `pick_shard` (mirrors STDB pure fn), `RegistryView`, heartbeat task, Infrarust event hooks (gated by `with-infrarust` feature) |
 | **Proxy binary** | [`mythic-cord/proxy/`](mythic-cord/proxy/) | Standalone build today (registry citizen + admin HTTP); flips to full proxy after vendor script runs |
 | **Pterodactyl egg** | [`mythic-cord/pterodactyl/egg-mythiccord.json`](mythic-cord/pterodactyl/egg-mythiccord.json) | 11 env variables, install script downloads musl release, default config seeded on first install |
-| **Docker scaffold** | [`tools/docker/`](tools/docker/) | `docker-compose{,dev}.yml`, 4 Dockerfiles, monitoring + provisioning, up/down scripts |
+| **Docker scaffold** | [`tools/docker/`](tools/docker/) | `docker-compose{,dev}.yml`, 5 Dockerfiles, monitoring + provisioning, up/down scripts |
+| **Geyser deployment** | [`tools/docker/geyser/`](tools/docker/geyser/) | Standalone Bedrock sidecar on UDP `19132`, Geyser config targeting MythicCord, Bedrock pack mount at `geyser/packs/`, process-backed `.mcpack` conversion hook |
+| **Voice deployment** | [`tools/docker/folia/voicechat-server.properties`](tools/docker/folia/voicechat-server.properties) | Simple Voice Chat + SimpleVoice-Geyser Modrinth resolution baked into Folia image, proximity defaults, UDP/web bridge ports |
+| **Sentry bootstrap** | [`MythicErrorTracker`](mythic-suite/suite-api/src/main/java/net/mythicpvp/suite/api/error/MythicErrorTracker.java) | Shared Java suite Sentry initializer with Docker env wiring and shaded SDK runtime |
 
 #### Design decisions
 
@@ -604,6 +607,8 @@ erDiagram
 | Surface | Tool | Result |
 |---|---|---|
 | Full Maven reactor | `mvn -B -ntp test` | **BUILD SUCCESS** — all 26 modules, ~38 tests pass |
+| Docker Compose syntax | `docker compose -f tools/docker/docker-compose.yml config --quiet` | Clean after Geyser, voice, Sentry wiring |
+| Docker Compose dev syntax | `docker compose -f tools/docker/docker-compose.dev.yml config --quiet` | Clean after voice and Sentry wiring |
 | `suite-database` schema package | `mvn -pl mythic-suite/suite-database test` | **20/20 green** (`MythicSchemaTest` 12, `DtoRoundTripTest` 5, `SpacetimeConnectionTest` 3) |
 | `mythic-stdb` (SpacetimeDB module) | `cargo check -p mythic-stdb --target wasm32-unknown-unknown` | Clean — 0 errors, 0 warnings |
 | `mythiccord-stdb-bridge` | `cargo test -p mythiccord-stdb-bridge` | **2/2 green** (`enum_wire_values`, `registry_announce_args_shape`) |
@@ -668,7 +673,7 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 | Phase | Name | Weeks | Key Deliverables |
 |-------|------|-------|-----------------|
 | **1** | **Mythic Suite** ⭐ | 1–8 | All 23 foundation APIs, YAML-configurable text surfaces, tested and documented |
-| **2** | **MythicCord + Docker** 🚧 | 9–12 | STDB schema ✅ (wasm32 build clean), Java mirror ✅ (20/20 tests), Rust bridge ✅ (2/2 tests), routing plugin ✅ (4/4 tests), standalone proxy ✅ (cargo check clean), Pterodactyl egg ✅, Docker scaffold + monitoring ✅. Geyser, voice, Sentry pending; Infrarust subtree vendored on first bootstrap |
+| **2** | **MythicCord + Docker** 🚧 | 9–12 | STDB schema ✅ (wasm32 build clean), Java mirror ✅ (20/20 tests), Rust bridge ✅ (2/2 tests), routing plugin ✅ (4/4 tests), standalone proxy ✅ (cargo check clean), Pterodactyl egg ✅, Docker scaffold + monitoring ✅, Geyser sidecar ✅, voice deployment ✅, Sentry bootstrap ✅. Infrarust subtree vendored on first bootstrap |
 | **3** | Core + Hub | 13–16 | Base plugin, friends/party, hub, Tebex, resource pack |
 | **4** | Skyblock Core | 17–24 | Islands, economy, enchants, quests |
 | **5** | PvP & Events | 25–30 | PvP zones, KOTH, airdrops, points |

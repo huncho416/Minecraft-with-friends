@@ -42,7 +42,6 @@ services:
     stop_grace_period: 60s
     tty: true
     stdin_open: true
-    ports: ["25565:25565"]
     environment:
       JAVA_OPTS: >-
         -Xms1G -Xmx2G
@@ -55,9 +54,18 @@ services:
       SHARD_ID: hub-dev
       VIEW_DISTANCE: "6"
       ONLINE_MODE: "false"
+      VOICE_HOST: ${VOICE_HOST:-localhost}
+      VOICE_PORT: "24454"
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-local}
     volumes:
       - hub-dev-data:/data
-      - ./folia/plugins:/data/plugins:ro
+      - ./folia/plugins:/opt/folia/user-plugins:ro
+    ports:
+      - "25565:25565"
+      - "24454:24454/udp"
+      - "8090:8090"
     depends_on:
       stdb-publish:
         condition: service_completed_successfully

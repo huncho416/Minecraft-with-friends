@@ -16,6 +16,11 @@ x-folia-base: &folia-base
       -XX:+DisableExplicitGC -XX:+AlwaysPreTouch
     STDB_URI: http://spacetimedb:3000
     STDB_MODULE: mythicpvp
+    VOICE_HOST: ${VOICE_HOST:-localhost}
+    VOICE_PORT: "24454"
+    SENTRY_DSN: ${SENTRY_DSN:-}
+    SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+    SENTRY_RELEASE: ${SENTRY_RELEASE:-local}
   depends_on:
     stdb-publish:
       condition: service_completed_successfully
@@ -72,10 +77,30 @@ services:
       MYTHIC_MAX_PLAYERS: "500"
       MYTHIC_ADMIN_BIND: 0.0.0.0:8080
       MYTHIC_LOG_FORMAT: json
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-local}
       RUST_LOG: info,mythiccord=debug
     depends_on:
       stdb-publish:
         condition: service_completed_successfully
+    networks: [mythicnet]
+
+  geyser:
+    build:
+      context: ../..
+      dockerfile: tools/docker/Dockerfile.geyser
+    container_name: mythic-geyser
+    restart: unless-stopped
+    ports:
+      - "19132:19132/udp"
+    volumes:
+      - geyser-data:/data
+      - ./geyser/config.yml:/data/config.yml:ro
+      - ./geyser/packs:/data/packs:ro
+    depends_on:
+      mythiccord:
+        condition: service_started
     networks: [mythicnet]
 
   hub:
@@ -93,10 +118,18 @@ services:
       SERVER_TYPE: hub
       SHARD_ID: hub-1
       VIEW_DISTANCE: "8"
-    ports: ["25566:25565"]
+      VOICE_HOST: ${VOICE_HOST:-localhost}
+      VOICE_PORT: "24454"
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-local}
+    ports:
+      - "25566:25565"
+      - "24454:24454/udp"
+      - "8090:8090"
     volumes:
       - hub-data:/data
-      - ./folia/plugins:/data/plugins:ro
+      - ./folia/plugins:/opt/folia/user-plugins:ro
 
   skyblock-1:
     <<: *folia-base
@@ -113,10 +146,18 @@ services:
       SERVER_TYPE: skyblock
       SHARD_ID: sb-1
       VIEW_DISTANCE: "6"
-    ports: ["25567:25565"]
+      VOICE_HOST: ${VOICE_HOST:-localhost}
+      VOICE_PORT: "24454"
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-local}
+    ports:
+      - "25567:25565"
+      - "24455:24454/udp"
+      - "8091:8090"
     volumes:
       - sb1-data:/data
-      - ./folia/plugins:/data/plugins:ro
+      - ./folia/plugins:/opt/folia/user-plugins:ro
 
   api:
     build:
@@ -166,6 +207,7 @@ services:
 
 volumes:
   stdb-data:
+  geyser-data:
   hub-data:
   sb1-data:
   prometheus-data:

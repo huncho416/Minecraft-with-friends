@@ -104,4 +104,4 @@ The proxy stack is **AGPL-3.0-or-later** with Infrarust's plugin exception prese
 - [x] Pterodactyl egg
 - [ ] Vendor Infrarust subtree (`tools/vendor-infrarust.sh`)
 - [ ] Hook integration tests against an in-process STDB
-- [ ] Geyser + SimpleVoice sidecar (Phase 2 follow-up)
+- [x] Geyser + SimpleVoice sidecar (Docker deployment)

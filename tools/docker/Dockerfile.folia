@@ -1,7 +1,3 @@
-# syntax=docker/dockerfile:1.7
-# Folia 1.21.1 server image with mythic-suite jars baked in.
-# Two-stage: maven build of the suite, runtime on JRE 21.
-
 FROM maven:3.9-eclipse-temurin-21 AS suite-build
 WORKDIR /build
 COPY pom.xml ./
@@ -25,6 +21,33 @@ RUN set -eux; \
     curl -fsSL -o folia.jar \
         "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}/builds/${FOLIA_BUILD}/downloads/${JAR}"
 
+FROM eclipse-temurin:21-jre-jammy AS voice-plugin-fetch
+ARG FOLIA_VERSION=1.21.1
+ARG VOICE_PLUGINS=true
+WORKDIR /voice-plugins
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl jq ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    fetch_modrinth() { \
+        project="$1"; \
+        output="$2"; \
+        url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" "https://api.modrinth.com/v2/project/${project}/version?loaders=%5B%22bukkit%22%5D&game_versions=%5B%22${FOLIA_VERSION}%22%5D" \
+            | jq -r '.[0].files[]? | select(.primary == true) | .url' \
+            | head -n 1); \
+        if [ -z "${url}" ] || [ "${url}" = "null" ]; then \
+            url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" "https://api.modrinth.com/v2/project/${project}/version?loaders=%5B%22bukkit%22%5D&game_versions=%5B%22${FOLIA_VERSION}%22%5D" \
+                | jq -r '.[0].files[0].url'); \
+        fi; \
+        test -n "${url}"; \
+        test "${url}" != "null"; \
+        curl -fsSL -o "${output}" "${url}"; \
+    }; \
+    if [ "${VOICE_PLUGINS}" = "true" ]; then \
+        fetch_modrinth simple-voice-chat simple-voice-chat.jar; \
+        fetch_modrinth simplevoice-geyser simplevoice-geyser.jar; \
+    fi
+
 FROM eclipse-temurin:21-jre-jammy
 LABEL org.opencontainers.image.title="MythicPvP Folia"
 LABEL org.opencontainers.image.source="https://github.com/mythicpvp"
@@ -38,24 +61,28 @@ RUN apt-get update \
 WORKDIR /data
 COPY --from=folia-fetch /folia/folia.jar /opt/folia/folia.jar
 COPY --from=suite-build /build/mythic-suite/*/target/*.jar /opt/folia/suite/
+COPY --from=voice-plugin-fetch /voice-plugins/ /opt/folia/voice-plugins/
 COPY tools/docker/folia/entrypoint.sh /opt/folia/entrypoint.sh
 COPY tools/docker/folia/eula.txt /opt/folia/defaults/eula.txt
 COPY tools/docker/folia/server.properties /opt/folia/defaults/server.properties
 COPY tools/docker/folia/bukkit.yml /opt/folia/defaults/bukkit.yml
 COPY tools/docker/folia/spigot.yml /opt/folia/defaults/spigot.yml
 COPY tools/docker/folia/paper-global.yml /opt/folia/defaults/paper-global.yml
+COPY tools/docker/folia/voicechat-server.properties /opt/folia/defaults/voicechat-server.properties
 
 RUN chmod +x /opt/folia/entrypoint.sh \
+ && mkdir -p /opt/folia/user-plugins \
  && chown -R mythic:mythic /data /opt/folia
 
 USER mythic
-EXPOSE 25565
+EXPOSE 25565 24454/udp
 
 ENV JAVA_OPTS="-Xms2G -Xmx4G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch" \
     SERVER_TYPE=hub \
     SHARD_ID=hub-1 \
     VIEW_DISTANCE=8 \
-    ONLINE_MODE=false
+    ONLINE_MODE=false \
+    VOICE_PORT=24454
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -fsS --max-time 5 http://localhost:25565 || exit 0

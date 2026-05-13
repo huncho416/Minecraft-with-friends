@@ -1,0 +1,50 @@
+bedrock:
+  address: 0.0.0.0
+  port: 19132
+  clone-remote-port: false
+  motd1: "MythicPvP"
+  motd2: "Java and Bedrock"
+  server-name: "MythicPvP"
+  compression-level: 6
+  enable-proxy-protocol: false
+remote:
+  address: mythiccord
+  port: 25565
+  auth-type: online
+  use-proxy-protocol: false
+  forward-hostname: true
+floodgate-key-file: key.pem
+saved-user-logins: []
+command-suggestions: true
+passthrough-motd: true
+passthrough-player-counts: true
+legacy-ping-passthrough: true
+ping-passthrough-interval: 3
+forward-player-ping: true
+max-players: 500
+debug-mode: false
+allow-third-party-capes: true
+allow-third-party-ears: true
+show-cooldown: title
+show-coordinates: true
+disable-bedrock-scaffolding: false
+emote-offhand-workaround: disabled
+default-locale: en_us
+cache-images: 0
+allow-custom-skulls: true
+max-visible-custom-skulls: 128
+custom-skull-render-distance: 32
+add-non-bedrock-items: true
+above-bedrock-nether-building: false
+force-resource-packs: true
+xbox-achievements-enabled: false
+log-player-ip-addresses: true
+notify-on-new-bedrock-update: true
+unusable-space-block: minecraft:barrier
+pending-authentication-timeout: 120
+scoreboard-packet-threshold: 20
+enable-proxy-connections: false
+mtu: 1400
+use-direct-connection: true
+disable-compression: true
+config-version: 4

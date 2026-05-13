@@ -29,6 +29,7 @@
         <junit.version>5.13.4</junit.version>
         <mockito.version>5.20.0</mockito.version>
         <mockbukkit.version>3.133.2</mockbukkit.version>
+        <sentry.version>8.41.0</sentry.version>
     </properties>
 
     <repositories>
@@ -81,6 +82,11 @@
                 <artifactId>annotations</artifactId>
                 <version>${annotations.version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.sentry</groupId>
+                <artifactId>sentry</artifactId>
+                <version>${sentry.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.mythicpvp</groupId>

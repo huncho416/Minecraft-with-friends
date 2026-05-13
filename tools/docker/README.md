@@ -1,38 +1,39 @@
-# MythicPvP — Docker
+# MythicPvP Docker
 
-One-command spin-up for the entire MythicPvP network: SpacetimeDB,
-MythicCord proxy, Folia game servers, REST API, Prometheus + Grafana.
+One-command spin-up for the MythicPvP network: SpacetimeDB, MythicCord, Geyser, Folia servers, REST API, Prometheus, and Grafana.
 
 ## Layout
 
 | File / dir | What it does |
 |---|---|
-| `docker-compose.yml` | Full network: STDB, proxy, Hub, Skyblock #1, API, Prometheus, Grafana |
+| `docker-compose.yml` | Full network: STDB, proxy, Geyser, Hub, Skyblock #1, API, Prometheus, Grafana |
 | `docker-compose.dev.yml` | Lightweight: STDB + single Hub, no proxy, no monitoring |
-| `Dockerfile.folia` | Folia 1.21.1 image. Two-stage: Maven builds `mythic-suite`, runtime is JRE 21. Suite jars baked in at `/opt/folia/suite/` and copied into `/data/plugins/` on first boot |
-| `Dockerfile.mythiccord` | Rust proxy image. **Currently a stub** that forwards 25565→Hub via socat; replace builder stage when the SpacerCord fork lands under `mythic-cord/` |
-| `Dockerfile.api` | Ktor gateway image. **Currently a stub** that returns `503 not_implemented`; replace when `api-suite/` exists |
-| `folia/` | Server config defaults (eula, server.properties, bukkit.yml, spigot.yml, paper-global.yml) and entrypoint |
-| `monitoring/` | Prometheus scrape config + Grafana datasource/dashboard provisioning |
+| `Dockerfile.folia` | Folia 1.21.1 image with suite jars plus Simple Voice Chat and SimpleVoice-Geyser resolved from Modrinth |
+| `Dockerfile.geyser` | Geyser Standalone image downloaded from the official Geyser downloads API |
+| `Dockerfile.mythiccord` | Rust proxy image in standalone registry/admin mode by default; enable `MYTHICCORD_FEATURES=with-infrarust` after vendoring Infrarust |
+| `Dockerfile.api` | Ktor gateway image stub that returns `503 not_implemented` until `api-suite/` exists |
+| `folia/` | Server config defaults, voice config, user plugin mount, and entrypoint |
+| `geyser/` | Geyser Standalone config plus `packs/` for Bedrock `.mcpack` files |
+| `monitoring/` | Prometheus scrape config and Grafana datasource/dashboard provisioning |
 | `scripts/` | `up.sh`/`up.ps1`, `down.sh`/`down.ps1` |
 
-## Quick start
+## Quick Start
 
-**Linux / macOS:**
+Linux / macOS:
+
 ```sh
 cd tools/docker
-cp .env.example .env       # optional — edit Grafana password etc.
-./scripts/up.sh            # full network
-# or
-./scripts/up.sh dev        # STDB + single Hub
+cp .env.example .env
+./scripts/up.sh
+./scripts/up.sh dev
 ```
 
-**Windows (PowerShell):**
+Windows PowerShell:
+
 ```powershell
 cd tools\docker
 copy .env.example .env
 .\scripts\up.ps1
-# or
 .\scripts\up.ps1 dev
 ```
 
@@ -40,68 +41,76 @@ copy .env.example .env
 
 | Port | Service | Notes |
 |---|---|---|
-| 25565 | MythicCord (proxy) | Production entry point |
-| 25566 | Hub (direct) | For testing without the proxy |
-| 25567 | Skyblock #1 (direct) | For testing without the proxy |
-| 3000  | SpacetimeDB HTTP | `wget http://localhost:3000/health` |
-| 8080  | MythicCord control plane / metrics | Stub returns 200 until proxy lands |
-| 8081  | REST API gateway | Stub returns 503 until `api-suite/` lands |
-| 9090  | Prometheus | http://localhost:9090 |
-| 3001  | Grafana | http://localhost:3001 (admin / $GRAFANA_PASSWORD) |
+| 25565 | MythicCord | Production Java entry point once the full Infrarust feature is enabled |
+| 25566 | Hub direct | Java testing without the proxy |
+| 25567 | Skyblock #1 direct | Java testing without the proxy |
+| 19132/udp | Geyser | Bedrock entry point |
+| 24454/udp | Hub voice | Simple Voice Chat UDP |
+| 24455/udp | Skyblock #1 voice | Host mapping to backend `24454/udp` |
+| 8090 | Hub voice web | SimpleVoice-Geyser web bridge |
+| 8091 | Skyblock #1 voice web | Host mapping to backend `8090` |
+| 3000 | SpacetimeDB HTTP | `http://localhost:3000/health` |
+| 8080 | MythicCord control plane | `/health`, `/metrics`, `POST /admin/drain` |
+| 8081 | REST API gateway | Stub until `api-suite/` lands |
+| 9090 | Prometheus | `http://localhost:9090` |
+| 3001 | Grafana | `http://localhost:3001` |
 
-## What's stubbed vs. real
+## Service Status
 
 | Service | Status |
 |---|---|
-| SpacetimeDB | **Real** — `clockworklabs/spacetime:latest` |
-| Folia + suite jars | **Real** — boots a 1.21.1 server with all 24 suite plugins mounted |
-| Prometheus + Grafana | **Real** — datasource and starter dashboard auto-provisioned |
-| MythicCord | **Stub** — forwards proxy port to Hub directly. Replace `Dockerfile.mythiccord` builder stage when the Rust crate exists |
-| REST API | **Stub** — returns `503 not_implemented` |
+| SpacetimeDB | Real, using `clockworklabs/spacetime:latest` |
+| Folia + suite jars | Real, boots 1.21.1 servers with suite plugins plus voice plugins |
+| Geyser | Real, standalone container on UDP `19132`, pointed at MythicCord |
+| Simple Voice Chat | Real, Bukkit/Folia plugin resolved from Modrinth and seeded with proximity defaults |
+| SimpleVoice-Geyser | Real, Bukkit plugin resolved from Modrinth and exposed on the web bridge port |
+| Prometheus + Grafana | Real, datasource and starter dashboard auto-provisioned |
+| MythicCord | Real standalone mode for registry/admin/metrics; Minecraft traffic requires the Infrarust vendored feature |
+| REST API | Stub until `api-suite/` exists |
 
-Until the proxy is real, connect Minecraft clients directly to `localhost:25566` (Hub) to bypass the stub.
+Until the full Infrarust feature is enabled, connect Java clients directly to `localhost:25566`. Bedrock clients should use `localhost:19132` after Geyser points at a traffic-capable Java endpoint.
 
-## Folia config knobs
-
-Set on each Folia service in compose. Defaults in [`folia/server.properties`](folia/server.properties) are seeded into `/data/` on first boot, then overridden per env var:
+## Folia Config Knobs
 
 | Env var | Effect |
 |---|---|
-| `SERVER_TYPE` | `hub`, `skyblock`, etc. Used in MOTD and (eventually) suite logic |
+| `SERVER_TYPE` | `hub`, `skyblock`, etc. Used in MOTD and suite logic |
 | `SHARD_ID` | Unique identifier, written to `server-name=` |
 | `VIEW_DISTANCE` | Written into `server.properties` |
-| `ONLINE_MODE` | Default `false` (proxy handles auth); set `true` for direct-connect testing |
+| `ONLINE_MODE` | Default `false`; set `true` for direct-connect testing |
+| `VOICE_HOST` | External hostname/IP advertised by Simple Voice Chat |
+| `VOICE_PORT` | Backend voice UDP port, default `24454` |
+| `SENTRY_DSN` / `SENTRY_ENVIRONMENT` / `SENTRY_RELEASE` | Error tracking bootstrap inputs for Java plugins |
 | `JAVA_OPTS` | Heap and GC flags |
-| `STDB_URI` / `STDB_MODULE` | Forwarded to plugins via env |
+| `STDB_URI` / `STDB_MODULE` | Forwarded to plugins through env |
 
-User plugins can be dropped into [`folia/plugins/`](folia/plugins/) — that directory is mounted read-only into every Folia container and takes precedence over the suite jars.
+User plugins can be dropped into [`folia/plugins/`](folia/plugins/) and are copied into each Folia container on first boot.
 
-## Modern forwarding (Velocity / MythicCord)
+## Bedrock And Voice
 
-`folia/paper-global.yml` has Velocity modern forwarding disabled with a placeholder secret. When MythicCord ships modern-forwarding support:
+Geyser Standalone reads [`geyser/config.yml`](geyser/config.yml). Bedrock resource packs belong in [`geyser/packs/`](geyser/packs/) as `.mcpack` files. The Java `ResourcePackManager` can run a configured conversion process through `CommandBedrockPackConverter`, while the Docker stack exposes the final pack directory to Geyser.
 
-1. Set `proxies.velocity.enabled: true` in `paper-global.yml`
-2. Set a real `secret` (and pass the same one to the proxy via env)
-3. Set `ONLINE_MODE=false` on Folia and `online-mode=true` on the proxy
-4. Firewall the direct Folia ports (25566, 25567) so only the proxy can reach them
+Simple Voice Chat and SimpleVoice-Geyser are resolved during the Folia image build from Modrinth for `FOLIA_VERSION`. Java voice uses UDP `24454`; the Bedrock web bridge is exposed on `8090` for Hub and `8091` for Skyblock #1.
 
-## Build pin
+## Modern Forwarding
 
-`Dockerfile.folia` defaults to the latest Folia 1.21.1 build at image-build time. Pin a specific build for reproducibility:
+`folia/paper-global.yml` has Velocity modern forwarding disabled with a placeholder secret. When MythicCord ships full traffic support:
+
+1. Set `proxies.velocity.enabled: true` in `paper-global.yml`.
+2. Set a real `secret` and pass the same one to the proxy.
+3. Set `ONLINE_MODE=false` on Folia and `online-mode=true` on the proxy.
+4. Firewall direct Folia ports so only the proxy can reach them.
+
+## Build Pin
+
+`Dockerfile.folia` defaults to the latest Folia 1.21.1 build at image-build time. Pin a build for reproducibility:
 
 ```sh
-docker compose build \
-  --build-arg FOLIA_VERSION=1.21.1 \
-  --build-arg FOLIA_BUILD=42 \
-  hub skyblock-1
+docker compose build --build-arg FOLIA_VERSION=1.21.1 --build-arg FOLIA_BUILD=42 hub skyblock-1
 ```
 
-## Phase 2 follow-ups
+## Phase 2 Follow-Ups
 
-- [ ] Replace `Dockerfile.mythiccord` builder stage with the real Rust crate once SpacerCord fork lands
 - [ ] Replace `Dockerfile.api` with a real Ktor build once `api-suite/` exists
-- [ ] Add Geyser sidecar / Geyser-Standalone container once integration approach is chosen
-- [ ] Add SimpleVoice-Geyser config + UDP port mapping
-- [ ] Expose Folia metrics on `:9100` (prometheus-exporter plugin or suite-side `/metrics`) and tighten the Prometheus `folia` job
-- [ ] Add Sentry DSN env wiring once the Sentry SDK lands in the suite
-- [ ] Replace the placeholder Grafana dashboard with a real TPS / player-count / DB-latency board
+- [ ] Expose Folia metrics on `:9100` and tighten the Prometheus `folia` job
+- [ ] Replace the placeholder Grafana dashboard with a real TPS, player count, and DB latency board

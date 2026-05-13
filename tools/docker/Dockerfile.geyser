@@ -1,0 +1,16 @@
+FROM eclipse-temurin:21-jre-jammy AS geyser-fetch
+WORKDIR /geyser
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL -o Geyser-Standalone.jar https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/standalone
+
+FROM eclipse-temurin:21-jre-jammy
+RUN groupadd -r mythic --gid 1000 \
+ && useradd -r -g mythic --uid 1000 -m -d /home/mythic mythic
+WORKDIR /data
+COPY --from=geyser-fetch /geyser/Geyser-Standalone.jar /opt/geyser/Geyser-Standalone.jar
+RUN chown -R mythic:mythic /data /opt/geyser
+USER mythic
+EXPOSE 19132/udp
+ENTRYPOINT ["java", "-jar", "/opt/geyser/Geyser-Standalone.jar"]
