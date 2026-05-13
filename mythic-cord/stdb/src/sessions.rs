@@ -151,10 +151,11 @@ pub fn session_logout(ctx: &ReducerContext, uuid: PlayerUuid, reason: String) ->
         return Ok(()); // already gone
     };
     let shard_id = s.shard_id.clone();
-    let session_seconds = (ctx.timestamp.to_micros_since_unix_epoch()
+    // `.max(0)` guarantees non-negative; the `as u64` cast is then exact.
+    let elapsed_micros = (ctx.timestamp.to_micros_since_unix_epoch()
         - s.login_at.to_micros_since_unix_epoch())
-        .max(0) as u64
-        / 1_000_000;
+        .max(0);
+    let session_seconds = u64::try_from(elapsed_micros).unwrap_or(0) / 1_000_000;
     sessions.player_uuid().delete(uuid.clone());
 
     let players = ctx.db.players();
@@ -230,10 +231,14 @@ pub fn session_touch(ctx: &ReducerContext, uuid: PlayerUuid) -> ReducerResult {
 #[reducer]
 pub fn session_reap(ctx: &ReducerContext, older_than_seconds: u64) -> ReducerResult {
     require_backend(ctx)?;
+    // u64 → i64 saturating: ages > i64::MAX seconds (≈292B years) clamp to 0.
+    let older_micros = i64::try_from(older_than_seconds)
+        .unwrap_or(i64::MAX)
+        .saturating_mul(1_000_000);
     let cutoff_micros = ctx
         .timestamp
         .to_micros_since_unix_epoch()
-        .saturating_sub(older_than_seconds as i64 * 1_000_000);
+        .saturating_sub(older_micros);
     let sessions = ctx.db.sessions();
     let stale: Vec<PlayerUuid> = sessions
         .iter()
@@ -262,8 +267,9 @@ pub fn pick_shard<'a>(
         .filter(|e| e.status == crate::common::server_status::HEALTHY)
         .filter(|e| e.player_count < e.max_players)
         .min_by(|a, b| {
-            let region_a = if a.region == preferred_region { 0 } else { 1 };
-            let region_b = if b.region == preferred_region { 0 } else { 1 };
+            // 0 when region matches, 1 otherwise — sorts matching regions first.
+            let region_a = u32::from(a.region != preferred_region);
+            let region_b = u32::from(b.region != preferred_region);
             load_score(a)
                 .partial_cmp(&load_score(b))
                 .unwrap_or(std::cmp::Ordering::Equal)

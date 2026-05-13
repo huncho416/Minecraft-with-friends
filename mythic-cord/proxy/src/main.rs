@@ -16,6 +16,8 @@
 //! Both modes share signal-handling, config loading, and the admin HTTP
 //! surface so Pterodactyl manages them identically.
 
+#![allow(clippy::doc_markdown)]
+
 mod admin;
 mod config;
 mod state;
@@ -130,7 +132,7 @@ async fn main() -> anyhow::Result<()> {
     let infrarust_task: Option<tokio::task::JoinHandle<anyhow::Result<()>>> = None;
 
     let shutdown_reason = tokio::select! {
-        _ = wait_for_shutdown_signal() => "signal",
+        () = wait_for_shutdown_signal() => "signal",
         result = wait_for_optional_task(infrarust_task) => {
             match result {
                 Ok(Ok(())) => "infrarust exited cleanly",

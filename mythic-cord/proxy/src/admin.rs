@@ -38,6 +38,10 @@ pub async fn run(bind: SocketAddr, state: Arc<ProxyState>) -> anyhow::Result<()>
     }
 }
 
+// `async` is required by hyper's `service_fn` signature even though none
+// of the synchronous handlers await — clippy's `unused_async` is wrong
+// for this idiom.
+#[allow(clippy::unused_async)]
 async fn handle(
     req: Request<hyper::body::Incoming>,
     state: Arc<ProxyState>,
@@ -56,10 +60,12 @@ async fn handle(
 
 fn health(state: &ProxyState) -> Response<Full<Bytes>> {
     let status = *state.status.read();
+    // Only Offline returns 503; every other status (incl. Draining) is
+    // still "live" from a health-check perspective so load balancers don't
+    // panic-kill us during a graceful drain.
     let code = match status {
-        ServerStatus::Healthy | ServerStatus::Starting => StatusCode::OK,
-        ServerStatus::Degraded | ServerStatus::Draining => StatusCode::OK, // still up
         ServerStatus::Offline => StatusCode::SERVICE_UNAVAILABLE,
+        _ => StatusCode::OK,
     };
     let body = serde_json::json!({
         "status": status.wire(),

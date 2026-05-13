@@ -112,8 +112,10 @@ impl Config {
         if let Ok(v) = std::env::var("MYTHIC_ROLE") { self.identity.role = v; }
         if let Ok(v) = std::env::var("MYTHIC_REGION") { self.identity.region = v; }
         if let Ok(v) = std::env::var("MYTHIC_ADDRESS") { self.identity.address = v; }
-        if let Ok(v) = std::env::var("MYTHIC_MAX_PLAYERS") {
-            if let Ok(n) = v.parse() { self.identity.max_players = n; }
+        if let Ok(v) = std::env::var("MYTHIC_MAX_PLAYERS")
+            && let Ok(n) = v.parse()
+        {
+            self.identity.max_players = n;
         }
         if let Ok(v) = std::env::var("MYTHIC_ADMIN_BIND") { self.admin.bind = v; }
         if let Ok(v) = std::env::var("MYTHIC_LOG_FORMAT") { self.log.format = v; }

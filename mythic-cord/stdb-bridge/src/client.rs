@@ -192,6 +192,6 @@ mod tests {
         let arr = args.as_array().unwrap();
         assert_eq!(arr.len(), 6);
         assert_eq!(arr[1].as_str(), Some("HUB"));
-        assert_eq!(arr[5].as_u64(), Some(crate::schema::SCHEMA_VERSION as u64));
+        assert_eq!(arr[5].as_u64(), Some(u64::from(crate::schema::SCHEMA_VERSION)));
     }
 }

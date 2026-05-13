@@ -148,7 +148,7 @@ async fn run_session(
             "queryStrings": [format!("SELECT * FROM {table}")],
         })
         .to_string();
-        if let Err(e) = sink.send(Message::Text(msg.into())).await {
+        if let Err(e) = sink.send(Message::Text(msg)).await {
             return Err(format!("re-subscribe failed: {e}"));
         }
     }
@@ -164,9 +164,7 @@ async fn run_session(
                     debug!("command channel closed");
                     return Ok(());
                 };
-                if let Err(e) = handle_command(cmd, &mut sink, state).await {
-                    return Err(e);
-                }
+                handle_command(cmd, &mut sink, state).await?;
             }
 
             msg = stream.next() => {
@@ -176,15 +174,14 @@ async fn run_session(
                             warn!("malformed STDB message ignored: {e}");
                         }
                     }
-                    Some(Ok(Message::Binary(_))) => {
-                        // STDB doesn't currently send binary frames to JSON clients.
-                    }
                     Some(Ok(Message::Close(_))) | None => {
                         return Err("socket closed".into());
                     }
                     Some(Ok(Message::Ping(p))) => {
                         let _ = sink.send(Message::Pong(p)).await;
                     }
+                    // STDB only emits text frames; ignore Binary / Pong /
+                    // Frame / future variants without dropping the session.
                     Some(Ok(_)) => {}
                     Some(Err(e)) => return Err(format!("ws read: {e}")),
                 }
@@ -210,7 +207,7 @@ async fn handle_command(
                 "reducer": reducer,
                 "args": args,
             });
-            if let Err(e) = sink.send(Message::Text(envelope.to_string().into())).await {
+            if let Err(e) = sink.send(Message::Text(envelope.to_string())).await {
                 let _ = reply.send(Err(StdbError::ResponseDropped));
                 return Err(format!("send reducer: {e}"));
             }
@@ -222,7 +219,7 @@ async fn handle_command(
                 "type": "subscribe",
                 "queryStrings": [format!("SELECT * FROM {table}")],
             });
-            if let Err(e) = sink.send(Message::Text(envelope.to_string().into())).await {
+            if let Err(e) = sink.send(Message::Text(envelope.to_string())).await {
                 let _ = reply.send(Err(StdbError::SubscriptionFailed {
                     table: table.into(),
                     message: e.to_string(),
@@ -301,21 +298,23 @@ pub async fn assert_schema_version(handle: &StdbHandle) -> StdbResult<()> {
     let mut events = handle.subscribe(MODULE_META).await?;
     let result = tokio::time::timeout(Duration::from_secs(10), async {
         while let Some(event) = events.recv().await {
-            if let Ok(parsed) = serde_json::from_str::<Value>(&event.payload) {
-                if let Some(v) = parsed
-                    .get("schema_version")
-                    .and_then(Value::as_u64)
-                {
-                    let actual = v as u32;
-                    if actual == SCHEMA_VERSION {
-                        return Ok(());
-                    }
-                    return Err(StdbError::SchemaMismatch {
-                        expected: SCHEMA_VERSION,
-                        actual,
-                    });
-                }
+            let Ok(parsed) = serde_json::from_str::<Value>(&event.payload) else {
+                continue;
+            };
+            let Some(v) = parsed.get("schema_version").and_then(Value::as_u64) else {
+                continue;
+            };
+            // STDB's `schema_version` is a u32 in the schema; if a row ever
+            // reports something out of range, treat it as a mismatch with a
+            // sentinel `u32::MAX` actual value rather than silently truncate.
+            let actual = u32::try_from(v).unwrap_or(u32::MAX);
+            if actual == SCHEMA_VERSION {
+                return Ok(());
             }
+            return Err(StdbError::SchemaMismatch {
+                expected: SCHEMA_VERSION,
+                actual,
+            });
         }
         Err(StdbError::ResponseDropped)
     })

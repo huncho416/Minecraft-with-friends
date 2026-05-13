@@ -9,6 +9,10 @@ use mythiccord_stdb_bridge::ServerStatus;
 /// Routing-friendly load score. Lower is better. Identical formula to
 /// `mythic_stdb::registry::load_score` so client-side routing matches
 /// what STDB-side reducers would compute.
+///
+/// `u32 → f32` is intentional: routing only needs the relative ordering,
+/// and our `max_players` caps are <100k where f32 is exact.
+#[allow(clippy::cast_precision_loss)]
 pub fn load_score(e: &ServerEntry) -> f32 {
     let cap = e.max_players.max(1) as f32;
     let saturation = (e.player_count as f32) / cap;
@@ -44,6 +48,9 @@ pub fn pick_shard<'a>(
 mod tests {
     use super::*;
 
+    // Test fixture builder — taking every field is clearer than a builder
+    // here. Suppress the lint locally.
+    #[allow(clippy::too_many_arguments)]
     fn entry(
         shard: &str,
         role: &str,

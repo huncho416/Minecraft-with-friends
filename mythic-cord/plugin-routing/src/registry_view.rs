@@ -59,7 +59,7 @@ impl RegistryView {
         self.inner.read().is_empty()
     }
 
-    fn apply(&self, event: TableEvent) {
+    fn apply(&self, event: &TableEvent) {
         match event.op {
             TableOp::Insert | TableOp::Update => {
                 match serde_json::from_str::<ServerEntry>(&event.payload) {
@@ -71,10 +71,10 @@ impl RegistryView {
             }
             TableOp::Delete => {
                 // Delete payloads carry only the PK fields in STDB.
-                if let Ok(stub) = serde_json::from_str::<serde_json::Value>(&event.payload) {
-                    if let Some(id) = stub.get("shard_id").and_then(|v| v.as_str()) {
-                        self.inner.write().remove(id);
-                    }
+                if let Ok(stub) = serde_json::from_str::<serde_json::Value>(&event.payload)
+                    && let Some(id) = stub.get("shard_id").and_then(|v| v.as_str())
+                {
+                    self.inner.write().remove(id);
                 }
             }
         }
@@ -94,7 +94,7 @@ pub fn spawn(handle: StdbHandle, view: RegistryView) -> tokio::task::JoinHandle<
         };
         debug!("registry_view: subscribed");
         while let Some(event) = events.recv().await {
-            view.apply(event);
+            view.apply(&event);
         }
         debug!("registry_view: stream ended");
     })
@@ -127,7 +127,7 @@ mod tests {
     #[test]
     fn insert_then_update_then_delete() {
         let view = RegistryView::new();
-        view.apply(TableEvent {
+        view.apply(&TableEvent {
             table: table::SERVER_REGISTRY,
             op: TableOp::Insert,
             payload: entry_payload("sb-1", "HEALTHY", 10),
@@ -135,14 +135,14 @@ mod tests {
         assert_eq!(view.len(), 1);
         assert_eq!(view.get("sb-1").unwrap().player_count, 10);
 
-        view.apply(TableEvent {
+        view.apply(&TableEvent {
             table: table::SERVER_REGISTRY,
             op: TableOp::Update,
             payload: entry_payload("sb-1", "HEALTHY", 20),
         });
         assert_eq!(view.get("sb-1").unwrap().player_count, 20);
 
-        view.apply(TableEvent {
+        view.apply(&TableEvent {
             table: table::SERVER_REGISTRY,
             op: TableOp::Delete,
             payload: r#"{"shard_id":"sb-1"}"#.into(),

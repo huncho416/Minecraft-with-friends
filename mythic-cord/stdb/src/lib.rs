@@ -26,7 +26,30 @@
 //! - **Schema migrations**: bump [`SCHEMA_VERSION`] and add a one-shot
 //!   migration reducer that callers can invoke during deploy.
 
-#![allow(clippy::needless_pass_by_value)] // SpacetimeDB reducers take owned args
+// Reducers in SpacetimeDB take owned args by macro convention.
+#![allow(clippy::needless_pass_by_value)]
+// Proper nouns ("SpacetimeDB", "MythicCord", etc.) appear in module docs.
+#![allow(clippy::doc_markdown)]
+// Many reducers do `target.field = src.clone()` where `src` is still used
+// downstream — `clone_into` would force premature ownership transfer.
+#![allow(clippy::assigning_clones)]
+// `load_score` and the XP curve placeholder cast u32/u64 → f32/f64 by
+// design; we only need monotonic ordering, not exact representation.
+#![allow(clippy::cast_precision_loss)]
+// Identical match arms in `leaderboard_rebuild` (MONTHLY uses weekly bucket
+// until a monthly bucket exists) and a few other intentional placeholders.
+#![allow(clippy::match_same_arms)]
+// `uuid.as_bytes().iter().filter(...).count()` is plenty fast for 36 bytes;
+// the bytecount crate isn't worth the dep.
+#![allow(clippy::naive_bytecount)]
+// `if cond { 0 } else { 1 }` is clearer than `u32::from(!cond)` in routing
+// tie-breakers (we already use the latter where it reads naturally).
+#![allow(clippy::bool_to_int_with_if)]
+// XP curve uses `_ as u32` after `.floor()`; bounded by data so safe.
+// Leaderboard rank uses `i as u32` where `i < top_n: u32`.
+#![allow(clippy::cast_possible_truncation)]
+// Same XP curve: `_ as u32` from sqrt() of non-negative f64 can't be signed.
+#![allow(clippy::cast_sign_loss)]
 
 pub mod common;
 pub mod cosmetics;

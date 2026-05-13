@@ -26,6 +26,9 @@
 //! around the socket itself. Bounded channels give us backpressure when
 //! a slow STDB host falls behind.
 
+// Project nouns ("MythicCord", "SpacetimeDB", "SpacerCord") show up in
+// module docs; not Rust identifiers, so the doc-backticks lint is wrong.
+#![allow(clippy::doc_markdown)]
 #![allow(clippy::missing_const_for_fn)]
 
 pub mod client;

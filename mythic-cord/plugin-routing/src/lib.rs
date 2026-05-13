@@ -18,6 +18,7 @@
 //! [`heartbeat`] compiles standalone and is unit-testable without the
 //! upstream subtree.
 
+#![allow(clippy::doc_markdown)]
 #![allow(clippy::module_name_repetitions)]
 
 pub mod heartbeat;
