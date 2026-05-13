@@ -1,0 +1,5 @@
+server:
+  id: "local"
+  type: "development"
+links:
+  discord: "https://discord.gg/mythicpvp"

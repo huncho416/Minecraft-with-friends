@@ -1,0 +1,6 @@
+scoreboard:
+  title: "&#FF00F8MythicPvP"
+  lines:
+    - "&#FFFFFFRank: %rank%"
+    - "&#FFFFFFServer: %server%"
+    - "&#FFFFFFOnline: %online%"

@@ -1,0 +1,11 @@
+punishments:
+  default-reason: "No reason specified"
+  silent-flag: "-s"
+  notify-staff-permission: "mythic.core.punish.notify"
+  commands:
+    ban: "mythic.core.punish.ban"
+    tempban: "mythic.core.punish.tempban"
+    mute: "mythic.core.punish.mute"
+    tempmute: "mythic.core.punish.tempmute"
+    warn: "mythic.core.punish.warn"
+    history: "mythic.core.punish.history"

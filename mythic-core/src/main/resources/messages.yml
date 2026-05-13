@@ -1,0 +1,31 @@
+messages:
+  prefix: "&#FF00F8Mythic &8» &f"
+  command:
+    player-only: "&#FF00F8✘ &#FFFFFFThis command can only be used by players."
+    no-permission: "&#FF00F8✘ &#FFFFFFUnknown command."
+    usage: "&#FF00F8✘ &#FFFFFFUsage: %usage%"
+    player-not-found: "&#FF00F8✘ &#FFFFFFThat player is not online."
+  links:
+    discord: "&#FF00F8Discord &8» &#FFFFFFhttps://discord.gg/mythicpvp"
+    help:
+      - "&#FF00F8MythicPvP Help"
+      - "&#FFFFFFUse /discord for community support."
+  essentials:
+    gamemode: "&#FF00F8✔ &#FFFFFFSet your gamemode to %mode%."
+    teleport: "&#FF00F8✔ &#FFFFFFTeleported to %target%."
+    tphere: "&#FF00F8✔ &#FFFFFFTeleported %target% to you."
+  staff:
+    format: "&#888888[%server%] %rank_color%%rank%%sender% &8» &#FFFFFF%message%"
+    join: "&#888888[%server%] %rank_color%%sender% &#FFFFFFjoined."
+    quit: "&#888888[%server%] %rank_color%%sender% &#FFFFFFdisconnected."
+    switch: "&#888888[%from% -> %to%] %rank_color%%sender% &#FFFFFFswitched servers."
+  punishment:
+    executed: "&#FF00F8✔ &#FFFFFF%type% issued for %target%."
+    silent-executed: "&#FF00F8✔ &#FFFFFFSilent %type% issued for %target%."
+    broadcast: "&#FF00F8Punishment &8» &#FFFFFF%target% was punished for %reason%."
+    history-empty: "&#FF00F8✘ &#FFFFFFNo punishment history found for %target%."
+  chat-control:
+    muted: "&#FF00F8Chat &8» &#FFFFFFChat has been muted."
+    unmuted: "&#FF00F8Chat &8» &#FFFFFFChat has been unmuted."
+    slowed: "&#FF00F8Chat &8» &#FFFFFFChat slow mode is now %seconds%s."
+    cleared: "&#FF00F8Chat &8» &#FFFFFFChat has been cleared."

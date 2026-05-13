@@ -156,6 +156,11 @@ public final class CommandManager {
                 sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFThis command is player-only."));
                 return;
             }
+            if (type.equals(String[].class)) {
+                resolved[i] = Arrays.copyOfRange(args, argIndex, args.length);
+                argIndex = args.length;
+                continue;
+            }
 
             if (argIndex >= args.length) {
                 if (params[i].isAnnotationPresent(net.mythicpvp.suite.command.Optional.class)) {

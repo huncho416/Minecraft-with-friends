@@ -1,0 +1,16 @@
+channels:
+  staff:
+    permission: "mythic.core.staffchat"
+    command: "staffchat"
+  builder:
+    permission: "mythic.core.builderchat"
+    command: "builderchat"
+  management:
+    permission: "mythic.core.managementchat"
+    command: "managementchat"
+  admin:
+    permission: "mythic.core.adminchat"
+    command: "adminchat"
+  owner:
+    permission: "mythic.core.ownerchat"
+    command: "ownerchat"

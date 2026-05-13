@@ -621,17 +621,31 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 
 ### Phase 3 — Core Plugin + Hub (Weeks 13–16)
 
-| Task | Owner |
-|------|-------|
-| `mythic-core`: bootstrap, sessions, ranks, nametags, tab, scoreboard | Dev A |
-| `mythic-core`: punishments (temp/perma/appeal), staff commands, audit log | Dev A |
-| `mythic-core`: friends, party, mail, offline rewards | Dev B |
-| `mythic-hub`: spawn, server selector, cosmetic preview, hub activities | Dev B |
-| Resource pack: finalize MythicPvP custom font, rebrand `smpd` → `mythic` namespace | Dev B |
-| Tebex webhook integration → cosmetic unlock pipeline | Dev A |
+`mythic-core` is the shared network essentials and staff suite installed on every backend server. It owns core commands, staff tooling, punishments, ranks, prefixes, suffixes, chat controls, announcements, broadcasts, tablist, scoreboard, nametags, and cross-server staff communication. Every player-facing message, staff format, punishment line, command response, tablist entry, scoreboard line, prefix, suffix, broadcast, and announcement must be configurable through YAML.
+
+| Task | Owner | Status |
+|------|-------|--------|
+| `mythic-core`: Maven module, plugin bootstrap, command API vararg support, default YAML resources | Dev A | ✅ |
+| `mythic-core`: server identity, lifecycle, service registry, Folia-safe scheduler wiring, shutdown cleanup | Dev A | 🚧 |
+| `mythic-core`: ranks, rank colors, prefixes, suffixes, permission inheritance, cosmetic display integration | Dev A | 🚧 |
+| `mythic-core`: command blocker coverage for all core commands and permission-hidden tab completion | Dev A | 🚧 |
+| `mythic-core`: essentials commands `/gmc`, `/gms`, `/gamemode`, `/tp`, `/tphere`, `/help`, `/discord` | Dev A | 🚧 |
+| `mythic-core`: staff chats for staff, builder, management, admin, owner with cross-server protocol delivery | Dev A | 🚧 |
+| `mythic-core`: staff join, disconnect, and server-switch notifications with origin server and rank color | Dev A | 🚧 |
+| `mythic-core`: staff mode with configurable tools, inventory restore, vanish/fly state, and safe disable | Dev A | 🚧 |
+| `mythic-core`: punishments for bans, tempbans, mutes, tempmutes, warns, pardons, history, appeals, audit log | Dev A | 🚧 |
+| `mythic-core`: silent punishment flag `-s` for all punishment commands, including `/ban -s <player>` | Dev A | ✅ |
+| `mythic-core`: chat management `/chat mute`, `/chat slow <seconds>`, `/chat clear`, local and network scopes | Dev A | 🚧 |
+| `mythic-core`: broadcasts, announcements, Discord/help links, and scheduled announcement rotation | Dev A | 🚧 |
+| `mythic-core`: tablist, scoreboard, nametag, and chat formatting bound to YAML, ranks, cosmetics, disguises | Dev A | 🚧 |
+| `mythic-core`: friends, party, mail, offline rewards | Dev B | |
+| `mythic-hub`: spawn, server selector, cosmetic preview, hub activities using `mythic-core` services | Dev B | |
+| Resource pack: finalize MythicPvP custom font, rebrand `smpd` → `mythic` namespace | Dev B | |
+| Tebex webhook integration → cosmetic unlock pipeline | Dev A | |
+
+Core protocol channels: `core:staff-chat`, `core:staff-presence`, `core:broadcast`, `core:chat-control`, and `core:punishment-update`. Core persistence uses the existing SpacetimeDB schema where possible, with Phase 3 migrations added only for missing audit, chat-control, or staff-presence state.
 
 ---
-
 ### Phase 4 — Skyblock Core (Weeks 17–24)
 
 - Island management, sharding, Slime-format storage
@@ -674,7 +688,7 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 |-------|------|-------|-----------------|
 | **1** | **Mythic Suite** ⭐ | 1–8 | All 23 foundation APIs, YAML-configurable text surfaces, tested and documented |
 | **2** | **MythicCord + Docker** 🚧 | 9–12 | STDB schema ✅ (wasm32 build clean), Java mirror ✅ (20/20 tests), Rust bridge ✅ (2/2 tests), routing plugin ✅ (4/4 tests), standalone proxy ✅ (cargo check clean), Pterodactyl egg ✅, Docker scaffold + monitoring ✅, Geyser sidecar ✅, voice deployment ✅, Sentry bootstrap ✅. Infrarust subtree vendored on first bootstrap |
-| **3** | Core + Hub | 13–16 | Base plugin, friends/party, hub, Tebex, resource pack |
+| **3** | Core + Hub | 13–16 | Network-wide essentials/staff suite, punishments with silent mode, ranks, YAML-driven tab/scoreboard/chat, friends/party, hub, Tebex, resource pack |
 | **4** | Skyblock Core | 17–24 | Islands, economy, enchants, quests |
 | **5** | PvP & Events | 25–30 | PvP zones, KOTH, airdrops, points |
 | **6** | Skills & Leaderboards | 31–36 | 4 skills, leaderboard system |
