@@ -2,7 +2,6 @@ package net.mythicpvp.suite.format;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -12,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 public final class MythicFormat {
 
-    private static final DecimalFormat DECIMAL = new DecimalFormat("#.#");
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
     private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -26,14 +24,27 @@ public final class MythicFormat {
     private MythicFormat() {}
 
     @NotNull
+    private static String truncate(double value) {
+        double truncated = Math.floor(value * 100) / 100.0;
+        if (truncated == (long) truncated) {
+            return String.valueOf((long) truncated);
+        }
+        String formatted = String.format("%.2f", truncated);
+        if (formatted.endsWith("0")) {
+            formatted = formatted.substring(0, formatted.length() - 1);
+        }
+        return formatted;
+    }
+
+    @NotNull
     public static String number(long value) {
         if (value < 0) return "-" + number(-value);
 
-        if (value >= QUADRILLION) return DECIMAL.format((double) value / QUADRILLION) + "Q";
-        if (value >= TRILLION) return DECIMAL.format((double) value / TRILLION) + "T";
-        if (value >= BILLION) return DECIMAL.format((double) value / BILLION) + "B";
-        if (value >= MILLION) return DECIMAL.format((double) value / MILLION) + "M";
-        if (value >= THOUSAND) return DECIMAL.format((double) value / THOUSAND) + "K";
+        if (value >= QUADRILLION) return truncate((double) value / QUADRILLION) + "Q";
+        if (value >= TRILLION) return truncate((double) value / TRILLION) + "T";
+        if (value >= BILLION) return truncate((double) value / BILLION) + "B";
+        if (value >= MILLION) return truncate((double) value / MILLION) + "M";
+        if (value >= THOUSAND) return truncate((double) value / THOUSAND) + "K";
 
         return String.valueOf(value);
     }
@@ -65,7 +76,15 @@ public final class MythicFormat {
 
     @NotNull
     public static String percent(double value) {
-        return DECIMAL.format(value * 100) + "%";
+        double truncated = Math.floor(value * 10000) / 100.0;
+        if (truncated == (long) truncated) {
+            return (long) truncated + "%";
+        }
+        String formatted = String.format("%.2f", truncated);
+        if (formatted.endsWith("0")) {
+            formatted = formatted.substring(0, formatted.length() - 1);
+        }
+        return formatted + "%";
     }
 
     @NotNull
