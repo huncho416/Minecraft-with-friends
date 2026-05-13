@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -17,6 +18,7 @@ class ChatManagerTest {
 
     @AfterEach
     void cleanup() {
+        ChatManager.getInstance().clear();
         DisguiseManager.getInstance().clear();
     }
 
@@ -29,6 +31,19 @@ class ChatManagerTest {
         when(player.getName()).thenReturn("Real");
         DisguiseManager.getInstance().disguiseAs(uuid, "Nick", null, null);
         assertTrue(manager.isBlocked("join example.com"));
+        assertTrue(manager.isBlocked("kill yourself"));
         assertEquals(" Nick: visit ***", PlainTextComponentSerializer.plainText().serialize(manager.format(player, "", "visit example.com")));
+    }
+
+    @Test
+    void tracksSpamWithinConfiguredWindow() {
+        ChatManager manager = ChatManager.getInstance();
+        UUID uuid = UUID.randomUUID();
+        manager.setSpamPolicy(60_000L, 2);
+
+        assertFalse(manager.recordAndCheckSpam(uuid));
+        assertFalse(manager.recordAndCheckSpam(uuid));
+        assertTrue(manager.recordAndCheckSpam(uuid));
+        assertTrue(manager.isSpam(uuid));
     }
 }
