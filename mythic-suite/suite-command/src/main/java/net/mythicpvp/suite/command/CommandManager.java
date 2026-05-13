@@ -1,0 +1,210 @@
+package net.mythicpvp.suite.command;
+
+import net.mythicpvp.suite.hex.MythicHex;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.SimpleCommandMap;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+public final class CommandManager {
+
+    private final JavaPlugin plugin;
+    private final Map<String, RegisteredCommand> commands = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Function<String, ?>> resolvers = new ConcurrentHashMap<>();
+
+    public CommandManager(@NotNull JavaPlugin plugin) {
+        this.plugin = plugin;
+        registerDefaultResolvers();
+    }
+
+    private void registerDefaultResolvers() {
+        resolvers.put(String.class, s -> s);
+        resolvers.put(int.class, Integer::parseInt);
+        resolvers.put(Integer.class, Integer::parseInt);
+        resolvers.put(long.class, Long::parseLong);
+        resolvers.put(Long.class, Long::parseLong);
+        resolvers.put(double.class, Double::parseDouble);
+        resolvers.put(Double.class, Double::parseDouble);
+        resolvers.put(boolean.class, Boolean::parseBoolean);
+        resolvers.put(Boolean.class, Boolean::parseBoolean);
+        resolvers.put(Player.class, s -> plugin.getServer().getPlayer(s));
+    }
+
+    public <T> void registerResolver(@NotNull Class<T> type, @NotNull Function<String, T> resolver) {
+        resolvers.put(type, resolver);
+    }
+
+    public void register(@NotNull MythicCommand command) {
+        CommandAlias aliasAnnotation = command.getClass().getAnnotation(CommandAlias.class);
+        if (aliasAnnotation == null) {
+            throw new IllegalArgumentException("Command must have @CommandAlias annotation");
+        }
+
+        String[] aliases = aliasAnnotation.value().split("\\|");
+        String primaryAlias = aliases[0].toLowerCase();
+        CommandPermission permAnnotation = command.getClass().getAnnotation(CommandPermission.class);
+
+        RegisteredCommand registered = new RegisteredCommand(command, permAnnotation != null ? permAnnotation.value() : null);
+
+        for (Method method : command.getClass().getDeclaredMethods()) {
+            method.setAccessible(true);
+            if (method.isAnnotationPresent(Default.class)) {
+                registered.setDefaultHandler(method);
+            } else if (method.isAnnotationPresent(Subcommand.class)) {
+                String sub = method.getAnnotation(Subcommand.class).value().toLowerCase();
+                registered.addSubcommand(sub, method);
+            }
+        }
+
+        commands.put(primaryAlias, registered);
+
+        Command bukkitCommand = new Command(primaryAlias, "", "", Arrays.asList(aliases)) {
+            @Override
+            public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {
+                handleCommand(sender, primaryAlias, args);
+                return true;
+            }
+
+            @Override
+            @NotNull
+            public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
+                return handleTabComplete(sender, primaryAlias, args);
+            }
+        };
+
+        plugin.getServer().getCommandMap().register(plugin.getName().toLowerCase(), bukkitCommand);
+    }
+
+    private void handleCommand(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
+        RegisteredCommand registered = commands.get(alias);
+        if (registered == null) return;
+
+        if (registered.getPermission() != null && !sender.hasPermission(registered.getPermission())) {
+            sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFYou don't have permission."));
+            return;
+        }
+
+        Method handler;
+        String[] handlerArgs;
+
+        if (args.length > 0) {
+            String sub = args[0].toLowerCase();
+            handler = registered.getSubcommand(sub);
+            if (handler != null) {
+                CommandPermission subPerm = handler.getAnnotation(CommandPermission.class);
+                if (subPerm != null && !sender.hasPermission(subPerm.value())) {
+                    sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFYou don't have permission."));
+                    return;
+                }
+                handlerArgs = Arrays.copyOfRange(args, 1, args.length);
+            } else {
+                handler = registered.getDefaultHandler();
+                handlerArgs = args;
+            }
+        } else {
+            handler = registered.getDefaultHandler();
+            handlerArgs = args;
+        }
+
+        if (handler == null) {
+            sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFUnknown command usage."));
+            return;
+        }
+
+        invokeHandler(sender, registered.getCommand(), handler, handlerArgs);
+    }
+
+    private void invokeHandler(@NotNull CommandSender sender, @NotNull MythicCommand command, @NotNull Method method, @NotNull String[] args) {
+        Parameter[] params = method.getParameters();
+        Object[] resolved = new Object[params.length];
+        int argIndex = 0;
+
+        for (int i = 0; i < params.length; i++) {
+            Class<?> type = params[i].getType();
+
+            if (CommandSender.class.isAssignableFrom(type)) {
+                resolved[i] = sender;
+                continue;
+            }
+            if (Player.class.isAssignableFrom(type) && sender instanceof Player) {
+                resolved[i] = sender;
+                continue;
+            }
+            if (Player.class.isAssignableFrom(type) && !(sender instanceof Player)) {
+                sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFThis command is player-only."));
+                return;
+            }
+
+            if (argIndex >= args.length) {
+                if (params[i].isAnnotationPresent(net.mythicpvp.suite.command.Optional.class)) {
+                    resolved[i] = null;
+                    continue;
+                }
+                sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFMissing argument: " + params[i].getName()));
+                return;
+            }
+
+            Function<String, ?> resolver = resolvers.get(type);
+            if (resolver != null) {
+                try {
+                    resolved[i] = resolver.apply(args[argIndex++]);
+                } catch (Exception e) {
+                    sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFInvalid argument: " + args[argIndex - 1]));
+                    return;
+                }
+            } else {
+                resolved[i] = args[argIndex++];
+            }
+        }
+
+        try {
+            method.invoke(command, resolved);
+        } catch (Exception e) {
+            sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFAn error occurred."));
+            e.printStackTrace();
+        }
+    }
+
+    @NotNull
+    private List<String> handleTabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
+        RegisteredCommand registered = commands.get(alias);
+        if (registered == null) return Collections.emptyList();
+
+        if (args.length == 1) {
+            return registered.getSubcommandNames().stream()
+                    .filter(s -> s.startsWith(args[0].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        return Collections.emptyList();
+    }
+
+    private static class RegisteredCommand {
+        private final MythicCommand command;
+        private final String permission;
+        private Method defaultHandler;
+        private final Map<String, Method> subcommands = new HashMap<>();
+
+        RegisteredCommand(@NotNull MythicCommand command, String permission) {
+            this.command = command;
+            this.permission = permission;
+        }
+
+        MythicCommand getCommand() { return command; }
+        String getPermission() { return permission; }
+        Method getDefaultHandler() { return defaultHandler; }
+        void setDefaultHandler(Method m) { this.defaultHandler = m; }
+        void addSubcommand(String name, Method m) { subcommands.put(name, m); }
+        Method getSubcommand(String name) { return subcommands.get(name); }
+        Set<String> getSubcommandNames() { return subcommands.keySet(); }
+    }
+}
