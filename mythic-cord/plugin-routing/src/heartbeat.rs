@@ -15,7 +15,7 @@ pub const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 /// Run forever (until the runtime is dropped). Spawn this with
 /// `tokio::spawn(heartbeat::run(runtime))`.
 pub async fn run(runtime: RoutingRuntime) {
-    let RoutingRuntime { identity, stdb, status, .. } = &runtime;
+    let RoutingRuntime { identity, stdb, .. } = &runtime;
 
     if let Err(e) = stdb
         .registry_announce(

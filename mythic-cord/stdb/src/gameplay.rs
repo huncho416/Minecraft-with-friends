@@ -5,6 +5,9 @@
 //! and we don't reshape STDB later.
 
 use crate::common::{require_backend, require_uuid, PlayerUuid, ReducerResult, ShardId};
+// `players` table accessor lives in `players` module; bring its trait in
+// scope so leaderboard_rebuild can resolve usernames from the players row.
+use crate::players::players;
 use crate::reject;
 use spacetimedb::{reducer, table, ReducerContext, Table, Timestamp};
 

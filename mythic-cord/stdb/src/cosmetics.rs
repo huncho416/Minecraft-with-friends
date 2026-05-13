@@ -4,7 +4,7 @@
 //! definitions (display name, model id, rarity, source) live in YAML in the
 //! suite — STDB only stores ownership and equip state.
 
-use crate::common::{cosmetic_type, require_backend, require_uuid, PlayerUuid, ReducerResult};
+use crate::common::{require_backend, require_uuid, PlayerUuid, ReducerResult};
 use crate::reject;
 use spacetimedb::{reducer, table, ReducerContext, Table, Timestamp};
 

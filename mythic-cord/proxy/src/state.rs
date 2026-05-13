@@ -10,6 +10,10 @@ use std::sync::Arc;
 
 pub struct ProxyState {
     pub identity: ProxyIdentity,
+    // Read only by the `with-infrarust` integration path today, but kept on
+    // the standalone state for parity so the admin surface can grow drain
+    // confirmation / kick commands without re-threading the handle.
+    #[allow(dead_code)]
     pub stdb: Arc<MythicStdbClient>,
     pub registry: RegistryView,
     pub status: Arc<RwLock<ServerStatus>>,

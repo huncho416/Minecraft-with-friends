@@ -7,7 +7,7 @@
 //!   keep the group together.
 //! - Mail is delivered on next login.
 
-use crate::common::{require_backend, require_uuid, PlayerUuid, ReducerResult};
+use crate::common::{require_uuid, PlayerUuid, ReducerResult};
 use crate::reject;
 use spacetimedb::{reducer, table, ReducerContext, Table, Timestamp};
 

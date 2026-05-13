@@ -599,6 +599,19 @@ erDiagram
 - **`pick_shard` lives twice** — once in [`mythic-stdb`](mythic-cord/stdb/src/sessions.rs) for cross-shard transfers, once in [`plugin-routing`](mythic-cord/plugin-routing/src/router.rs) for the proxy hot path. Identical formula, both unit-tested, no network round-trip per login.
 - **Pterodactyl integration is real**, not a placeholder. SIGTERM/SIGINT triggers drain → status flip → 500ms grace → final offline heartbeat → exit 0. Admin HTTP exposes `/health`, `/metrics`, `POST /admin/drain` for manual rolling deploys.
 
+#### Verification (last run)
+
+| Surface | Tool | Result |
+|---|---|---|
+| Full Maven reactor | `mvn -B -ntp test` | **BUILD SUCCESS** — all 26 modules, ~38 tests pass |
+| `suite-database` schema package | `mvn -pl mythic-suite/suite-database test` | **20/20 green** (`MythicSchemaTest` 12, `DtoRoundTripTest` 5, `SpacetimeConnectionTest` 3) |
+| `mythic-stdb` (SpacetimeDB module) | `cargo check -p mythic-stdb --target wasm32-unknown-unknown` | Clean — 0 errors, 0 warnings |
+| `mythiccord-stdb-bridge` | `cargo test -p mythiccord-stdb-bridge` | **2/2 green** (`enum_wire_values`, `registry_announce_args_shape`) |
+| `mythiccord-plugin-routing` | `cargo test -p mythiccord-plugin-routing` | **4/4 green** (3× `router::*` + `registry_view::insert_then_update_then_delete`) |
+| `mythiccord` (proxy binary, standalone) | `cargo check -p mythiccord` | Clean — 0 errors, 0 warnings |
+
+Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_64-pc-windows-gnu`) + winlibs MinGW-w64 14.2.0 for Rust. All toolchains installed under `.build-tools/` (gitignored) so the host environment stays clean.
+
 ---
 
 ### Phase 3 — Core Plugin + Hub (Weeks 13–16)
@@ -655,7 +668,7 @@ erDiagram
 | Phase | Name | Weeks | Key Deliverables |
 |-------|------|-------|-----------------|
 | **1** | **Mythic Suite** ⭐ | 1–8 | All 23 foundation APIs, YAML-configurable text surfaces, tested and documented |
-| **2** | **MythicCord + Docker** 🚧 | 9–12 | STDB schema ✅, Java mirror ✅, Rust bridge ✅, routing plugin ✅, standalone proxy ✅, Pterodactyl egg ✅, Docker scaffold + monitoring ✅. Geyser, voice, Sentry pending; Infrarust subtree vendored on first bootstrap |
+| **2** | **MythicCord + Docker** 🚧 | 9–12 | STDB schema ✅ (wasm32 build clean), Java mirror ✅ (20/20 tests), Rust bridge ✅ (2/2 tests), routing plugin ✅ (4/4 tests), standalone proxy ✅ (cargo check clean), Pterodactyl egg ✅, Docker scaffold + monitoring ✅. Geyser, voice, Sentry pending; Infrarust subtree vendored on first bootstrap |
 | **3** | Core + Hub | 13–16 | Base plugin, friends/party, hub, Tebex, resource pack |
 | **4** | Skyblock Core | 17–24 | Islands, economy, enchants, quests |
 | **5** | PvP & Events | 25–30 | PvP zones, KOTH, airdrops, points |

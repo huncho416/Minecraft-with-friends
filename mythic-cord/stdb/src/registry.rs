@@ -3,7 +3,7 @@
 //! Each game-server shard heartbeats into this table. The proxy reads it
 //! to make routing decisions; Grafana scrapes the same view for ops.
 
-use crate::common::{require_backend, server_role, server_status, ShardId};
+use crate::common::{require_backend, server_status, ShardId};
 use crate::reject;
 use spacetimedb::{reducer, table, ReducerContext, Table, Timestamp};
 

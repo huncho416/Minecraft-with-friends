@@ -7,7 +7,10 @@
 //!   [`session_route`] when transferring a player between shards.
 
 use crate::common::{require_backend, require_uuid, PlayerUuid, ReducerResult, ShardId};
-use crate::players::upsert_player;
+// Cross-module table accessors: SpacetimeDB's `#[table]` macro generates a
+// trait named after the table (lowercase). Calling `ctx.db.<table>()` from
+// another module requires that trait in scope.
+use crate::players::{players, upsert_player};
 use crate::reject;
 use crate::registry::{load_score, ServerEntry};
 use spacetimedb::{reducer, table, ReducerContext, Table, Timestamp};
