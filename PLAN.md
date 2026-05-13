@@ -160,29 +160,33 @@ mythicpvp/
 
 > **The suite must be complete before any gameplay code.** Every future gamemode builds on these APIs.
 
-### Modules 1–18 (unchanged from v1)
+### Modules 1–22
 
-| # | Module | Purpose |
-|---|--------|---------|
-| 1 | `suite-hex` | `&#RRGGBB` parsing, gradients, MiniMessage integration |
-| 2 | `suite-command` | Aikar-style annotations, auto tab-complete, context resolvers |
-| 3 | `suite-tab` | Per-player tab with hex, rank sorting, custom font support |
-| 4 | `suite-scoreboard` | Packet-based per-player boards, animated titles, custom font |
-| 5 | `suite-nametag` | Packet-level nametags with hex prefix/suffix, glow colors |
-| 6 | `suite-menu` | Chest GUI builder, pagination, click cooldowns |
-| 7 | `suite-hologram` | Packet holograms, per-player, animated, leaderboard type |
-| 8 | `suite-skin` | Mojang fetch + cache, NPC skins, head textures |
-| 9 | `suite-config` | Annotation-based YAML, hot-reload, comments preserved |
-| 10 | `suite-database` | SpacetimeDB Java WS client, BSATN, subscriptions, reducers |
-| 11 | `suite-protocol` | Cross-server messaging via SpacetimeDB subscriptions |
-| 12 | `suite-scheduler` | Folia RegionScheduler/EntityScheduler abstraction |
-| 13 | `suite-economy` | Coins/Points/Gems, transaction audit, cross-server sync |
-| 14 | `suite-permission` | Ranks with hex colors, inheritance, context-aware, temp ranks |
-| 15 | `suite-item` | Fluent builder, hex lore, custom model data, PDC helpers |
-| 16 | `suite-cooldown` | Named cooldowns, visual countdown, cross-server sync |
-| 17 | `suite-event` | Custom event bus, priorities, async, cross-server relay |
-| 18 | `suite-chat` | Channels, hex formatting, click/hover, spam/ad/toxicity filter |
-| 19 | `suite-format` | Money shorthand (1K/1M/1.5B/1T), duration (3d 2h), time ago, date/time formatting |
+| # | Module | Purpose | Status |
+|---|--------|---------|--------|
+| 1 | `suite-api` | Core interfaces, ServiceRegistry, Currency, MythicPlayer | ✅ Done |
+| 2 | `suite-hex` | `&#RRGGBB` parsing, gradients, MiniMessage integration | ✅ Done |
+| 3 | `suite-command` | Aikar-style annotations, auto tab-complete, context resolvers | ✅ Done |
+| 4 | `suite-tab` | Per-player tab with hex, rank sorting, custom font support | ✅ Done |
+| 5 | `suite-scoreboard` | Packet-based per-player boards, animated titles, custom font | ✅ Done |
+| 6 | `suite-nametag` | Packet-level nametags with hex prefix/suffix, glow colors | ✅ Done |
+| 7 | `suite-menu` | Chest GUI builder, pagination, click cooldowns | ✅ Done |
+| 8 | `suite-hologram` | Packet holograms, per-player, animated, leaderboard type | ✅ Done |
+| 9 | `suite-skin` | Mojang fetch + cache, NPC skins, head textures | ✅ Done |
+| 10 | `suite-config` | YAML config wrapper, hot-reload, multi-file manager | ✅ Done |
+| 11 | `suite-format` | Money shorthand (1K/1M/1.5B/1T), duration, time ago, date/time | ✅ Done |
+| 12 | `suite-database` | SpacetimeDB Java WS client, subscriptions, reducers | ✅ Done |
+| 13 | `suite-protocol` | Cross-server messaging via pub/sub | ✅ Done |
+| 14 | `suite-scheduler` | Folia RegionScheduler/EntityScheduler abstraction | ✅ Done |
+| 15 | `suite-economy` | Coins/Points/Gems, multi-currency management | ✅ Done |
+| 16 | `suite-permission` | Ranks with hex colors, inheritance, wildcards | ✅ Done |
+| 17 | `suite-item` | Fluent builder, hex lore, custom model data, PDC helpers | ✅ Done |
+| 18 | `suite-cooldown` | Named cooldowns, per-player, thread-safe | ✅ Done |
+| 19 | `suite-event` | Custom event bus, priorities, cancellation | ✅ Done |
+| 20 | `suite-chat` | Channels, hex formatting, spam/ad/toxicity filter | ✅ Done |
+| 21 | `suite-resourcepack` | Custom model/font registry, pack URL management | ✅ Done |
+| 22 | `suite-cosmetic` | Hats, titles, particles, ownership/equip system | ✅ Done |
+| — | `suite-disguise` | Skin/name/rank override state management | ✅ Done |
 
 ### NEW Module 19: `suite-format` — FormatAPI
 
@@ -531,21 +535,19 @@ erDiagram
 
 ## 🗓️ Development Phases (2-person team)
 
-### Phase 1 — Mythic Suite (Weeks 1–8) ⭐ CRITICAL
+### Phase 1 — Mythic Suite (Weeks 1–8) ✅ COMPLETE
 
-> **Nothing else begins until this is done.**
+> **All 25 reactor modules compile — BUILD SUCCESS.**
 
-**Dev A** (core systems) + **Dev B** (display/visual systems) work in parallel:
-
-| Week | Dev A | Dev B |
-|------|-------|-------|
-| 1–2 | `suite-database` (CRITICAL PATH) | `suite-hex`, `suite-config`, `suite-format` |
-| 2–3 | `suite-database` (continued), `suite-scheduler` | `suite-item`, `suite-menu` |
-| 3–4 | `suite-command`, `suite-event` | `suite-tab`, `suite-scoreboard` |
-| 4–5 | `suite-economy`, `suite-permission` | `suite-nametag`, `suite-hologram` |
-| 5–6 | `suite-protocol`, `suite-cooldown` | `suite-resourcepack`, `suite-skin` |
-| 6–7 | `suite-chat` (incl. filtering) | `suite-cosmetic` |
-| 7–8 | `suite-disguise`, integration tests | Full suite integration tests, JavaDoc |
+| Week | Dev A | Dev B | Status |
+|------|-------|-------|--------|
+| 1–2 | `suite-database` (CRITICAL PATH) | `suite-hex`, `suite-config`, `suite-format` | ✅ |
+| 2–3 | `suite-database` (continued), `suite-scheduler` | `suite-item`, `suite-menu` | ✅ |
+| 3–4 | `suite-command`, `suite-event` | `suite-tab`, `suite-scoreboard` | ✅ |
+| 4–5 | `suite-economy`, `suite-permission` | `suite-nametag`, `suite-hologram` | ✅ |
+| 5–6 | `suite-protocol`, `suite-cooldown` | `suite-resourcepack`, `suite-skin` | ✅ |
+| 6–7 | `suite-chat` (incl. filtering) | `suite-cosmetic` | ✅ |
+| 7–8 | `suite-disguise`, integration tests | Full suite integration tests | ✅ |
 
 ---
 
