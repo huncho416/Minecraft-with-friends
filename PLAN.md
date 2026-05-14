@@ -2,7 +2,7 @@
 
 > **Server Name:** &#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP
 > **Colors:** Brand gradient pink-to-white/grey (`#F529BE`, `#FD37F0`, `#F639EA`, `#DD35C4`, `#F63DF1`, `#EA21FF`, `#FFFFFF`, `#D2D8E0`, `#DDDBD9`) · Success `#9CFF9C` · Failure `#FF8A8A`
-> **Version:** 1.21.1 · **Server:** Folia · **Proxy:** MythicCord (SpacerCord fork)
+> **Version:** 1.21.11 (accepts clients 1.21.x+) · **Server:** Folia · **Proxy:** MythicCord (SpacerCord fork)
 > **Language:** Java 21 (server plugins), Rust (proxy) · **Build:** Maven
 > **Database:** SpacetimeDB (sole database — no Redis) · **Bedrock:** Geyser + Voice Chat
 > **Team:** 2 developers · **Hosting:** Multi-region bare metal/VPS
@@ -79,7 +79,7 @@ The **HexAPI** parses `&#RRGGBB` tags across all text surfaces. The custom **Myt
 |-------|-----------|------|
 | **DDoS** | TCPShield / Cloudflare Spectrum | L4 proxy protection |
 | **Proxy** | MythicCord (SpacerCord/Infrarust fork, Rust) | Routing, SpacetimeDB, Geyser |
-| **Game Server** | Folia 1.21.1 (Java 21) | Regionized multithreaded MC |
+| **Game Server** | Folia 1.21.11 (Java 21, accepts 1.21.x+ clients) | Regionized multithreaded MC |
 | **Server Plugins** | Java 21 + Maven multi-module | All gameplay logic |
 | **Database** | SpacetimeDB (self-hosted, sole DB) | Persistence, real-time sync, pub/sub |
 | **Bedrock** | Geyser (integrated in proxy) | Bedrock→Java translation |

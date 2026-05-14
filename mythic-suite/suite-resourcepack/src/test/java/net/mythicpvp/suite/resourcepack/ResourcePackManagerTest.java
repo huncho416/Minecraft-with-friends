@@ -2,6 +2,7 @@ package net.mythicpvp.suite.resourcepack;
 
 import net.kyori.adventure.resource.ResourcePackRequest;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -31,9 +32,10 @@ class ResourcePackManagerTest {
         Path pack = Files.createTempFile("mythic-pack", ".zip");
         Files.writeString(pack, "mythic");
         assertEquals("af1fc7004e01a84ca36b0048155fb7d37d1fc41b", manager.computeHash(pack));
-        manager.registerModel("mythic_sword", Material.DIAMOND_SWORD, 10001);
+        NamespacedKey swordModel = NamespacedKey.fromString("mythic:mythic_sword");
+        manager.registerModel("mythic_sword", Material.DIAMOND_SWORD, swordModel);
         manager.registerFont("title", "mythic:font/title");
-        assertEquals(10001, manager.getModel("MYTHIC_SWORD").customModelData());
+        assertEquals(swordModel, manager.getModel("MYTHIC_SWORD").itemModel());
         assertEquals("mythic:font/title", manager.getFont("TITLE"));
     }
 

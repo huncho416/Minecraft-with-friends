@@ -1,6 +1,6 @@
 package net.mythicpvp.core.announce;
 
-import be.seeseemelk.mockbukkit.MockBukkit;
+import org.mockbukkit.mockbukkit.MockBukkit;
 import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.protocol.ProtocolManager;
 import org.junit.jupiter.api.AfterEach;

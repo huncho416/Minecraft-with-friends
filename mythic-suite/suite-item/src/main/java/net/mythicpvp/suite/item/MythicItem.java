@@ -120,9 +120,9 @@ public class MythicItem {
     }
 
     @NotNull
-    public MythicItem customModelData(int data) {
+    public MythicItem itemModel(@NotNull NamespacedKey itemModel) {
         ItemMeta meta = itemStack.getItemMeta();
-        meta.setCustomModelData(data);
+        meta.setItemModel(itemModel);
         itemStack.setItemMeta(meta);
         return this;
     }
@@ -136,7 +136,7 @@ public class MythicItem {
         if (itemStack.getType() != model.material()) {
             throw new IllegalArgumentException("Model " + modelId + " requires " + model.material());
         }
-        return customModelData(model.customModelData());
+        return itemModel(model.itemModel());
     }
 
     @NotNull

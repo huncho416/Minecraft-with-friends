@@ -3,6 +3,7 @@ package net.mythicpvp.suite.resourcepack;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -129,11 +130,8 @@ public final class ResourcePackManager {
         return bedrockPackHash;
     }
 
-    public void registerModel(@NotNull String id, @NotNull Material material, int customModelData) {
-        if (customModelData <= 0) {
-            throw new IllegalArgumentException("Custom model data must be positive");
-        }
-        models.put(normalize(id), new CustomModel(normalize(id), material, customModelData));
+    public void registerModel(@NotNull String id, @NotNull Material material, @NotNull NamespacedKey itemModel) {
+        models.put(normalize(id), new CustomModel(normalize(id), material, itemModel));
     }
 
     @Nullable
@@ -198,7 +196,7 @@ public final class ResourcePackManager {
         return normalized;
     }
 
-    public record CustomModel(@NotNull String id, @NotNull Material material, int customModelData) {}
+    public record CustomModel(@NotNull String id, @NotNull Material material, @NotNull NamespacedKey itemModel) {}
 
     public record PackDelivery(@NotNull String url, @NotNull String hash, long sentAtMillis, boolean forced) {}
 }
