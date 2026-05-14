@@ -643,6 +643,80 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 | Resource pack: finalize MythicPvP custom font, rebrand `smpd` → `mythic` namespace | Dev B | |
 | Tebex webhook integration → cosmetic unlock pipeline | Dev A | |
 
+#### Command Completion Requirements
+
+- All `mythic-core` commands must provide permission-aware tab completions through `suite-command`.
+- Players must only see commands, subcommands, online player names, rank ids, durations, punishment categories, punishment template titles, and editor options they are permitted to use.
+- Console-supported commands must expose useful completions where Bukkit supports them, especially `/cgrant`, punishment template management, and history commands.
+- Completion providers must be backed by live core services where possible so rank ids, permissions, punishment categories, and punishment templates stay current after runtime edits.
+- Command completions must respect the command blocker so hidden commands are not exposed through `/`, `/command <tab>`, namespace aliases, or subcommand suggestions.
+
+#### Ranks And Grants Requirements
+
+- `/grant <username>` opens a menu flow for granting ranks: rank selection, duration selection, reason selection, and final confirmation.
+- The rank selection menu displays every grantable rank as a dye based on the rank color configured in the rank editor.
+- Rank selection lore must include staff-rank status, purchasable/donator status, prefix, suffix, parent/inheritance, weight, permission list, and available permission edit actions.
+- The duration menu must include `1d`, `7d`, `30d`, `90d`, `365d`, permanent, and custom chat input. Custom input must accept values like `1d`, `7d`, `30d`, `perm`, and `permanent`.
+- The reason menu must include preset reasons for staff rank, rank upgrade, purchased rank, and custom chat input.
+- The final grant confirmation menu must contain a summary item showing target username, rank, duration, and reason, plus green confirm and red cancel items.
+- `/grants <username>` opens a grant-history menu showing active and inactive grants. Each grant is displayed as a dye based on rank color while active, and as grey dye when inactive.
+- Grant lore must display duration, executor, reason, remaining time for temporary grants, active/inactive state, and click actions.
+- Left clicking an active grant makes it inactive without removing it from history. Right clicking an inactive grant removes it from the user's visible grant history.
+- `/cgrant <username> <rank> <duration> <reason>` must grant ranks from console and from permitted players.
+- `/cleargrants <username>` must clear the player's entire grant history and remove active grants.
+- Rank grants must preserve history by default; inactive grants remain visible until explicitly removed.
+- The rank editor must support both command and menu editing for prefix, suffix, weight, color, dye material, parent/inheritance, permission list, staff-rank toggle, donator/purchasable toggle, chat formatting, tab formatting, and nametag formatting.
+
+#### Rank Display Formatting Requirements
+
+- Each rank must support independent chat, tab, and nametag prefix/format fields.
+- All rank display fields must support Mythic hex strings and existing suite hex parsing.
+- Core chat formatting must use the rank's chat prefix and chat format.
+- Core tab formatting must use the rank's tab prefix and tab format.
+- Core nametag formatting must use the rank's nametag prefix and nametag format.
+- A rank's generic prefix/suffix must remain available as fallback values, but display-specific formats must take precedence.
+- Rank display changes must refresh affected chat, tablist, nametag, and scoreboard state through the core display services.
+
+#### Punishment Menus And Handbook Requirements
+
+- `/punish <username>` opens the punishment execution menu flow for the selected target.
+- The first punishment menu displays categories `WARN`, `MUTE`, `BAN`, and `BLACKLIST`, each represented by a distinct wool color.
+- Selecting a category opens a paginated menu of punishment templates for that category, including offence-number titles such as `Cheating #1`.
+- Punishment template lore must show duration, category, title, and additional staff guidance.
+- Selecting a punishment opens the proof menu with no-proof state, proof summary, chat-entered proof input, and proof confirmation.
+- After proof confirmation, the final punishment confirmation menu must show clear-inventory toggle, silent-execution toggle, punishment summary, and execute item.
+- The silent toggle must use the existing silent punishment behavior so no public broadcast is sent when silent is enabled.
+- `/punishments` opens a read-only staff handbook containing every category and every punishment template. It must never execute punishments.
+- `/history <username>` opens punishment history for the target.
+- `/clearpunishments <username>` and `/clearhistory <username>` clear punishment history.
+- `/punishmentadd <category> <duration> <title> <additional information>` adds a punishment template.
+- `/punishmentedit <title>` opens an editor menu for title, category, duration, and additional information.
+- `/punishmentremove <title>` removes a punishment template.
+- Punishment templates must include category, duration, title, and additional information.
+
+#### Persistence And Config Requirements
+
+- Rank definitions, rank grants, grant history, punishment templates, proof, blacklist records, and punishment history must persist network-wide.
+- YAML must configure all menu titles, item names, lore, prompts, confirmation text, error text, command responses, rank display defaults, punishment template seed data, grant duration presets, grant reason presets, and rank editor labels.
+- Runtime history and state must use the database/service layer rather than only local YAML.
+- YAML seed data may create default ranks and punishment templates when no database state exists.
+- Persistence must use existing SpacetimeDB tables/reducers where possible and add Phase 3 schema/reducer entries only for missing rank grants, rank definitions, punishment templates, proof, blacklist, or clear-history behavior.
+
+#### Phase 3 Test Additions
+
+- Add tests for permission-aware tab completions.
+- Add tests for grant flows, grant history, inactive grant behavior, `/cgrant`, and `/cleargrants`.
+- Add tests for rank editor commands and menus.
+- Add tests for independent chat, tab, and nametag rank formatting.
+- Add tests for `/punish` menu flow, proof entry, silent toggle, clear-inventory toggle, handbook templates, history, and template management.
+- Run `mvn -B -ntp -pl mythic-core -am test`, then full `mvn -B -ntp test`, before committing implementation work.
+- Run a Java source comment scan over changed Java files before committing implementation work.
+
+#### Phase 3 Completion Rule
+
+- Do not mark a Phase 3 row complete only because the row exists in this plan.
+- Mark a Phase 3 row complete only after detailed requirements are present, implementation exists, relevant tests pass, the source comment scan is clean for changed Java files, and the work is committed and pushed to `main`.
+
 Core protocol channels: `core:staff-chat`, `core:staff-presence`, `core:broadcast`, `core:chat-control`, and `core:punishment-update`. Core persistence uses the existing SpacetimeDB schema where possible, with Phase 3 migrations added only for missing audit, chat-control, or staff-presence state.
 
 ---
