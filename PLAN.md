@@ -643,6 +643,14 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 | Resource pack: finalize MythicPvP custom font, rebrand `smpd` → `mythic` namespace | Dev B | |
 | Tebex webhook integration → cosmetic unlock pipeline | Dev A | |
 
+#### Current Phase 3 Implementation Notes
+
+- ✅ Dynamic completion provider foundation exists in `suite-command` and is wired into initial `mythic-core` rank/grant commands.
+- ✅ Initial rank/grant service foundation exists with rank ids, color, dye, prefix, suffix, weight, parent, permissions, staff/donator flags, and independent chat/tab/nametag display formats.
+- ✅ Initial grant commands exist for `/grant`, `/grants`, `/cgrant`, `/cleargrants`, and `/rankeditor`, with permission-aware completions for players, ranks, durations, reasons, booleans, and rank fields.
+- 🚧 Rank/grant database persistence, complete multi-step grant menus, full rank editor mutations, and SpacetimeDB schema/reducer additions remain pending.
+- 🚧 Punishment menu/handbook implementation remains pending beyond the existing punishment service and silent flag foundation.
+
 #### Command Completion Requirements
 
 - All `mythic-core` commands must provide permission-aware tab completions through `suite-command`.

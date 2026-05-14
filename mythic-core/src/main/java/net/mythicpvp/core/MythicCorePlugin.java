@@ -1,14 +1,23 @@
 package net.mythicpvp.core;
 
 import net.mythicpvp.core.chat.ChatControlService;
+import net.mythicpvp.core.command.CGrantCommand;
+import net.mythicpvp.core.command.ClearGrantsCommand;
+import net.mythicpvp.core.command.CoreCompletions;
+import net.mythicpvp.core.command.GrantCommand;
+import net.mythicpvp.core.command.GrantsCommand;
+import net.mythicpvp.core.command.RankEditorCommand;
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.punishment.PunishmentService;
+import net.mythicpvp.core.rank.GrantService;
+import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.core.staff.StaffChannelService;
 import net.mythicpvp.core.staff.StaffPresenceService;
 import net.mythicpvp.suite.api.MythicPlugin;
 import net.mythicpvp.suite.command.CommandManager;
 import net.mythicpvp.suite.config.ConfigManager;
 import net.mythicpvp.suite.config.ConfigText;
+import net.mythicpvp.suite.menu.MenuListener;
 import net.mythicpvp.suite.protocol.ProtocolManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +33,8 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private StaffPresenceService staffPresenceService;
     private PunishmentService punishmentService;
     private ChatControlService chatControlService;
+    private RankService rankService;
+    private GrantService grantService;
     private CoreMessages messages;
 
     @Override
@@ -44,10 +55,21 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         saveResourceIfMissing("punishments.yml");
         saveResourceIfMissing("scoreboard.yml");
         saveResourceIfMissing("tablist.yml");
+        saveResourceIfMissing("ranks.yml");
         serverIdentity = ServerIdentity.fromEnvironment();
         configManager = new ConfigManager(this);
         messages = new CoreMessages(new ConfigText(configManager.getOrCreate("messages"), "messages"));
         commandManager = new CommandManager(this);
+        rankService = new RankService();
+        rankService.load(configManager.getOrCreate("ranks"));
+        grantService = new GrantService(rankService, Clock.systemUTC());
+        CoreCompletions.register(commandManager, rankService);
+        getServer().getPluginManager().registerEvents(new MenuListener(), this);
+        commandManager.register(new GrantCommand(grantService, rankService));
+        commandManager.register(new GrantsCommand(grantService, rankService));
+        commandManager.register(new CGrantCommand(grantService));
+        commandManager.register(new ClearGrantsCommand(grantService));
+        commandManager.register(new RankEditorCommand(rankService));
         ProtocolManager protocolManager = ProtocolManager.getInstance();
         staffChannelService = new StaffChannelService(protocolManager, serverIdentity.id());
         staffPresenceService = new StaffPresenceService(protocolManager, serverIdentity.id());
@@ -96,6 +118,16 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     @NotNull
     public ChatControlService chatControlService() {
         return chatControlService;
+    }
+
+    @NotNull
+    public RankService rankService() {
+        return rankService;
+    }
+
+    @NotNull
+    public GrantService grantService() {
+        return grantService;
     }
 
     @NotNull

@@ -20,6 +20,7 @@ public final class CommandManager {
     private final JavaPlugin plugin;
     private final Map<String, RegisteredCommand> commands = new ConcurrentHashMap<>();
     private final Map<Class<?>, Function<String, ?>> resolvers = new ConcurrentHashMap<>();
+    private final Map<String, CommandCompletionProvider> completions = new ConcurrentHashMap<>();
     private final CommandBlocker commandBlocker;
 
     public CommandManager(@NotNull JavaPlugin plugin) {
@@ -44,6 +45,10 @@ public final class CommandManager {
 
     public <T> void registerResolver(@NotNull Class<T> type, @NotNull Function<String, T> resolver) {
         resolvers.put(type, resolver);
+    }
+
+    public void registerCompletion(@NotNull String id, @NotNull CommandCompletionProvider provider) {
+        completions.put(id.toLowerCase(), provider);
     }
 
     @NotNull
@@ -87,7 +92,7 @@ public final class CommandManager {
             @Override
             @NotNull
             public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
-                return handleTabComplete(sender, primaryAlias, args);
+                return tabComplete(sender, primaryAlias, args);
             }
         };
 
@@ -193,22 +198,63 @@ public final class CommandManager {
     }
 
     @NotNull
-    private List<String> handleTabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
+    public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
         RegisteredCommand registered = commands.get(alias);
         if (registered == null) return Collections.emptyList();
         if (!commandBlocker.canSee(sender, alias)) return Collections.emptyList();
 
         if (args.length == 1) {
-            return registered.getSubcommandNames().stream()
+            List<String> subcommands = registered.getSubcommandNames().stream()
                     .filter(s -> s.startsWith(args[0].toLowerCase()))
                     .filter(s -> {
                         String permission = getSubcommandPermission(alias, s);
                         return permission == null || sender.hasPermission(permission);
                     })
                     .collect(Collectors.toList());
+            if (!subcommands.isEmpty()) {
+                return subcommands;
+            }
         }
 
-        return Collections.emptyList();
+        Method handler = null;
+        String subcommand = "";
+        String[] completionArgs = args;
+        if (args.length > 0) {
+            Method subHandler = registered.getSubcommand(args[0].toLowerCase());
+            if (subHandler != null) {
+                CommandPermission subPerm = subHandler.getAnnotation(CommandPermission.class);
+                if (subPerm != null && !sender.hasPermission(subPerm.value())) {
+                    return Collections.emptyList();
+                }
+                handler = subHandler;
+                subcommand = args[0].toLowerCase();
+                completionArgs = Arrays.copyOfRange(args, 1, args.length);
+            }
+        }
+        if (handler == null) {
+            handler = registered.getDefaultHandler();
+        }
+        if (handler == null) {
+            return Collections.emptyList();
+        }
+        Complete completion = handler.getAnnotation(Complete.class);
+        if (completion == null) {
+            return Collections.emptyList();
+        }
+        int index = Math.max(0, completionArgs.length - 1);
+        if (index >= completion.value().length) {
+            index = completion.value().length - 1;
+        }
+        String id = completion.value()[index].toLowerCase();
+        CommandCompletionProvider provider = completions.get(id);
+        if (provider == null) {
+            return Collections.emptyList();
+        }
+        CommandCompletionContext context = new CommandCompletionContext(sender, alias, subcommand, completionArgs);
+        String current = context.current().toLowerCase();
+        return provider.complete(context).stream()
+                .filter(value -> value.toLowerCase().startsWith(current))
+                .collect(Collectors.toList());
     }
 
     String getPermission(@NotNull String command) {

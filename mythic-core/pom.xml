@@ -50,6 +50,16 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>net.mythicpvp</groupId>
+            <artifactId>suite-item</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.mythicpvp</groupId>
+            <artifactId>suite-menu</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
         </dependency>

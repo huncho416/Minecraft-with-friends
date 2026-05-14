@@ -1,0 +1,49 @@
+ranks:
+  default:
+    name: "Default"
+    color: "#808080"
+    dye: "LIGHT_GRAY_DYE"
+    prefix: "&7"
+    suffix: ""
+    weight: 1000
+    staff: false
+    donator: false
+    parent: ""
+    permissions:
+      - "mythic.join"
+    chat-prefix: "&7"
+    chat-format: "%chat_prefix%%player%&7: &f%message%"
+    tab-prefix: "&7"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&7"
+    nametag-format: "%nametag_prefix%%player%"
+  owner:
+    name: "Owner"
+    color: "#DE2222"
+    dye: "RED_DYE"
+    prefix: "&#DD3838O&#E01B1Bw&#E72C2Cn&#EE3D3De&#EE0B0Br #DE2222"
+    suffix: ""
+    weight: 1
+    staff: true
+    donator: false
+    parent: "default"
+    permissions:
+      - "mythic.*"
+    chat-prefix: "&#DD3838O&#E01B1Bw&#E72C2Cn&#EE3D3De&#EE0B0Br #DE2222"
+    chat-format: "%chat_prefix%%player%&7: &f%message%"
+    tab-prefix: "&#D22020&lO&#DE2222&lW&#C12D2D&lN&#A43737&lE&#E90000&lR #FFFFFF&l"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#D22020&lO&#DE2222&lW&#C12D2D&lN&#A43737&lE&#E90000&lR #FFFFFF&l"
+    nametag-format: "%nametag_prefix%%player%"
+grant:
+  durations:
+    - "1d"
+    - "7d"
+    - "30d"
+    - "90d"
+    - "365d"
+    - "permanent"
+  reasons:
+    - "Staff Rank"
+    - "Rank Upgrade"
+    - "Purchased Rank"
