@@ -23,6 +23,7 @@ public class PaginatedMenu implements InventoryHolder {
     private final int rows;
     private final List<ItemStack> items = new ArrayList<>();
     private final Map<Integer, Consumer<InventoryClickEvent>> staticSlots = new HashMap<>();
+    private final Map<Integer, ItemStack> staticItems = new HashMap<>();
     private final Map<Integer, Consumer<InventoryClickEvent>> itemClickHandlers = new HashMap<>();
     private int currentPage = 0;
     private Inventory inventory;
@@ -68,6 +69,13 @@ public class PaginatedMenu implements InventoryHolder {
         return this;
     }
 
+    @NotNull
+    public PaginatedMenu staticSlot(int slot, @NotNull ItemStack item, @NotNull Consumer<InventoryClickEvent> handler) {
+        staticSlots.put(slot, handler);
+        staticItems.put(slot, item);
+        return this;
+    }
+
     public int getMaxPages() {
         return Math.max(1, (int) Math.ceil((double) items.size() / contentSlots.length));
     }
@@ -102,9 +110,7 @@ public class PaginatedMenu implements InventoryHolder {
             inventory.setItem(rows * 9 - 1, MythicItem.create(Material.ARROW).name("&#FF00F8Next Page →").build());
         }
 
-        staticSlots.forEach((slot, handler) -> {
-            if (inventory.getItem(slot) != null) return;
-        });
+        staticItems.forEach((slot, item) -> inventory.setItem(slot, item));
     }
 
     public void handleClick(@NotNull InventoryClickEvent event) {
@@ -118,6 +124,12 @@ public class PaginatedMenu implements InventoryHolder {
         }
         if (slot == rows * 9 - 1 && currentPage < getMaxPages() - 1) {
             open(player, currentPage + 1);
+            return;
+        }
+
+        Consumer<InventoryClickEvent> staticHandler = staticSlots.get(slot);
+        if (staticHandler != null) {
+            staticHandler.accept(event);
             return;
         }
 

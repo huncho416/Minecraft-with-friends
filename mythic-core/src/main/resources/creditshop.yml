@@ -1,0 +1,81 @@
+# Credit shop categories and items.
+# Each category appears as a clickable item in the main shop menu.
+# Each item within a category can be purchased with credits.
+#
+# item types: RANK, CRATE, COSMETIC, RANK_UPGRADE
+# For RANK items, "value" is the rank id passed to GrantService.
+# For CRATE items, "value" is the crate definition id.
+# For COSMETIC items, "value" is the cosmetic id.
+# For RANK_UPGRADE items, "value" is the target rank id.
+
+shop:
+  categories:
+    ranks:
+      display-name: "Ranks"
+      material: "DIAMOND"
+      slot: 11
+      items:
+        vip:
+          display-name: "VIP Rank"
+          material: "EMERALD"
+          cost: 1000
+          type: "RANK"
+          value: "vip"
+          lore:
+            - "&7Purchase the VIP rank."
+            - "&7Includes exclusive perks and prefix."
+        mvp:
+          display-name: "MVP Rank"
+          material: "DIAMOND"
+          cost: 2500
+          type: "RANK"
+          value: "mvp"
+          lore:
+            - "&7Purchase the MVP rank."
+            - "&7Includes all VIP perks plus more."
+
+    crates:
+      display-name: "Crates"
+      material: "ENDER_CHEST"
+      slot: 13
+      items:
+        common_crate:
+          display-name: "Common Crate"
+          material: "CHEST"
+          cost: 150
+          type: "CRATE"
+          value: "common_crate"
+          lore:
+            - "&7A common cosmetic crate."
+        rare_crate:
+          display-name: "Rare Crate"
+          material: "ENDER_CHEST"
+          cost: 500
+          type: "CRATE"
+          value: "rare_crate"
+          lore:
+            - "&7A rare cosmetic crate."
+        legendary_crate:
+          display-name: "Legendary Crate"
+          material: "DRAGON_EGG"
+          cost: 1200
+          type: "CRATE"
+          value: "legendary_crate"
+          lore:
+            - "&7A legendary cosmetic crate."
+
+    rank_upgrades:
+      display-name: "Rank Upgrades"
+      material: "NETHER_STAR"
+      slot: 15
+      items:
+        vip_to_mvp:
+          display-name: "VIP → MVP Upgrade"
+          material: "NETHER_STAR"
+          cost: 1500
+          type: "RANK_UPGRADE"
+          value: "mvp"
+          requires-rank: "vip"
+          lore:
+            - "&7Upgrade from VIP to MVP."
+            - "&7Requires VIP rank."

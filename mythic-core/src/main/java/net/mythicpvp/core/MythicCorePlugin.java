@@ -251,6 +251,17 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         getServer().getPluginManager().registerEvents(
                 new net.mythicpvp.core.cosmetic.CosmeticRedeemListener(cosmeticService), this);
 
+        saveResourceIfMissing("creditshop.yml");
+        net.mythicpvp.core.credit.CreditService creditService = new net.mythicpvp.core.credit.CreditService();
+        net.mythicpvp.core.credit.CreditShopText creditShopText =
+                new net.mythicpvp.core.credit.CreditShopText(menusConfig);
+        net.mythicpvp.core.credit.CreditShopService creditShopService =
+                new net.mythicpvp.core.credit.CreditShopService(
+                        creditService, grantService, cosmeticService, crateService, creditShopText);
+        creditShopService.loadFromConfig(configManager.getOrCreate("creditshop"));
+        commandManager.register(new net.mythicpvp.core.command.CreditsCommand(creditService));
+        commandManager.register(new net.mythicpvp.core.command.CreditShopCommand(creditShopService));
+
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());
         ChatGuard chatGuard = new ChatGuard(this, chatControlService, messages);
         getServer().getPluginManager().registerEvents(chatGuard, this);

@@ -36,7 +36,7 @@ class CrateServiceTest {
     void rollReturnsCosmeticFromPool() {
         EconomyManager.getInstance().deposit(player, Currency.COINS, 500);
         CrateDefinition crate = new CrateDefinition("test_crate", "Test Crate", 100, Currency.COINS,
-                List.of(new CrateDefinition.CrateEntry("particle_hearts", 100)));
+                List.of(new CrateDefinition.CrateEntry("particle_hearts", 100)), 0, 0);
 
         CrateRoll roll = crateService.roll(player, crate);
 
@@ -50,7 +50,7 @@ class CrateServiceTest {
     void rollDeductsCurrency() {
         EconomyManager.getInstance().deposit(player, Currency.COINS, 500);
         CrateDefinition crate = new CrateDefinition("test_crate", "Test Crate", 100, Currency.COINS,
-                List.of(new CrateDefinition.CrateEntry("particle_hearts", 100)));
+                List.of(new CrateDefinition.CrateEntry("particle_hearts", 100)), 0, 0);
 
         crateService.roll(player, crate);
 
@@ -60,7 +60,7 @@ class CrateServiceTest {
     @Test
     void rollFailsOnInsufficientBalance() {
         CrateDefinition crate = new CrateDefinition("test_crate", "Test Crate", 100, Currency.COINS,
-                List.of(new CrateDefinition.CrateEntry("particle_hearts", 100)));
+                List.of(new CrateDefinition.CrateEntry("particle_hearts", 100)), 0, 0);
 
         CrateRoll roll = crateService.roll(player, crate);
 
@@ -71,7 +71,7 @@ class CrateServiceTest {
     void singleEntryPoolIsDeterministic() {
         EconomyManager.getInstance().deposit(player, Currency.COINS, 1000);
         CrateDefinition crate = new CrateDefinition("test_crate", "Test Crate", 100, Currency.COINS,
-                List.of(new CrateDefinition.CrateEntry("particle_hearts", 1)));
+                List.of(new CrateDefinition.CrateEntry("particle_hearts", 1)), 0, 0);
 
         CrateRoll roll = crateService.roll(player, crate);
 
@@ -84,7 +84,7 @@ class CrateServiceTest {
     void rollAppearsInAuditLog() {
         EconomyManager.getInstance().deposit(player, Currency.COINS, 500);
         CrateDefinition crate = new CrateDefinition("test_crate", "Test Crate", 100, Currency.COINS,
-                List.of(new CrateDefinition.CrateEntry("particle_hearts", 100)));
+                List.of(new CrateDefinition.CrateEntry("particle_hearts", 100)), 0, 0);
 
         crateService.roll(player, crate);
 

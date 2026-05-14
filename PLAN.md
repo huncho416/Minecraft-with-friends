@@ -610,7 +610,7 @@ erDiagram
 
 | Surface | Tool | Result |
 |---|---|---|
-| Full Maven reactor | `mvn -B -ntp test` | **BUILD SUCCESS** — all 27 modules, 193 tests pass |
+| Full Maven reactor | `mvn -B -ntp test` | **BUILD SUCCESS** — all 28 modules, 209 tests pass |
 | Docker Compose syntax | `docker compose -f tools/docker/docker-compose.yml config --quiet` | Clean after Geyser, voice, Sentry wiring |
 | Docker Compose dev syntax | `docker compose -f tools/docker/docker-compose.dev.yml config --quiet` | Clean after voice and Sentry wiring |
 | `suite-database` schema package | `mvn -pl mythic-suite/suite-database test` | **20/20 green** (`MythicSchemaTest` 12, `DtoRoundTripTest` 5, `SpacetimeConnectionTest` 3) |

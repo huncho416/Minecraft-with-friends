@@ -12,8 +12,11 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public final class CosmeticMenuService {
 
@@ -50,7 +53,7 @@ public final class CosmeticMenuService {
             menu.slot(slots[i], MythicItem.create(mat)
                     .name("&#F529BE" + type.getDisplayName())
                     .lore(List.of("&7Owned: &f" + ownedCount + "/" + totalCount, text.clickToView()))
-                    .build(), event -> openBrowse(player, type));
+                    .build(), event -> openBrowse(player, type, EnumSet.noneOf(BrowseFilter.class)));
         }
 
         menu.slot(22, MythicItem.create(Material.ENDER_CHEST)
@@ -61,12 +64,47 @@ public final class CosmeticMenuService {
         menu.open(player);
     }
 
-    public void openBrowse(@NotNull Player player, @NotNull CosmeticType type) {
+    public void openBrowse(@NotNull Player player, @NotNull CosmeticType type,
+                           @NotNull Set<BrowseFilter> activeFilters) {
         UUID uuid = player.getUniqueId();
         PaginatedMenu menu = PaginatedMenu.create(6, text.browseTitle(type.getDisplayName()));
 
         Collection<CosmeticManager.Cosmetic> cosmetics = CosmeticManager.getInstance().getByType(type);
-        for (CosmeticManager.Cosmetic cosmetic : cosmetics) {
+        Stream<CosmeticManager.Cosmetic> stream = cosmetics.stream();
+
+        if (activeFilters.contains(BrowseFilter.OWNED)) {
+            stream = stream.filter(c -> CosmeticManager.getInstance().ownsCosmetic(uuid, c.id()));
+        }
+        if (activeFilters.contains(BrowseFilter.NOT_OWNED)) {
+            stream = stream.filter(c -> !CosmeticManager.getInstance().ownsCosmetic(uuid, c.id()));
+        }
+        if (activeFilters.contains(BrowseFilter.EQUIPPED)) {
+            stream = stream.filter(c -> {
+                String eq = CosmeticManager.getInstance().getEquipped(uuid, c.type());
+                return c.id().equalsIgnoreCase(eq);
+            });
+        }
+        if (activeFilters.contains(BrowseFilter.TRADABLE)) {
+            stream = stream.filter(CosmeticManager.Cosmetic::tradable);
+        }
+        if (activeFilters.contains(BrowseFilter.LIMITED)) {
+            stream = stream.filter(CosmeticManager.Cosmetic::limited);
+        }
+        if (activeFilters.contains(BrowseFilter.COMMON)) {
+            stream = stream.filter(c -> "COMMON".equalsIgnoreCase(c.rarity()));
+        }
+        if (activeFilters.contains(BrowseFilter.RARE)) {
+            stream = stream.filter(c -> "RARE".equalsIgnoreCase(c.rarity()));
+        }
+        if (activeFilters.contains(BrowseFilter.EPIC)) {
+            stream = stream.filter(c -> "EPIC".equalsIgnoreCase(c.rarity()));
+        }
+        if (activeFilters.contains(BrowseFilter.LEGENDARY)) {
+            stream = stream.filter(c -> "LEGENDARY".equalsIgnoreCase(c.rarity()));
+        }
+
+        List<CosmeticManager.Cosmetic> filtered = stream.toList();
+        for (CosmeticManager.Cosmetic cosmetic : filtered) {
             boolean owns = CosmeticManager.getInstance().ownsCosmetic(uuid, cosmetic.id());
             String equippedId = CosmeticManager.getInstance().getEquipped(uuid, type);
             boolean isEquipped = cosmetic.id().equalsIgnoreCase(equippedId);
@@ -85,7 +123,32 @@ public final class CosmeticMenuService {
             });
         }
 
+        addFilterBar(menu, player, type, activeFilters);
         menu.open(player);
+    }
+
+    private void addFilterBar(@NotNull PaginatedMenu menu, @NotNull Player player,
+                              @NotNull CosmeticType type, @NotNull Set<BrowseFilter> active) {
+        int slot = 45;
+        for (BrowseFilter filter : BrowseFilter.values()) {
+            if (slot > 52) break;
+            boolean on = active.contains(filter);
+            Material mat = on ? Material.LIME_STAINED_GLASS_PANE : Material.GRAY_STAINED_GLASS_PANE;
+            String toggle = on ? "&aON" : "&7OFF";
+            menu.staticSlot(slot, MythicItem.create(mat)
+                    .name("&#F529BE" + filter.displayName)
+                    .lore(List.of("&7Filter: " + toggle, "&#D2D8E0Click to toggle"))
+                    .build(), event -> {
+                Set<BrowseFilter> next = EnumSet.copyOf(active.isEmpty() ? EnumSet.noneOf(BrowseFilter.class) : active);
+                if (next.contains(filter)) {
+                    next.remove(filter);
+                } else {
+                    next.add(filter);
+                }
+                openBrowse(player, type, next);
+            });
+            slot++;
+        }
     }
 
     public void openDetail(@NotNull Player player, @NotNull CosmeticManager.Cosmetic cosmetic) {
@@ -146,6 +209,7 @@ public final class CosmeticMenuService {
         UUID uuid = player.getUniqueId();
 
         for (CrateDefinition crate : crateService.allCrates()) {
+            if (!crate.isAvailable()) continue;
             long balance = EconomyManager.getInstance().getBalance(uuid, crate.currency());
             menu.addItem(MythicItem.create(Material.ENDER_CHEST)
                     .name("&#F529BE" + crate.displayName())
@@ -189,5 +253,23 @@ public final class CosmeticMenuService {
                 .build(), event -> openCrates(player));
 
         menu.open(player);
+    }
+
+    public enum BrowseFilter {
+        OWNED("Owned"),
+        NOT_OWNED("Not Owned"),
+        EQUIPPED("Equipped"),
+        TRADABLE("Tradable"),
+        LIMITED("Limited"),
+        COMMON("Common"),
+        RARE("Rare"),
+        EPIC("Epic"),
+        LEGENDARY("Legendary");
+
+        final String displayName;
+
+        BrowseFilter(@NotNull String displayName) {
+            this.displayName = displayName;
+        }
     }
 }

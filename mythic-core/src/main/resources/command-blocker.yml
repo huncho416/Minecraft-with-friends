@@ -82,4 +82,7 @@ required-permissions:
   ownerchat: "mythic.core.ownerchat"
   staffmode: "mythic.core.staffmode"
   appeals: "mythic.core.punish.appeal"
+  cosmetics: "mythic.core.cosmetics"
+  credits: "mythic.core.credits"
+  creditshop: "mythic.core.creditshop"
   # /appeal is intentionally NOT permission-gated — anyone can file.

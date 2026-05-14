@@ -1,6 +1,6 @@
 package net.mythicpvp.core.command;
 
-import net.mythicpvp.core.cosmetic.CosmeticMenuService;
+import net.mythicpvp.core.credit.CreditShopService;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.CommandPermission;
 import net.mythicpvp.suite.command.Default;
@@ -8,18 +8,18 @@ import net.mythicpvp.suite.command.MythicCommand;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-@CommandAlias("cosmetics")
-@CommandPermission("mythic.core.cosmetics")
-public final class CosmeticsCommand extends MythicCommand {
+@CommandAlias("creditshop")
+@CommandPermission("mythic.core.creditshop")
+public final class CreditShopCommand extends MythicCommand {
 
-    private final CosmeticMenuService menuService;
+    private final CreditShopService shopService;
 
-    public CosmeticsCommand(@NotNull CosmeticMenuService menuService) {
-        this.menuService = menuService;
+    public CreditShopCommand(@NotNull CreditShopService shopService) {
+        this.shopService = shopService;
     }
 
     @Default
     public void execute(@NotNull Player player) {
-        menuService.openMain(player);
+        shopService.openMain(player);
     }
 }

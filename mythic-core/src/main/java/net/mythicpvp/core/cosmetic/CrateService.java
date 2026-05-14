@@ -54,7 +54,10 @@ public final class CrateService {
                 }
             }
 
-            crates.add(new CrateDefinition(id, displayName, cost, currency, List.copyOf(entries)));
+            long availableFrom = section.getLong("available-from", 0);
+            long availableUntil = section.getLong("available-until", 0);
+
+            crates.add(new CrateDefinition(id, displayName, cost, currency, List.copyOf(entries), availableFrom, availableUntil));
         }
 
         logger.info("[crates] Loaded " + crates.size() + " crate definitions");
@@ -92,6 +95,31 @@ public final class CrateService {
         double rollPercentage = (double) selected.weight() / totalWeight * 100.0;
         CosmeticManager.getInstance().grantCosmetic(player, selected.cosmeticId());
         cosmeticService.persistGrant(player, selected.cosmeticId(), "CRATE", crate.id());
+
+        CrateRoll result = new CrateRoll(player, crate.id(), selected.cosmeticId(), rollPercentage, System.currentTimeMillis());
+        auditLog.add(result);
+        return result;
+    }
+
+    @Nullable
+    public CrateRoll rollFree(@NotNull UUID player, @NotNull CrateDefinition crate) {
+        int totalWeight = crate.totalWeight();
+        if (totalWeight <= 0) return null;
+
+        int roll = ThreadLocalRandom.current().nextInt(totalWeight);
+        int cumulative = 0;
+        CrateDefinition.CrateEntry selected = crate.entries().getLast();
+        for (CrateDefinition.CrateEntry entry : crate.entries()) {
+            cumulative += entry.weight();
+            if (roll < cumulative) {
+                selected = entry;
+                break;
+            }
+        }
+
+        double rollPercentage = (double) selected.weight() / totalWeight * 100.0;
+        CosmeticManager.getInstance().grantCosmetic(player, selected.cosmeticId());
+        cosmeticService.persistGrant(player, selected.cosmeticId(), "CREDIT_SHOP_CRATE", crate.id());
 
         CrateRoll result = new CrateRoll(player, crate.id(), selected.cosmeticId(), rollPercentage, System.currentTimeMillis());
         auditLog.add(result);

@@ -94,3 +94,12 @@ cosmetics:
   cancel: "&#FF8A8ACancel"
   open-crates: "&#F529BECrates"
   back: "&#F529BEBack"
+
+# Credit shop menus (/creditshop).
+creditshop:
+  shop-title: "&#FFD700Credit Shop"
+  category-title: "&#FFD700%category%"
+  confirm-title: "&#FFD700Purchase %item%?"
+  click-to-view: "&#D2D8E0Click to browse"
+  confirm: "&#9CFF9CConfirm Purchase"
+  cancel: "&#FF8A8ACancel"
