@@ -1,11 +1,10 @@
-//! Public client-facing handle. Send commands to the driver, await responses.
+
 
 use serde_json::Value;
 use thiserror::Error;
 use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
-/// Result type for every reducer/subscription call.
 pub type StdbResult<T> = Result<T, StdbError>;
 
 #[derive(Debug, Error)]
@@ -26,32 +25,29 @@ pub enum StdbError {
     Json(#[from] serde_json::Error),
 }
 
-/// One command in flight to the driver.
 pub(crate) enum Command {
-    /// Call a reducer with positional args. Driver replies with raw payload
-    /// or rejection message.
+
     CallReducer {
         request_id: Uuid,
         reducer: &'static str,
         args: Value,
         reply: oneshot::Sender<StdbResult<Value>>,
     },
-    /// Subscribe to a table. Each row delivery is forwarded on `events`.
+
     Subscribe {
         table: &'static str,
         events: mpsc::UnboundedSender<TableEvent>,
         reply: oneshot::Sender<StdbResult<()>>,
     },
-    /// Cooperative shutdown.
+
     Shutdown,
 }
 
-/// Row event forwarded from the driver to subscribers.
 #[derive(Debug, Clone)]
 pub struct TableEvent {
     pub table: &'static str,
     pub op: TableOp,
-    /// Raw row payload — deserialize to your DTO.
+
     pub payload: String,
 }
 
@@ -62,16 +58,13 @@ pub enum TableOp {
     Delete,
 }
 
-/// Clone-able handle. Anything in the proxy that talks to STDB holds one
-/// of these — the driver task is the singleton on the other end.
 #[derive(Clone)]
 pub struct StdbHandle {
     pub(crate) tx: mpsc::Sender<Command>,
 }
 
 impl StdbHandle {
-    /// Call a reducer with `args` already serialized to a JSON value.
-    /// Most callers use [`crate::client::MythicStdbClient`] instead.
+
     pub async fn call_raw(
         &self,
         reducer: &'static str,
@@ -90,8 +83,6 @@ impl StdbHandle {
         reply_rx.await.map_err(|_| StdbError::ResponseDropped)?
     }
 
-    /// Subscribe to a table. Returns once the subscription is confirmed by
-    /// STDB; row events flow on the returned receiver.
     pub async fn subscribe(
         &self,
         table: &'static str,
@@ -110,7 +101,6 @@ impl StdbHandle {
         Ok(events_rx)
     }
 
-    /// Best-effort cooperative shutdown. Idempotent.
     pub async fn shutdown(&self) {
         let _ = self.tx.send(Command::Shutdown).await;
     }

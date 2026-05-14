@@ -8,12 +8,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-/**
- * No-op gateway used in tests and in single-server / standalone runs
- * where SpacetimeDB isn't reachable. Every method is a successful no-op.
- *
- * <p>Singleton: there's no per-instance state.
- */
 public final class NoopPersistenceGateway implements PersistenceGateway {
 
     public static final NoopPersistenceGateway INSTANCE = new NoopPersistenceGateway();

@@ -1,0 +1,28 @@
+[package]
+name = "infrarust_protocol"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+repository.workspace = true
+description = "Minecraft protocol codec for the Infrarust proxy"
+
+[lints]
+workspace = true
+
+[features]
+default = []
+libdeflater = ["dep:libdeflater"]
+
+[dependencies]
+fastnbt = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+bytes = { workspace = true }
+flate2 = { workspace = true }
+libdeflater = { workspace = true, optional = true }
+aes = { workspace = true }
+cfb8 = { workspace = true }
+cipher = { workspace = true }
+
+[dev-dependencies]

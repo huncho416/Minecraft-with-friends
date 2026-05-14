@@ -11,20 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-/**
- * Decorator that re-schedules every hydration call onto the Bukkit main
- * thread.
- *
- * <p>STDB delivers row events on its driver thread; the wrapped services
- * (in particular {@link net.mythicpvp.suite.permission.PermissionManager})
- * touch shared mutable state that's only safe on the server's main thread.
- * Wrapping the inner sink in this decorator is the cheapest correct fix.
- *
- * <p>Folia note: the per-region scheduler would be more precise here,
- * but for the rank/punishment registries (global state) the global
- * scheduler is the right target. Falls back to the legacy Bukkit
- * scheduler when not on Folia.
- */
 public final class MainThreadHydrationSink implements HydrationSink {
 
     private final JavaPlugin plugin;
@@ -48,14 +34,12 @@ public final class MainThreadHydrationSink implements HydrationSink {
     }
 
     private void schedule(@NotNull Consumer<HydrationSink> action) {
-        // Already on main thread? Apply directly to keep tests with a
-        // mocked main scheduler simple.
+
         if (plugin.getServer().isPrimaryThread()) {
             action.accept(inner);
             return;
         }
-        // Folia-safe via MythicScheduler — global region on Folia,
-        // legacy scheduler on Paper/Spigot.
+
         MythicScheduler.runSync(plugin, () -> action.accept(inner));
     }
 }

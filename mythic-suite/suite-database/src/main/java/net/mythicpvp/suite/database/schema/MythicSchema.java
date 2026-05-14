@@ -8,19 +8,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
-/**
- * Typed wrapper around {@link SpacetimeConnection#callReducer} for every
- * reducer declared in {@code mythic-cord/stdb}.
- *
- * <p>One method per reducer. Args are packaged as a positional JSON array
- * — SpacetimeDB's wire format — so the order here must match the Rust
- * function signature exactly. Add a new method when you add a reducer;
- * do not free-form call by name except in admin/debug code.
- *
- * <p>All methods return {@link CompletableFuture} of {@link ReducerResult}.
- * The future resolves when STDB acknowledges; check
- * {@link ReducerResult#success()} before assuming the mutation landed.
- */
 public final class MythicSchema {
 
     private static final Pattern UUID_PATTERN = Pattern.compile(
@@ -32,8 +19,6 @@ public final class MythicSchema {
         this.connection = connection;
     }
 
-    // ── players ──────────────────────────────────────────────────────
-
     @NotNull
     public CompletableFuture<ReducerResult> playerSetRank(@NotNull UUID uuid, @NotNull String rank) {
         return call(ReducerNames.PLAYER_SET_RANK, hyphenated(uuid), rank);
@@ -43,8 +28,6 @@ public final class MythicSchema {
     public CompletableFuture<ReducerResult> playerSetRegion(@NotNull UUID uuid, @NotNull String region) {
         return call(ReducerNames.PLAYER_SET_REGION, hyphenated(uuid), region);
     }
-
-    // ── registry ─────────────────────────────────────────────────────
 
     @NotNull
     public CompletableFuture<ReducerResult> registryAnnounce(
@@ -75,8 +58,6 @@ public final class MythicSchema {
     public CompletableFuture<ReducerResult> registryDrain(@NotNull String shardId) {
         return call(ReducerNames.REGISTRY_DRAIN, shardId);
     }
-
-    // ── sessions ─────────────────────────────────────────────────────
 
     @NotNull
     public CompletableFuture<ReducerResult> sessionLogin(
@@ -115,12 +96,6 @@ public final class MythicSchema {
         return call(ReducerNames.SESSION_REAP, olderThanSeconds);
     }
 
-    // ── punishments ──────────────────────────────────────────────────
-
-    /**
-     * Issue a punishment. Schema v2 signature — denormalized target/staff
-     * usernames, plus silent / clear-inventory / origin-server flags.
-     */
     @NotNull
     public CompletableFuture<ReducerResult> punishIssue(
             @NotNull UUID target,
@@ -198,14 +173,6 @@ public final class MythicSchema {
         return call(ReducerNames.BLACKLIST_REVOKE, entryId, hyphenated(staff), reason);
     }
 
-    // ── ranks: definitions ──────────────────────────────────────────
-
-    /**
-     * Insert-or-update a rank definition. Args mirror the Rust reducer
-     * signature in {@code mythic-stdb/src/ranks.rs::rank_define}.
-     * {@code permissionsJson} is a serialized JSON array string (the
-     * caller does the encoding so this method stays type-stable).
-     */
     @NotNull
     public CompletableFuture<ReducerResult> rankDefine(
             @NotNull String id,
@@ -241,8 +208,6 @@ public final class MythicSchema {
     public CompletableFuture<ReducerResult> rankRemove(@NotNull String id) {
         return call(ReducerNames.RANK_REMOVE, id);
     }
-
-    // ── ranks: grants ───────────────────────────────────────────────
 
     @NotNull
     public CompletableFuture<ReducerResult> grantIssue(
@@ -295,7 +260,6 @@ public final class MythicSchema {
                 appealId, hyphenated(reviewer), decision.wireValue(), notes);
     }
 
-    /** Wire values match the Rust check in {@code appeal_review}. */
     public enum AppealDecision {
         APPROVED("APPROVED"),
         DENIED("DENIED");
@@ -311,8 +275,6 @@ public final class MythicSchema {
             return wire;
         }
     }
-
-    // ── economy ──────────────────────────────────────────────────────
 
     @NotNull
     public CompletableFuture<ReducerResult> economyAdjust(
@@ -358,8 +320,6 @@ public final class MythicSchema {
                 hyphenated(uuid), sinceMicros, untilMicros, reason);
     }
 
-    // ── cosmetics ────────────────────────────────────────────────────
-
     @NotNull
     public CompletableFuture<ReducerResult> cosmeticGrant(
             @NotNull UUID player,
@@ -372,7 +332,6 @@ public final class MythicSchema {
                 hyphenated(player), cosmeticId, type.wireValue(), source, reference);
     }
 
-    /** Pass {@code ""} as {@code cosmeticId} to unequip the slot. */
     @NotNull
     public CompletableFuture<ReducerResult> cosmeticEquip(
             @NotNull UUID player, @NotNull StdbCosmeticType type, @NotNull String cosmeticId) {
@@ -380,8 +339,6 @@ public final class MythicSchema {
                 ReducerNames.COSMETIC_EQUIP,
                 hyphenated(player), type.wireValue(), cosmeticId);
     }
-
-    // ── social ───────────────────────────────────────────────────────
 
     @NotNull
     public CompletableFuture<ReducerResult> friendRequest(@NotNull UUID from, @NotNull UUID to) {
@@ -438,8 +395,6 @@ public final class MythicSchema {
         return call(ReducerNames.MAIL_MARK_READ, mailId);
     }
 
-    // ── gameplay ─────────────────────────────────────────────────────
-
     @NotNull
     public CompletableFuture<ReducerResult> islandCreate(
             @NotNull String islandId,
@@ -485,18 +440,11 @@ public final class MythicSchema {
         return call(ReducerNames.LEADERBOARD_REBUILD, board, timeframe, statKey, topN);
     }
 
-    // ── helpers ──────────────────────────────────────────────────────
-
     @NotNull
     private CompletableFuture<ReducerResult> call(@NotNull String reducer, @NotNull Object... args) {
         return connection.callReducer(reducer, args);
     }
 
-    /**
-     * Hyphenated 36-char form expected by {@code common::require_uuid}.
-     * {@link UUID#toString()} already produces this form; the wrapper
-     * exists so a future change to identity representation is one edit.
-     */
     @NotNull
     static String hyphenated(@NotNull UUID uuid) {
         String s = uuid.toString();

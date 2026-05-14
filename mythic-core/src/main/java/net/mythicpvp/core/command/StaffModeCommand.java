@@ -9,13 +9,6 @@ import net.mythicpvp.suite.command.MythicCommand;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * {@code /staffmode} (alias {@code /sm}) — toggle the caller into staff
- * mode. Player-only because staff mode mutates inventory + flight +
- * vanish, all of which require an actual player.
- *
- * <p>Permission: {@code mythic.core.staffmode}.
- */
 @CommandAlias("staffmode")
 @CommandPermission("mythic.core.staffmode")
 public final class StaffModeCommand extends MythicCommand {

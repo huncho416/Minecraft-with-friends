@@ -1,34 +1,33 @@
-# Vendored upstream — Infrarust
+﻿# Vendored upstream â€” Infrarust
 
-This file is **regenerated** by `tools/vendor-infrarust.{sh,ps1}`. Until
-you run that script, `mythic-cord/infrarust/` does not exist and the
-workspace builds the **standalone** proxy (no Minecraft accept loop —
-registry citizen + admin HTTP only).
+This snapshot was extracted from https://github.com/Shadowner/Infrarust by
+`mythic-cord/tools/vendor-infrarust.{ps1,sh}`. Don't edit files under
+`infrarust/` by hand; instead add MythicCord-specific code in
+`mythic-cord/proxy/`, `mythic-cord/plugin-routing/`, or
+`mythic-cord/stdb-bridge/` â€” those crates depend on the vendored API
+and survive re-baselines untouched.
 
-## Bootstrap
+## Current pin
 
-```sh
-# Linux/macOS
-./tools/vendor-infrarust.sh
+| Key | Value |
+|---|---|
+| Ref      | `v2.0.0-alpha.6` |
+| Commit   | `5ef97c3c2daeee52d3817e79e5655bf98fd1959c` |
+| Date     | 2026-04-12 12:12:20 +0200 |
 
-# Windows
-.\tools\vendor-infrarust.ps1
+## Re-baselining
+
+```
+.\tools\vendor-infrarust.ps1 -Ref v2.0.0-alpha.7   # or whatever ref
 ```
 
-Default pin: **`v2.0.0-alpha.6`**. After vendoring:
+After re-vendoring, run:
 
-```sh
+```
 cargo build --workspace --features with-infrarust
 ```
 
-## Rationale
-
-We **fork from Infrarust directly** (not from SpacerCord, which is itself
-a fork). SpacerCord is consulted as a reference for the SpacetimeDB
-driver pattern — see `mythic-cord/stdb-bridge/src/driver.rs` for the
-cherry-pick — but its `module_bindings` are replaced wholesale with
-bindings against `mythic-stdb`.
-
 ## License
 
-Infrarust is AGPL-3.0 with a plugin exception. See `LICENSE`.
+Infrarust is AGPL-3.0 with a plugin exception. `mythic-cord/LICENSE`
+preserves both terms verbatim.

@@ -18,15 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Unit-level coverage for the parts of {@link StaffModeService} that
- * don't require a real {@code Player} object — config loading, tool
- * parsing, and the freeze flag set.
- *
- * <p>Full inventory snapshot/restore is exercised structurally through
- * the surface API; integration tests with a real Player would need a
- * heavier MockBukkit setup that's out of scope for this slice.
- */
 class StaffModeServiceTest {
 
     private ServerMock server;

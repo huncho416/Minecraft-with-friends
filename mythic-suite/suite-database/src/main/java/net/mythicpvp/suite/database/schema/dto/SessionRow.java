@@ -1,6 +1,5 @@
 package net.mythicpvp.suite.database.schema.dto;
 
-/** Mirrors the {@code sessions} table row. */
 public record SessionRow(
         String player_uuid,
         String username,

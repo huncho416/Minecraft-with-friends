@@ -1,20 +1,4 @@
-//! Driver task — owns the WebSocket and multiplexes calls/subscriptions.
-//!
-//! Wire format mirrors what the Java suite uses (see
-//! `mythic-suite/suite-database/src/main/java/.../SpacetimeConnection.java`):
-//!
-//! * Reducer call:
-//!   `{"type":"call","requestId":"<uuid>","reducer":"<name>","args":[…]}`
-//! * Subscribe:
-//!   `{"type":"subscribe","queryStrings":["SELECT * FROM <table>"]}`
-//! * Reducer ack:
-//!   `{"requestId":"<uuid>","payload":<json>,"error":<null|string>}`
-//! * Row event:
-//!   `{"table":"<name>","operation":"insert|update|delete","payload":<row>}`
-//!
-//! Reconnects on socket drop with exponential backoff (capped at 30s).
-//! In-flight calls are failed with [`StdbError::ResponseDropped`] on
-//! disconnect — callers retry at the application layer.
+
 
 use crate::handle::{Command, StdbError, StdbHandle, StdbResult, TableEvent, TableOp};
 use crate::schema::SCHEMA_VERSION;
@@ -28,16 +12,14 @@ use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
-/// Tunables for the driver task.
 #[derive(Debug, Clone)]
 pub struct DriverConfig {
-    /// e.g. `http://spacetimedb:3000` — converted to `ws://…/database/subscribe/<module>`.
+
     pub stdb_uri: String,
     pub module_name: String,
-    /// Bound on the command channel between handles and driver. Backpressure
-    /// kicks in when the driver falls behind.
+
     pub command_capacity: usize,
-    /// Initial reconnect delay; doubles each failure up to 30s.
+
     pub reconnect_initial: Duration,
 }
 
@@ -52,8 +34,6 @@ impl Default for DriverConfig {
     }
 }
 
-/// Spawn the driver task on the current tokio runtime. Returns a
-/// clone-able handle and the driver's join handle (await for shutdown).
 pub fn spawn_driver(config: DriverConfig) -> (StdbHandle, tokio::task::JoinHandle<()>) {
     let (tx, rx) = mpsc::channel(config.command_capacity);
     let handle = StdbHandle { tx };
@@ -63,7 +43,6 @@ pub fn spawn_driver(config: DriverConfig) -> (StdbHandle, tokio::task::JoinHandl
 
 type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
-/// Per-driver in-flight state.
 struct InFlight {
     pending_calls: HashMap<Uuid, oneshot::Sender<StdbResult<Value>>>,
     subscriptions: HashMap<&'static str, Vec<mpsc::UnboundedSender<TableEvent>>>,
@@ -83,7 +62,6 @@ impl InFlight {
         }
     }
 
-    /// Drop dead subscriber channels (receiver gone). Called periodically.
     fn prune_subscribers(&mut self) {
         for senders in self.subscriptions.values_mut() {
             senders.retain(|s| !s.is_closed());
@@ -105,7 +83,7 @@ async fn driver_main(config: DriverConfig, mut rx: mpsc::Receiver<Command>) {
                     warn!("stdb-driver session ended: {e}");
                 }
                 state.fail_all_pending();
-                // Caller asked us to shut down? Then exit; otherwise reconnect.
+
                 if rx.is_closed() {
                     info!("stdb-driver: command channel closed, exiting");
                     return;
@@ -140,8 +118,6 @@ async fn run_session(
 ) -> Result<(), String> {
     let (mut sink, mut stream) = ws.split();
 
-    // Re-establish subscriptions after reconnect — driver remembers what
-    // each handle is subscribed to.
     for table in state.subscriptions.keys().copied().collect::<Vec<_>>() {
         let msg = json!({
             "type": "subscribe",
@@ -180,8 +156,7 @@ async fn run_session(
                     Some(Ok(Message::Ping(p))) => {
                         let _ = sink.send(Message::Pong(p)).await;
                     }
-                    // STDB only emits text frames; ignore Binary / Pong /
-                    // Frame / future variants without dropping the session.
+
                     Some(Ok(_)) => {}
                     Some(Err(e)) => return Err(format!("ws read: {e}")),
                 }
@@ -227,8 +202,7 @@ async fn handle_command(
                 return Err(format!("send subscribe: {e}"));
             }
             state.subscriptions.entry(table).or_default().push(events);
-            // Subscriptions are confirmed implicitly on next row event;
-            // we ack immediately so callers don't block on first row.
+
             let _ = reply.send(Ok(()));
             Ok(())
         }
@@ -270,8 +244,7 @@ fn handle_incoming(text: &str, state: &mut InFlight) -> Result<(), String> {
             .get("payload")
             .map(ToString::to_string)
             .unwrap_or_default();
-        // Find the matching subscription (table is &'static, but the wire
-        // gave us a regular string — match by value).
+
         let subs = state
             .subscriptions
             .iter()
@@ -291,8 +264,6 @@ fn handle_incoming(text: &str, state: &mut InFlight) -> Result<(), String> {
     Ok(())
 }
 
-/// Block until the live `module_meta` row is observed; verify
-/// `schema_version == SCHEMA_VERSION`. Call this once at boot.
 pub async fn assert_schema_version(handle: &StdbHandle) -> StdbResult<()> {
     use crate::schema::table::MODULE_META;
     let mut events = handle.subscribe(MODULE_META).await?;
@@ -304,9 +275,7 @@ pub async fn assert_schema_version(handle: &StdbHandle) -> StdbResult<()> {
             let Some(v) = parsed.get("schema_version").and_then(Value::as_u64) else {
                 continue;
             };
-            // STDB's `schema_version` is a u32 in the schema; if a row ever
-            // reports something out of range, treat it as a mismatch with a
-            // sentinel `u32::MAX` actual value rather than silently truncate.
+
             let actual = u32::try_from(v).unwrap_or(u32::MAX);
             if actual == SCHEMA_VERSION {
                 return Ok(());

@@ -32,9 +32,9 @@ class ResourcePackManagerTest {
         Files.writeString(pack, "mythic");
         assertEquals("af1fc7004e01a84ca36b0048155fb7d37d1fc41b", manager.computeHash(pack));
         manager.registerModel("mythic_sword", Material.DIAMOND_SWORD, 10001);
-        manager.registerFont("title", "smpd:font/mythic_title");
+        manager.registerFont("title", "mythic:font/title");
         assertEquals(10001, manager.getModel("MYTHIC_SWORD").customModelData());
-        assertEquals("smpd:font/mythic_title", manager.getFont("TITLE"));
+        assertEquals("mythic:font/title", manager.getFont("TITLE"));
     }
 
     @Test

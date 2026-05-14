@@ -3,10 +3,6 @@ package net.mythicpvp.suite.database.schema;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Mirrors {@code common::grant_source}. Identifies why a rank grant exists
- * — staff promotion, store purchase, automated promotion, or system seed.
- */
 public enum GrantSource {
     STAFF("STAFF"),
     PURCHASE("PURCHASE"),

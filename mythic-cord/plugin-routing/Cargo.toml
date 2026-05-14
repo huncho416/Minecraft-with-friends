@@ -1,4 +1,4 @@
-[package]
+﻿[package]
 name = "mythiccord-plugin-routing"
 description = "Infrarust plugin: wires player lifecycle and routing into mythic-stdb"
 version.workspace = true
@@ -27,18 +27,19 @@ thiserror = { workspace = true }
 # Cargo eagerly resolves `path = ...` dependencies even when behind
 # `optional = true`, so we can't list them here until the subtree
 # exists on disk. `tools/vendor-infrarust.{sh,ps1}` un-comments the
-# block below as part of the vendor step — see VENDOR.md.
+# block below as part of the vendor step â€” see VENDOR.md.
 #
 # >>> BEGIN VENDOR-MANAGED BLOCK
-# infrarust-api  = { path = "../infrarust/crates/infrarust-api",  optional = true }
-# infrarust-core = { path = "../infrarust/crates/infrarust-core", optional = true }
+infrarust-api  = { path = "../infrarust/crates/infrarust-api",  optional = true }
+infrarust-core = { path = "../infrarust/crates/infrarust-core", optional = true }
 # >>> END VENDOR-MANAGED BLOCK
 
 [features]
 default = []
 # The vendor script flips `with-infrarust` to depend on the un-commented
 # infrarust-api / infrarust-core entries above.
-with-infrarust = []
+with-infrarust = ["dep:infrarust-api", "dep:infrarust-core"]
 
 [lints]
 workspace = true
+

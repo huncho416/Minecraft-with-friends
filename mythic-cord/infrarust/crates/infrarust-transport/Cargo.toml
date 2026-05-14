@@ -1,0 +1,26 @@
+[package]
+name = "infrarust-transport"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+description = "Low-level networking layer for the Infrarust Minecraft proxy"
+
+[lints]
+workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+bytes = { workspace = true }
+socket2 = { workspace = true }
+ppp = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+infrarust_config = { workspace = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+nix = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }

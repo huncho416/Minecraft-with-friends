@@ -19,11 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies that mutations on RankService and GrantService trigger the
- * registered display refresher callbacks. Pure-fn — no MockBukkit, no
- * actual DisplayService. The wiring contract is what we're proving.
- */
 class DisplayRefresherWiringTest {
 
     private static final UUID TARGET = UUID.fromString("11111111-1111-1111-1111-111111111111");
@@ -37,20 +32,16 @@ class DisplayRefresherWiringTest {
         RankService ranks = new RankService();
         ranks.setDisplayRefresher(calls::incrementAndGet);
 
-        // Direct register — not in the seeding path — fires the refresher.
         ranks.register(rank("vip", 100));
         assertEquals(1, calls.get());
 
-        // setField re-registers and fires again.
         assertTrue(ranks.setField("vip", "weight", "50"));
         assertEquals(2, calls.get());
     }
 
     @Test
     void rankApplyRankFromHydrationCallsRefresher() {
-        // applyRank is the no-echo path used by hydration; it still fires
-        // the display refresher because a hydrated rank can change every
-        // bearer's tab/scoreboard/nametag.
+
         AtomicInteger calls = new AtomicInteger();
         RankService ranks = new RankService();
         ranks.setDisplayRefresher(calls::incrementAndGet);
@@ -79,8 +70,6 @@ class DisplayRefresherWiringTest {
         grants.deactivate(g.id());
         grants.clear(TARGET);
 
-        // grant + deactivate + clear (which removes the deactivated grant
-        // from history, counts as a removed-grant clear) → 3 callbacks.
         assertEquals(3, refreshed.size());
         assertTrue(refreshed.stream().allMatch(uuid -> uuid.equals(TARGET)));
     }
@@ -105,20 +94,14 @@ class DisplayRefresherWiringTest {
 
     @Test
     void seedingDoesNotFireRefresher() {
-        // The YAML load path constructs ranks BEFORE DisplayService
-        // exists; firing the refresher would NPE on a yet-unset callback.
-        // RankService's seedingFromYaml flag suppresses the refresh
-        // during load(); only direct register() afterwards fires it.
+
         AtomicInteger calls = new AtomicInteger();
         RankService ranks = new RankService();
         ranks.setDisplayRefresher(calls::incrementAndGet);
 
-        // Simulate the seeding path. We don't have a public way to set
-        // the flag from outside, but the no-arg load() path does it.
-        // Instead we verify that the no-op default refresher is safe.
         RankService bareRanks = new RankService();
-        bareRanks.register(rank("default", 1000));  // no refresher set — must not throw
-        // If we reach here without exception the contract holds.
+        bareRanks.register(rank("default", 1000));
+
         assertEquals(0, calls.get(), "default no-op refresher must be silent");
     }
 

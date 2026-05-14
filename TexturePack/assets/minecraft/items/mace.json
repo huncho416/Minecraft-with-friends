@@ -17,7 +17,7 @@
         ],
         "on_true": {
           "type": "minecraft:model",
-          "model": "smpd:item/density"
+          "model": "mythic:item/density"
         },
         "on_false": {
           "type": "minecraft:empty"
@@ -34,7 +34,7 @@
         ],
         "on_true": {
           "type": "minecraft:model",
-          "model": "smpd:item/breach"
+          "model": "mythic:item/breach"
         },
         "on_false": {
           "type": "minecraft:empty"

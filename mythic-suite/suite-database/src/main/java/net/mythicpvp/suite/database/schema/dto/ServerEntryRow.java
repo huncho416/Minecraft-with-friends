@@ -1,6 +1,5 @@
 package net.mythicpvp.suite.database.schema.dto;
 
-/** Mirrors the {@code server_registry} table row. */
 public record ServerEntryRow(
         String shard_id,
         String role,

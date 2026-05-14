@@ -18,17 +18,11 @@ public final class GrantService {
     private final Clock clock;
     private final AtomicLong ids = new AtomicLong();
     private final List<RankGrant> grants = new CopyOnWriteArrayList<>();
-    // Optional persistence sink. Defaults to no-op so existing tests stay
-    // green; production wiring sets this to StdbPersistenceGateway in
-    // MythicCorePlugin.onEnable.
+
     private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
-    // Optional display refresher. Called with the affected player's UUID
-    // after every grant mutation so the DisplayService can re-push tab,
-    // nametag, and scoreboard for that player. No-op in tests.
+
     private volatile java.util.function.Consumer<UUID> displayRefresher = uuid -> {};
-    // Optional grant observer — fires once after a successful grant().
-    // Used by the cosmetic-bundle integration to auto-grant the rank's
-    // bundled cosmetics. No-op in tests.
+
     private volatile java.util.function.Consumer<RankGrant> grantObserver = grant -> {};
 
     public GrantService(@NotNull RankService rankService, @NotNull Clock clock) {
@@ -60,8 +54,7 @@ public final class GrantService {
         PermissionManager.getInstance().setPlayerRank(targetUuid, activeRank(targetUuid));
         persistence.grantIssue(grant);
         displayRefresher.accept(targetUuid);
-        // Fire the post-grant observer last so persistence + display
-        // are already in the right state if the observer reads them.
+
         grantObserver.accept(grant);
         return grant;
     }
@@ -122,33 +115,20 @@ public final class GrantService {
         return removed;
     }
 
-    /**
-     * Insert-or-replace a grant by id without firing the persistence
-     * gateway. Used by the STDB hydration path when rows arrive from the
-     * database; calling {@link #grant} would re-write the same row to
-     * STDB and infinite-loop.
-     *
-     * <p>Also keeps the auto-inc id generator monotonically ahead of any
-     * id observed from STDB so future {@link #grant} calls don't collide.
-     */
     public void applyGrant(@NotNull RankGrant grant) {
         grants.removeIf(existing -> existing.id() == grant.id());
         grants.add(grant);
-        // Keep the id generator ahead of any seen id so subsequent
-        // grant() calls produce unique ids.
+
         long observed = grant.id();
         long current = ids.get();
         if (observed > current) {
             ids.compareAndSet(current, observed);
         }
         PermissionManager.getInstance().setPlayerRank(grant.targetUuid(), activeRank(grant.targetUuid()));
-        // Hydration also touches the visible rank, so refresh display.
-        // Refresher schedules onto the main thread itself so this is
-        // safe to call from the STDB driver thread via the sink.
+
         displayRefresher.accept(grant.targetUuid());
     }
 
-    /** Remove a grant by id without firing the persistence gateway. */
     public void removeGrant(long grantId) {
         UUID owner = grants.stream()
                 .filter(g -> g.id() == grantId)

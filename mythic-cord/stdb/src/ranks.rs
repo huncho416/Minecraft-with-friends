@@ -1,60 +1,36 @@
-//! Ranks: definitions + grants.
-//!
-//! Mirrors mythic-core's `CoreRank` and `RankGrant` records. Two tables:
-//! - `rank_definitions` — one row per rank id (default, vip, mod, owner…).
-//!   Edits in-place via `rank_define`. YAML-seeded at boot.
-//! - `rank_grants` — append-only history of every grant ever issued.
-//!   Phase 3 keeps inactive grants visible until explicitly removed
-//!   (PLAN line 683), so we soft-delete via `active=false`.
+
 
 use crate::common::{require_backend, require_uuid, PlayerUuid, ReducerResult};
 use crate::reject;
 use spacetimedb::{reducer, table, ReducerContext, Table, Timestamp};
 
-// ── Rank definitions ─────────────────────────────────────────────────
-
 #[table(name = rank_definitions, public)]
 pub struct RankDefinition {
-    /// Lowercased rank id (e.g. `default`, `vip`, `owner`).
+
     #[primary_key]
     pub id: String,
 
-    /// Display name (preserved casing).
     pub display_name: String,
 
-    /// Hex color for the rank (`#RRGGBB`).
     pub color: String,
 
-    /// Bukkit `Material` name for the rank-selection menu icon
-    /// (e.g. `WHITE_DYE`). Stored as a string so the schema doesn't
-    /// pin a Bukkit version.
     pub dye: String,
 
-    /// Generic prefix (legacy / fallback when display-specific is empty).
     pub prefix: String,
 
-    /// Generic suffix.
     pub suffix: String,
 
-    /// Lower wins when a player has multiple ranks (1 = highest priority).
     #[index(btree)]
     pub weight: i32,
 
-    /// Staff rank flag.
     pub staff: bool,
 
-    /// Donator/purchasable flag.
     pub donator: bool,
 
-    /// Parent rank id for inheritance display (empty = no parent).
     pub parent: String,
 
-    /// JSON-encoded array of permission strings. Stored as JSON because
-    /// SpacetimeDB doesn't natively support `Vec<String>` columns.
     pub permissions_json: String,
 
-    /// Display-specific fields. All support hex strings via the suite's
-    /// MythicHex parser. Empty string = fall back to `prefix`/`suffix`.
     pub chat_prefix: String,
     pub chat_format: String,
     pub tab_prefix: String,
@@ -62,15 +38,11 @@ pub struct RankDefinition {
     pub nametag_prefix: String,
     pub nametag_format: String,
 
-    /// `true` for ranks seeded from YAML at boot. Lets ops distinguish
-    /// hand-edited definitions from defaults that may be re-seeded.
     pub seeded: bool,
 
     pub created_at: Timestamp,
     pub updated_at: Timestamp,
 }
-
-// ── Rank grants ──────────────────────────────────────────────────────
 
 #[table(name = rank_grants, public)]
 pub struct RankGrant {
@@ -83,7 +55,6 @@ pub struct RankGrant {
 
     pub target_name: String,
 
-    /// FK to [`RankDefinition::id`].
     #[index(btree)]
     pub rank_id: String,
 
@@ -92,28 +63,16 @@ pub struct RankGrant {
 
     pub reason: String,
 
-    /// `STAFF`, `PURCHASE`, `PROMOTION`, `SYSTEM`. See
-    /// [`crate::common::grant_source`].
     pub source: String,
 
     pub created_at: Timestamp,
 
-    /// `0` = permanent.
     pub expires_at_micros: i64,
 
-    /// Active grants count toward the player's rank set; inactive grants
-    /// remain in history (PLAN line 683). Soft-deactivate via
-    /// `grant_deactivate`; hard-remove via `grant_remove_inactive`.
     #[index(btree)]
     pub active: bool,
 }
 
-// ── Helpers exposed for the proxy / suite ────────────────────────────
-
-/// Find the highest-priority active rank id for a player. Lowest weight
-/// wins; ties broken by `created_at` (newest first), then by rank id for
-/// stability. Returns `None` if no active grants — caller decides
-/// fallback (mythic-core uses `"default"`).
 pub fn active_rank(ctx: &ReducerContext, uuid: &str) -> Option<String> {
     let now = ctx.timestamp.to_micros_since_unix_epoch();
     let definitions = ctx.db.rank_definitions();
@@ -142,10 +101,6 @@ pub fn active_rank(ctx: &ReducerContext, uuid: &str) -> Option<String> {
     best.map(|(_, _, id)| id)
 }
 
-// ── Reducers: definitions ────────────────────────────────────────────
-
-/// Insert-or-update a rank definition. Idempotent — safe to call from
-/// YAML seeding on every boot.
 #[reducer]
 #[allow(clippy::too_many_arguments)]
 pub fn rank_define(
@@ -231,8 +186,7 @@ pub fn rank_remove(ctx: &ReducerContext, id: String) -> ReducerResult {
     if id == "default" {
         reject!("cannot remove the default rank");
     }
-    // Refuse if any active grant references this rank — the caller should
-    // call `grant_clear` for affected players first.
+
     let in_use = ctx
         .db
         .rank_grants()
@@ -244,8 +198,6 @@ pub fn rank_remove(ctx: &ReducerContext, id: String) -> ReducerResult {
     ctx.db.rank_definitions().id().delete(id);
     Ok(())
 }
-
-// ── Reducers: grants ─────────────────────────────────────────────────
 
 #[reducer]
 #[allow(clippy::too_many_arguments)]
@@ -287,8 +239,6 @@ pub fn grant_issue(
     Ok(())
 }
 
-/// Soft-deactivate a grant — keeps the row visible in history.
-/// Used by `/grants` left-click and by the expiry janitor.
 #[reducer]
 pub fn grant_deactivate(ctx: &ReducerContext, grant_id: u64) -> ReducerResult {
     require_backend(ctx)?;
@@ -304,9 +254,6 @@ pub fn grant_deactivate(ctx: &ReducerContext, grant_id: u64) -> ReducerResult {
     Ok(())
 }
 
-/// Hard-remove an inactive grant from history. `/grants` right-click on
-/// inactive entries. Refuses to remove active grants — caller must
-/// `grant_deactivate` first.
 #[reducer]
 pub fn grant_remove_inactive(ctx: &ReducerContext, grant_id: u64) -> ReducerResult {
     require_backend(ctx)?;
@@ -321,8 +268,6 @@ pub fn grant_remove_inactive(ctx: &ReducerContext, grant_id: u64) -> ReducerResu
     Ok(())
 }
 
-/// Clear all grants for a player — both active history and inactive.
-/// `/cleargrants <username>`.
 #[reducer]
 pub fn grant_clear(ctx: &ReducerContext, target_uuid: PlayerUuid) -> ReducerResult {
     require_backend(ctx)?;
@@ -341,8 +286,6 @@ pub fn grant_clear(ctx: &ReducerContext, target_uuid: PlayerUuid) -> ReducerResu
     Ok(())
 }
 
-/// Janitor: deactivate grants whose `expires_at_micros` has passed.
-/// Cron-style — call from the proxy on an interval.
 #[reducer]
 pub fn grant_expire(ctx: &ReducerContext) -> ReducerResult {
     require_backend(ctx)?;

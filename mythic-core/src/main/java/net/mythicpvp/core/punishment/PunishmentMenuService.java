@@ -21,7 +21,7 @@ public final class PunishmentMenuService {
     private final PunishmentMenuText text;
 
     public PunishmentMenuService(@NotNull PunishmentService punishmentService, @NotNull ChatPromptService prompts, @NotNull Clock clock, @NotNull String serverId) {
-        // Back-compat: tests + callers without a menus.yml use defaults.
+
         this(punishmentService, prompts, clock, serverId, PunishmentMenuText.DEFAULTS);
     }
 
@@ -127,7 +127,6 @@ public final class PunishmentMenuService {
         lore.add(text.templateClickHint(executable));
         return lore;
     }
-
 
     @NotNull
     private static List<String> summary(@NotNull PunishmentFlow flow) {

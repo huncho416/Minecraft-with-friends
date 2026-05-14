@@ -16,11 +16,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Pins the ranks.yml → bundled-cosmetics loader. Lookups are
- * case-insensitive on the rank id; ranks without bundled-cosmetics
- * stay absent from the registry (don't pollute the diagnostic set).
- */
 class RankCosmeticBundlesTest {
 
     private MockPlugin plugin;

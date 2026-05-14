@@ -40,7 +40,7 @@ public final class ChatPromptService implements Listener {
 
     @EventHandler
     public void onQuit(@NotNull PlayerQuitEvent event) {
-        // Drop dangling prompts so disconnected players don't accumulate.
+
         prompts.remove(event.getPlayer().getUniqueId());
     }
 
@@ -51,13 +51,11 @@ public final class ChatPromptService implements Listener {
             return;
         }
         event.setCancelled(true);
-        // Modern Paper hands us a Component; flatten to plain text for
-        // the prompt handler (callers expect a String).
+
         String message = PlainTextComponentSerializer.plainText().serialize(event.message());
         if (!message.equalsIgnoreCase("cancel")) {
             if (event.isAsynchronous()) {
-                // Folia-safe via MythicScheduler so prompt callbacks
-                // land on the correct global region thread.
+
                 MythicScheduler.runSync(plugin, () -> handler.accept(event.getPlayer(), message));
             } else {
                 handler.accept(event.getPlayer(), message);

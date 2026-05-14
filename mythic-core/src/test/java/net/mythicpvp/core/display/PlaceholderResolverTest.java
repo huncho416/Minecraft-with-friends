@@ -6,11 +6,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * Pure-fn tests for the placeholder resolver. No Bukkit, no DB —
- * deliberately small surface so it stays easy to extend (and to swap in
- * a PAPI bridge later).
- */
 class PlaceholderResolverTest {
 
     @Test
@@ -24,8 +19,7 @@ class PlaceholderResolverTest {
 
     @Test
     void preservesUnknownPlaceholdersVerbatim() {
-        // Mistakes and PAPI-style tokens we don't know about must NOT
-        // be blanked — that would silently hide bugs in YAML.
+
         String result = new PlaceholderResolver()
                 .set("rank", "Owner")
                 .resolve("%rank% %papi_relation_friends%");
@@ -34,9 +28,7 @@ class PlaceholderResolverTest {
 
     @Test
     void caseInsensitiveLookups() {
-        // Resolver canonicalizes keys to lower; templates are also matched
-        // against [a-z0-9_]+ so callers should use lowercase keys, but
-        // the API accepts any casing on .set() to be friendly.
+
         PlaceholderResolver r = new PlaceholderResolver().set("RANK", "Owner");
         assertEquals("Owner", r.get("rank"));
         assertEquals("Owner", r.get("RANK"));
@@ -68,9 +60,7 @@ class PlaceholderResolverTest {
 
     @Test
     void placeholderValueWithSpecialReplaceCharsIsLiteral() {
-        // Matcher.appendReplacement treats $ and \ as escape chars; we
-        // quote the replacement so a hex color like "&#FF00F8" lands
-        // verbatim instead of triggering a regex group ref.
+
         String result = new PlaceholderResolver()
                 .set("color", "&#FF00F8")
                 .resolve("%color%MythicPvP");

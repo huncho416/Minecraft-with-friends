@@ -17,24 +17,6 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Append-only structured audit log for staff actions.
- *
- * <p>Writes one line per event into {@code plugins/MythicCore/audit.log},
- * shape:
- *
- * <pre>{@code
- *   2026-05-14T12:34:56Z [GRANT] staff=Admin/22…22 target=Notch/11…11 details=rank=vip duration=30d
- * }</pre>
- *
- * <p>Format choice: line-per-event makes it grep-friendly; the
- * key=value detail block survives shell munging better than CSV; ISO-8601
- * UTC timestamps sort lexicographically. Not JSON because ops grep, and
- * JSON-per-line bloats the file 3x for the same useful content.
- *
- * <p>Failures are logged via the plugin's {@link Logger} — audit-log
- * write errors must never cascade back into the gameplay path.
- */
 public final class CoreAuditLog {
 
     private static final java.time.format.DateTimeFormatter ISO_UTC =
@@ -53,16 +35,6 @@ public final class CoreAuditLog {
         }
     }
 
-    /**
-     * Record a staff action.
-     *
-     * @param action  short uppercase verb — GRANT, PARDON, BLACKLIST_ADD, etc.
-     * @param staff   actor uuid — pass {@code null} for system-driven events
-     * @param staffName  actor display name (or "SYSTEM")
-     * @param target  affected player uuid (nullable for global actions)
-     * @param targetName  affected player name
-     * @param details key=value pairs flattened into the line
-     */
     public void log(
             @NotNull String action,
             UUID staff,
@@ -100,11 +72,6 @@ public final class CoreAuditLog {
         }
     }
 
-    /**
-     * Strip newlines/spaces/quotes from a value so the line stays
-     * parseable. Audit values shouldn't contain these in practice, but
-     * a malicious reason text could try to forge a fake log entry.
-     */
     @NotNull
     private static String escapeValue(@NotNull String value) {
         return value

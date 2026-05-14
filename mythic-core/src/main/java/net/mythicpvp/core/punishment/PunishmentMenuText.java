@@ -4,21 +4,8 @@ import net.mythicpvp.suite.config.MythicConfig;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Operator-overridable strings for the punishment menus.
- *
- * <p>Loaded from {@code menus.yml}. Every getter returns a sensible
- * default if the key is absent so the menu still renders cleanly when
- * the file is missing or partial — the historical hard-coded strings
- * are the defaults.
- *
- * <p>Tokens (e.g. {@code %target%}, {@code %category%}) are substituted
- * by {@link #with} per call, since {@link MythicConfig} doesn't itself
- * understand placeholders.
- */
 public final class PunishmentMenuText {
 
-    /** Singleton "use defaults everywhere" instance for tests / no-config callers. */
     public static final PunishmentMenuText DEFAULTS = new PunishmentMenuText(null);
 
     @Nullable

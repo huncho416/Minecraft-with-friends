@@ -121,12 +121,11 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         serverIdentity = ServerIdentity.fromEnvironment();
         configManager = new ConfigManager(this);
         messages = new CoreMessages(new ConfigText(configManager.getOrCreate("messages"), "messages"));
-        // Audit log lives early so essentials + later services can share it.
+
         auditLog = new CoreAuditLog(this);
         essentialsService = new CoreEssentialsService(messages, auditLog, this);
         commandManager = new CommandManager(this);
-        // Bring up the persistence gateway BEFORE rank/grant/punishment
-        // services so YAML seeding writes through to STDB on first boot.
+
         persistenceGateway = createPersistenceGateway();
         rankService = new RankService();
         rankService.setPersistence(persistenceGateway);
@@ -134,9 +133,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         chatPromptService = new ChatPromptService(this);
         grantService = new GrantService(rankService, Clock.systemUTC());
         grantService.setPersistence(persistenceGateway);
-        // Operator-overridable menu strings (menus.yml) — shared bundle
-        // for both rank and punishment menus, falls back to built-in
-        // defaults when keys are missing.
+
         net.mythicpvp.suite.config.MythicConfig menusConfig = configManager.getOrCreate("menus");
         net.mythicpvp.core.rank.RankMenuText rankMenuText =
                 new net.mythicpvp.core.rank.RankMenuText(menusConfig);
@@ -149,23 +146,13 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         punishmentMenuService = new PunishmentMenuService(
                 punishmentService, chatPromptService, Clock.systemUTC(), serverIdentity.id(), menuText);
         seedPunishments(configManager.getOrCreate("punishments"));
-        // Open subscriptions to every Phase 3 table. Snapshot rows arrive
-        // asynchronously and fold into the in-memory services via the
-        // CoreHydrationSink. Wrapped in MainThreadHydrationSink so the
-        // PermissionManager + Bukkit-side state stays main-thread-safe.
-        // No-op when the gateway is the noop fallback (single-server).
+
         hydrationSink = new CoreHydrationSink(getLogger(), rankService, grantService, punishmentService);
         persistenceGateway.hydrate(new MainThreadHydrationSink(this, hydrationSink));
-        // Login enforcement uses the hydrated blacklist + active
-        // punishments. Registered ASAP so the first connecting player
-        // sees the right answer (subscriptions deliver snapshot rows
-        // synchronously via service_completed_successfully ordering).
+
         getServer().getPluginManager().registerEvents(
                 new PunishmentLoginGuard(punishmentService, hydrationSink, messages), this);
-        // Display tier — pushes tab/scoreboard/nametag through the suite
-        // managers, sourcing rank state from RankService/GrantService.
-        // Wired AFTER rank/grant services exist; refresh callbacks let
-        // those services notify display on every mutation.
+
         displayService = new DisplayService(this, rankService, grantService, serverIdentity.id());
         displayService.loadTemplates(
                 configManager.getOrCreate("tablist"),
@@ -197,66 +184,51 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new HelpCommand(essentialsService));
         commandManager.register(new DiscordCommand(essentialsService));
         staffChannelService = new StaffChannelService(protocolManager, serverIdentity.id());
-        // Render every inbound staff message to permitted players + console.
-        // Format pulled from messages.yml so ops can re-style without code.
+
         String staffFormat = messages.raw(
                 "messages.staff.format",
                 "&#888888[%server%] %rank_color%%rank%%sender% &8» &#FFFFFF%message%",
                 java.util.Map.of());
         staffChannelService.addAudience(new BukkitStaffAudience(staffFormat));
-        // Five channel-specific commands. Distinct aliases instead of a
-        // single /sc <channel> so the command-blocker / permission check
-        // matches the friend's StaffChannel enum 1:1.
+
         commandManager.register(new StaffChatCommand.Staff(staffChannelService, rankService, grantService));
         commandManager.register(new StaffChatCommand.Builder(staffChannelService, rankService, grantService));
         commandManager.register(new StaffChatCommand.Management(staffChannelService, rankService, grantService));
         commandManager.register(new StaffChatCommand.Admin(staffChannelService, rankService, grantService));
         commandManager.register(new StaffChatCommand.Owner(staffChannelService, rankService, grantService));
         staffPresenceService = new StaffPresenceService(protocolManager, serverIdentity.id());
-        // Render presence events to staff + console.
+
         staffPresenceService.addAudience(new BukkitStaffPresenceAudience(
                 new net.mythicpvp.suite.config.ConfigText(
                         configManager.getOrCreate("messages"), "messages")));
         getServer().getPluginManager().registerEvents(
                 new StaffPresenceListener(staffPresenceService, rankService, grantService), this);
-        // Staff mode — inventory snapshot/restore + vanish + fly + tools.
+
         staffModeService = new StaffModeService();
         staffModeService.load(configManager.getOrCreate("staff-mode"));
         commandManager.register(new StaffModeCommand(staffModeService, messages));
         getServer().getPluginManager().registerEvents(
                 new StaffModeToolListener(staffModeService, messages, grantService, rankService), this);
-        // Appeal commands. Audit log is initialized earlier (shared with
-        // essentials); appeals route through the gateway so they persist
-        // to STDB.
+
         commandManager.register(new AppealCommand(punishmentService, persistenceGateway, messages, auditLog));
         commandManager.register(new AppealsCommand(persistenceGateway, messages, auditLog));
-        // Rank ↔ cosmetics bundle integration. Loads ranks.yml's
-        // bundled-cosmetics list per rank, then attaches a grant
-        // observer to GrantService that auto-grants the bundled
-        // cosmetics on every successful /grant. Audit logged.
+
         RankCosmeticBundles cosmeticBundles = new RankCosmeticBundles();
         cosmeticBundles.load(configManager.getOrCreate("ranks"));
         grantService.setGrantObserver(new RankBundleGrantHook(
                 cosmeticBundles, auditLog, getLogger(), persistenceGateway));
-        // Pass shardId so LOCAL-scope chat-control changes from other
-        // servers are dropped — see ChatControlService.apply.
+
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());
         ChatGuard chatGuard = new ChatGuard(this, chatControlService, messages);
         getServer().getPluginManager().registerEvents(chatGuard, this);
         commandManager.register(new ChatCommand(chatControlService, messages));
-        // Broadcasts + rotating announcements. Loads YAML, registers
-        // /broadcast, schedules the rotation tick. Tick runs async via
-        // MythicScheduler — broadcast() itself reschedules its render
-        // calls onto the main thread (Bukkit#broadcast is main-only).
+
         broadcastService = new BroadcastService(protocolManager, serverIdentity.id());
         broadcastService.load(configManager.getOrCreate("announcements"));
         commandManager.register(new BroadcastCommand(broadcastService));
         if (broadcastService.enabled() && broadcastService.announcementCount() > 0) {
             long periodTicks = broadcastService.intervalSeconds() * 20L;
-            // Async timer: BroadcastService.broadcast() publishes to the
-            // protocol channel (no Bukkit calls); the receive path
-            // schedules rendering onto main via the chat broadcast,
-            // which Bukkit handles internally.
+
             net.mythicpvp.suite.scheduler.MythicScheduler.runTimer(
                     this,
                     () -> {
@@ -273,9 +245,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
     @Override
     public void disable() {
-        // Order matters here. Save persistent state first so a slow
-        // shutdown doesn't lose unsaved YAML edits, then tear down
-        // visible UI surfaces, then close network connections.
+
         if (configManager != null) {
             try {
                 configManager.saveAll();
@@ -283,9 +253,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 getLogger().warning("config save during disable failed: " + e.getMessage());
             }
         }
-        // Drop per-player UI state so a re-enable starts from a clean slate.
-        // Each manager's clear() is idempotent and safe even if it was
-        // never populated (e.g. plugin disabled before any join).
+
         try {
             net.mythicpvp.suite.tab.TabManager.getInstance().clear();
             net.mythicpvp.suite.nametag.NametagManager.getInstance().clear();
@@ -293,9 +261,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         } catch (RuntimeException e) {
             getLogger().warning("UI manager teardown failed: " + e.getMessage());
         }
-        // Tear down STDB so the plugin can be cleanly re-enabled (Folia
-        // /reload, Pterodactyl restart). disconnectAll is a no-op when
-        // no connection was ever established.
+
         DatabaseManager.getInstance().disconnectAll();
     }
 
@@ -399,14 +365,6 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         }
     }
 
-    /**
-     * Best-effort STDB connection. Returns the no-op gateway when:
-     * <ul>
-     *   <li>{@code STDB_URI} env var is unset (single-server / dev runs)
-     *   <li>The STDB connection fails to construct
-     * </ul>
-     * Logs the chosen mode so ops know whether mutations are persisting.
-     */
     @NotNull
     private PersistenceGateway createPersistenceGateway() {
         String uri = System.getenv("STDB_URI");
@@ -418,8 +376,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         try {
             SpacetimeConnection connection = DatabaseManager.getInstance()
                     .createConnection("mythic-core", uri, module);
-            // Connect asynchronously; the gateway tolerates calls before
-            // the socket is fully open (writes return failed futures).
+
             connection.connect();
             MythicSchema schema = new MythicSchema(connection);
             getLogger().info("STDB persistence active: uri=" + uri + " module=" + module);

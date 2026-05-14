@@ -1,11 +1,5 @@
 package net.mythicpvp.suite.database.schema.dto;
 
-/**
- * Mirrors the {@code mail} table row.
- *
- * <p>{@code attachments_json} is a free-form JSON blob — keep its shape
- * documented in {@code mythic-core}'s mail handler, not here.
- */
 public record MailRow(
         long id,
         String recipient_uuid,

@@ -1,6 +1,5 @@
 package net.mythicpvp.suite.database.schema.dto;
 
-/** Mirrors the {@code punishment_appeals} table row. */
 public record AppealRow(
         long id,
         long punishment_id,

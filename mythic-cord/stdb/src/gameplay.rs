@@ -1,17 +1,10 @@
-//! Gameplay tables: islands, skills, stats, leaderboards.
-//!
-//! These are the Skyblock-facing tables (Phase 4+), but the schema is
-//! defined here so suite consumers can subscribe to them from day one
-//! and we don't reshape STDB later.
+
 
 use crate::common::{require_backend, require_uuid, PlayerUuid, ReducerResult, ShardId};
-// `players` table accessor lives in `players` module; bring its trait in
-// scope so leaderboard_rebuild can resolve usernames from the players row.
+
 use crate::players::players;
 use crate::reject;
 use spacetimedb::{reducer, table, ReducerContext, Table, Timestamp};
-
-// ── Islands ──────────────────────────────────────────────────────────
 
 #[table(name = islands, public)]
 pub struct Island {
@@ -21,16 +14,13 @@ pub struct Island {
     #[index(btree)]
     pub owner_uuid: PlayerUuid,
 
-    /// Shard hosting the island world.
     #[index(btree)]
     pub shard_id: ShardId,
 
     pub level: u32,
 
-    /// Island Top score.
     pub total_points: i64,
 
-    /// Tier id (small / medium / large …); content lives in YAML.
     pub size_tier: String,
 
     pub created_at: Timestamp,
@@ -49,7 +39,6 @@ pub struct IslandMember {
     #[index(btree)]
     pub player_uuid: PlayerUuid,
 
-    /// `OWNER`, `CO_OWNER`, `MEMBER`, `VISITOR`.
     pub role: String,
 
     pub joined_at: Timestamp,
@@ -88,8 +77,6 @@ pub fn island_create(
     Ok(())
 }
 
-// ── Skills ───────────────────────────────────────────────────────────
-
 #[table(name = skills, public)]
 pub struct SkillRow {
     #[primary_key]
@@ -99,7 +86,6 @@ pub struct SkillRow {
     #[index(btree)]
     pub player_uuid: PlayerUuid,
 
-    /// `MINING`, `FARMING`, `FISHING`, `COMBAT` (catalog in YAML).
     #[index(btree)]
     pub skill: String,
 
@@ -143,14 +129,9 @@ pub fn skill_grant_xp(
     Ok(())
 }
 
-/// Quadratic XP curve placeholder. The real curve will live in YAML and
-/// be passed in by the calling reducer; this exists so the schema is
-/// self-consistent until then.
 fn level_for_xp(xp: u64) -> u32 {
     ((xp as f64 / 100.0).sqrt().floor() as u32).max(1)
 }
-
-// ── Stats ────────────────────────────────────────────────────────────
 
 #[table(name = stats, public)]
 pub struct StatRow {
@@ -161,15 +142,13 @@ pub struct StatRow {
     #[index(btree)]
     pub player_uuid: PlayerUuid,
 
-    /// `KILLS`, `DEATHS`, `BLOCKS_MINED`, …
     #[index(btree)]
     pub stat: String,
 
-    /// Current daily count. Reset at UTC midnight by the janitor.
     pub value_daily: i64,
-    /// Current weekly count.
+
     pub value_weekly: i64,
-    /// Lifetime count.
+
     pub value_alltime: i64,
 
     pub last_updated: Timestamp,
@@ -235,21 +214,15 @@ pub fn stats_reset_weekly(ctx: &ReducerContext) -> ReducerResult {
     Ok(())
 }
 
-// ── Leaderboards ─────────────────────────────────────────────────────
-
-/// Materialized leaderboard rows. Recomputed by `leaderboard_rebuild`
-/// — we don't compute on read because subscriptions need stable rows.
 #[table(name = leaderboards, public)]
 pub struct LeaderboardRow {
     #[primary_key]
     #[auto_inc]
     pub id: u64,
 
-    /// e.g. `KILLS`, `BLOCKS_MINED`, `ISLAND_POINTS`.
     #[index(btree)]
     pub board: String,
 
-    /// `DAILY`, `WEEKLY`, `MONTHLY`, `ALLTIME`.
     #[index(btree)]
     pub timeframe: String,
 
@@ -258,15 +231,12 @@ pub struct LeaderboardRow {
 
     pub username: String,
     pub score: i64,
-    /// 1-indexed rank within (board, timeframe).
+
     pub rank: u32,
 
     pub computed_at: Timestamp,
 }
 
-/// Rebuild a single (board, timeframe) leaderboard. Caller passes the
-/// stat key that drives this board — keeps the rebuild logic schema-
-/// agnostic. Reducers stay deterministic so SpacetimeDB can replay them.
 #[reducer]
 pub fn leaderboard_rebuild(
     ctx: &ReducerContext,
@@ -279,7 +249,7 @@ pub fn leaderboard_rebuild(
     if !matches!(timeframe.as_str(), "DAILY" | "WEEKLY" | "MONTHLY" | "ALLTIME") {
         reject!("invalid timeframe: {timeframe}");
     }
-    // Pull all matching stat rows, project to (uuid, score).
+
     let mut rows: Vec<(PlayerUuid, i64)> = ctx
         .db
         .stats()
@@ -289,7 +259,7 @@ pub fn leaderboard_rebuild(
             let score = match timeframe.as_str() {
                 "DAILY" => s.value_daily,
                 "WEEKLY" => s.value_weekly,
-                "MONTHLY" => s.value_weekly, // TODO once monthly bucket exists
+                "MONTHLY" => s.value_weekly,
                 _ => s.value_alltime,
             };
             (s.player_uuid, score)
@@ -299,7 +269,6 @@ pub fn leaderboard_rebuild(
     rows.sort_unstable_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
     rows.truncate(top_n as usize);
 
-    // Wipe prior rows for this (board, timeframe) and re-insert.
     let lb = ctx.db.leaderboards();
     let prior: Vec<u64> = lb
         .iter()

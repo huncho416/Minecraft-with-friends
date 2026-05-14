@@ -16,32 +16,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * {@code /chat} — staff-facing controls for the network-replicated
- * mute / slow-mode / clear-chat state.
- *
- * <p>Subcommands:
- * <ul>
- *   <li>{@code /chat mute [local|network]}
- *   <li>{@code /chat unmute [local|network]}
- *   <li>{@code /chat slow <seconds> [local|network]} — 0 disables
- *   <li>{@code /chat clear [local|network]}
- *   <li>{@code /chat status} — read-only state dump
- * </ul>
- *
- * <p>The default scope is {@link ChatScope#LOCAL} for safety: a typo
- * shouldn't accidentally mute the whole network. Staff opt into network
- * scope explicitly with the trailing arg.
- *
- * <p>Permission split:
- * <ul>
- *   <li>{@code mythic.core.chat} — base permission, gates {@code /chat}
- *       and {@code /chat status}.
- *   <li>{@code mythic.core.chat.mute} — mute / unmute.
- *   <li>{@code mythic.core.chat.slow} — slow mode.
- *   <li>{@code mythic.core.chat.clear} — clear pulse.
- * </ul>
- */
 @CommandAlias("chat")
 @CommandPermission("mythic.core.chat")
 public final class ChatCommand extends MythicCommand {
@@ -109,9 +83,7 @@ public final class ChatCommand extends MythicCommand {
     @Complete({"chat-scopes"})
     public void clear(@NotNull CommandSender sender, @Optional String scopeArg) {
         chatControl.clear(parseScope(scopeArg));
-        // Per-player feedback comes through ChatGuard's clear listener
-        // — it sends the "cleared" message after flushing blank lines so
-        // the staff sender sees it like everyone else.
+
     }
 
     @Subcommand("status")
@@ -125,14 +97,6 @@ public final class ChatCommand extends MythicCommand {
                         "scope", chatControl.state().scope().name().toLowerCase(Locale.ROOT))));
     }
 
-    /**
-     * Parse the trailing scope arg. Defaults to {@link ChatScope#LOCAL}
-     * — staff must spell "network" out to nuke chat globally. Tolerant
-     * of casing and the {@code "n"} / {@code "l"} shorthands.
-     *
-     * <p>Package-private for direct testing; the command body is the
-     * only production caller.
-     */
     @NotNull
     static ChatScope parseScope(String arg) {
         if (arg == null || arg.isBlank()) {

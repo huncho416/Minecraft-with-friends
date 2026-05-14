@@ -10,13 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Test gateway that records every call so persistence-path assertions
- * can be made without bringing up a real STDB connection.
- *
- * <p>Stores call records as inner-record types so tests can pattern-match
- * cleanly. Order is preserved.
- */
 public final class CapturingPersistenceGateway implements PersistenceGateway {
 
     public final List<Object> calls = new ArrayList<>();
@@ -68,7 +61,7 @@ public final class CapturingPersistenceGateway implements PersistenceGateway {
                                         @NotNull String reference) {
         calls.add(new CosmeticGrant(player, cosmeticId, cosmeticType, source, reference));
     }
-    /** Records the hydrate invocation and the sink so tests can confirm wiring. */
+
     public record HydrateCall(HydrationSink sink) {}
     @Override public void hydrate(@NotNull HydrationSink sink) {
         calls.add(new HydrateCall(sink));

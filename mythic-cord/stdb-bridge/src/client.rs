@@ -1,16 +1,10 @@
-//! Typed reducer client. Mirror of Java's `MythicSchema` — one method per
-//! reducer. Args are positional JSON arrays in the same order as the Rust
-//! reducer signature in `mythic-cord/stdb/src/`.
-//!
-//! When you add a reducer to `mythic-stdb`, add a method here with the
-//! same parameter order so call sites stay statically typed.
+
 
 use crate::handle::{StdbHandle, StdbResult};
 use crate::schema::{reducer, GrantSource, PunishmentCategory, PunishmentKind, ServerRole, ServerStatus};
 use serde_json::{json, Value};
 use uuid::Uuid;
 
-/// Wraps an [`StdbHandle`] with one method per reducer.
 #[derive(Clone)]
 pub struct MythicStdbClient {
     handle: StdbHandle,
@@ -24,8 +18,6 @@ impl MythicStdbClient {
     pub fn handle(&self) -> &StdbHandle {
         &self.handle
     }
-
-    // ── sessions ─────────────────────────────────────────────────────
 
     pub async fn session_login(
         &self,
@@ -79,8 +71,6 @@ impl MythicStdbClient {
             .await
     }
 
-    // ── registry ─────────────────────────────────────────────────────
-
     pub async fn registry_announce(
         &self,
         shard_id: &str,
@@ -120,10 +110,6 @@ impl MythicStdbClient {
             .await
     }
 
-    // ── punishments ──────────────────────────────────────────────────
-
-    /// Issue a punishment. Phase 3 signature — denormalizes target/staff
-    /// names plus carries silent / clear-inventory / origin-server flags.
     #[allow(clippy::too_many_arguments)]
     pub async fn punish_issue(
         &self,
@@ -186,8 +172,6 @@ impl MythicStdbClient {
             .await
     }
 
-    // ── templates ───────────────────────────────────────────────────
-
     pub async fn template_upsert(
         &self,
         title: &str,
@@ -209,8 +193,6 @@ impl MythicStdbClient {
             .call_raw(reducer::TEMPLATE_REMOVE, json!([title]))
             .await
     }
-
-    // ── blacklist ───────────────────────────────────────────────────
 
     pub async fn blacklist_add(
         &self,
@@ -248,12 +230,6 @@ impl MythicStdbClient {
             .await
     }
 
-    // ── ranks: definitions ──────────────────────────────────────────
-
-    /// Insert-or-update a rank definition. Args mirror the Rust reducer
-    /// signature in `mythic-stdb/src/ranks.rs::rank_define`. The
-    /// permissions list is JSON-encoded by the caller — we don't try to
-    /// type it because the wire format is a single string.
     #[allow(clippy::too_many_arguments)]
     pub async fn rank_define(
         &self,
@@ -294,8 +270,6 @@ impl MythicStdbClient {
             .call_raw(reducer::RANK_REMOVE, json!([id]))
             .await
     }
-
-    // ── ranks: grants ───────────────────────────────────────────────
 
     #[allow(clippy::too_many_arguments)]
     pub async fn grant_issue(
@@ -353,8 +327,6 @@ impl MythicStdbClient {
 mod tests {
     use super::*;
 
-    /// Round-trip parity with the Java side: enum wire values must be
-    /// stable strings the Rust reducers recognize.
     #[test]
     fn enum_wire_values() {
         assert_eq!(ServerRole::Hub.wire(), "HUB");
@@ -370,8 +342,6 @@ mod tests {
         assert_eq!(GrantSource::Purchase.wire(), "PURCHASE");
     }
 
-    /// New-in-v2 reducer arg shape — sanity-checks the grant_issue
-    /// positional packaging since that signature has 8 args.
     #[test]
     fn grant_issue_args_shape() {
         let args = json!([
@@ -391,8 +361,6 @@ mod tests {
         assert_eq!(arr[7].as_i64(), Some(0));
     }
 
-    /// Verifies the JSON shape the driver puts on the wire matches what
-    /// `mythic-stdb`'s reducer signatures expect (positional array).
     #[test]
     fn registry_announce_args_shape() {
         let args = json!([

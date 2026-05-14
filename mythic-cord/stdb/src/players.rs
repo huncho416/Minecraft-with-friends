@@ -1,9 +1,4 @@
-//! Player identity, rank, currencies (mirror), and presence summary.
-//!
-//! This is the canonical player row. Other tables reference it by
-//! `uuid` (Mojang UUID, hyphenated). The economy module owns the
-//! transaction log; balances are also denormalized here for fast reads
-//! during login and tab-list rendering.
+
 
 use crate::common::{currency, require_backend, require_uuid, PlayerUuid, ReducerResult, ShardId};
 use crate::reject;
@@ -11,44 +6,32 @@ use spacetimedb::{reducer, table, ReducerContext, Table, Timestamp};
 
 #[table(name = players, public)]
 pub struct Player {
-    /// Mojang UUID, 36-char hyphenated.
+
     #[primary_key]
     pub uuid: PlayerUuid,
 
-    /// Last-seen username. Mojang allows renames — `username_history`
-    /// (future) will track changes.
     #[index(btree)]
     pub username: String,
 
-    /// Lowercased username for case-insensitive lookups.
     #[index(btree)]
     pub username_lower: String,
 
-    /// Rank key (matches `suite-permission` Rank ids). Empty = default.
     pub rank: String,
 
-    /// Denormalized balances. Source of truth is the transaction log in
-    /// [`crate::economy`] — these are updated by economy reducers atomically.
     pub coins: i64,
     pub points: i64,
     pub gems: i64,
 
-    /// Which shard the player is currently on. Empty when offline.
     pub current_shard: ShardId,
 
-    /// Geographic region tag (e.g. `us-east`, `eu-west`).
     pub region: String,
 
-    /// Online flag derived from `sessions` — denormalized so client
-    /// subscriptions can filter cheaply without joining.
     pub online: bool,
 
-    /// First-time login.
     pub first_join: Timestamp,
-    /// Most recent activity.
+
     pub last_seen: Timestamp,
 
-    /// Total play-time in seconds (accumulated server-side on disconnect).
     pub playtime_seconds: u64,
 }
 
@@ -73,8 +56,6 @@ impl Player {
     }
 }
 
-/// Create-if-missing helper used by `player_login`. Returns whether the
-/// row was newly inserted (true) or already existed (false).
 pub fn upsert_player(
     ctx: &ReducerContext,
     uuid: &str,
@@ -96,8 +77,6 @@ pub fn upsert_player(
     }
 }
 
-/// Update the player's denormalized balance for a currency. Called from
-/// the economy module after appending the transaction log row.
 pub(crate) fn adjust_balance(
     ctx: &ReducerContext,
     uuid: &str,
@@ -130,9 +109,6 @@ pub(crate) fn adjust_balance(
     Ok(new_balance)
 }
 
-// ── Reducers ──────────────────────────────────────────────────────────
-
-/// Set/promote a player's rank. Called by staff commands.
 #[reducer]
 pub fn player_set_rank(ctx: &ReducerContext, uuid: String, rank: String) -> ReducerResult {
     require_backend(ctx)?;
@@ -147,8 +123,6 @@ pub fn player_set_rank(ctx: &ReducerContext, uuid: String, rank: String) -> Redu
     Ok(())
 }
 
-/// Update the player's region tag — typically called once on first login
-/// after the proxy geo-resolves their IP.
 #[reducer]
 pub fn player_set_region(ctx: &ReducerContext, uuid: String, region: String) -> ReducerResult {
     require_backend(ctx)?;

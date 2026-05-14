@@ -1,6 +1,6 @@
 [package]
 name = "mythiccord"
-description = "MythicCord proxy — Infrarust fork wired to mythic-stdb"
+description = "MythicCord sidecar — STDB-driven config exporter for an Infrarust proxy process"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,6 +10,10 @@ authors.workspace = true
 [[bin]]
 name = "mythiccord"
 path = "src/main.rs"
+
+[features]
+default = []
+with-infrarust = []
 
 [dependencies]
 mythiccord-stdb-bridge = { path = "../stdb-bridge" }
@@ -27,19 +31,8 @@ hyper = { version = "1", features = ["server", "http1"] }
 hyper-util = { version = "0.1", features = ["tokio", "server"] }
 http-body-util = "0.1"
 
-# Vendored Infrarust binary — only included with the feature, but cargo
-# resolves `path = ...` even for optional deps, so we keep this block
-# commented until `tools/vendor-infrarust.{sh,ps1}` runs.
-#
-# >>> BEGIN VENDOR-MANAGED BLOCK
-# infrarust = { path = "../infrarust/crates/infrarust", optional = true }
-# >>> END VENDOR-MANAGED BLOCK
-
-[features]
-default = []
-with-infrarust = [
-    "mythiccord-plugin-routing/with-infrarust",
-]
+[dev-dependencies]
+tempfile = "3"
 
 [lints]
 workspace = true

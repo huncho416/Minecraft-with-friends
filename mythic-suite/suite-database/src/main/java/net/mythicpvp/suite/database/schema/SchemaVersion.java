@@ -7,40 +7,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * Schema version pinned to {@code mythic-stdb}'s {@code SCHEMA_VERSION}.
- *
- * <p>Bump this in lockstep with {@code mythic-cord/stdb/src/lib.rs}. The
- * server refuses to start when this constant disagrees with the live STDB
- * {@code module_meta} row.
- */
 public final class SchemaVersion {
 
-    /**
-     * Must equal {@code SCHEMA_VERSION} in {@code mythic-cord/stdb/src/lib.rs}.
-     *
-     * <p>History:
-     * <ul>
-     *   <li><b>1</b> — Phase 2 initial schema.
-     *   <li><b>2</b> — Phase 3 persistence: punishments widened (target/staff
-     *       names, silent, clear_inventory, server, evidence renamed proof);
-     *       new tables {@code punishment_templates}, {@code punishment_blacklist},
-     *       {@code rank_definitions}, {@code rank_grants}; expanded
-     *       punishment kinds (BAN, TEMP_MUTE, BLACKLIST; PERMA_BAN→BAN).
-     * </ul>
-     */
     public static final int CURRENT = 2;
 
     private SchemaVersion() {}
 
-    /**
-     * Block-on (with timeout) verification that the STDB module is publishing
-     * a schema we understand. Call this once during plugin enable, before
-     * any subscriptions are wired.
-     *
-     * @throws SchemaVersionMismatchException when versions disagree or the
-     *         lookup times out — caller should refuse to start.
-     */
     public static void assertMatches(@NotNull SpacetimeConnection connection)
             throws SchemaVersionMismatchException {
         try {
@@ -65,11 +37,6 @@ public final class SchemaVersion {
         }
     }
 
-    /**
-     * Extract {@code schema_version} from a JSON payload. Returns
-     * {@code null} when the field is absent — caller treats that as a
-     * still-loading row.
-     */
     static Integer parseSchemaVersion(@NotNull String payload) {
         int index = payload.indexOf("schema_version");
         if (index < 0) {
@@ -93,7 +60,6 @@ public final class SchemaVersion {
         return Integer.parseInt(payload.substring(start, end));
     }
 
-    /** Thrown when STDB schema version disagrees with {@link #CURRENT}. */
     public static final class SchemaVersionMismatchException extends Exception {
         private static final long serialVersionUID = 1L;
         private final int expected;

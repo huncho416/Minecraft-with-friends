@@ -1,8 +1,4 @@
-//! Layered config: defaults < TOML file < env overrides.
-//!
-//! Pterodactyl drives the proxy via env vars (egg variables become
-//! container env), so env wins over the file. The file is for ops who
-//! want a long-lived shape under source control.
+
 
 use mythiccord_stdb_bridge::ServerRole;
 use serde::Deserialize;
@@ -15,6 +11,7 @@ pub struct Config {
     pub identity: IdentityConfig,
     pub admin: AdminConfig,
     pub log: LogConfig,
+    pub config_export: ConfigExportConfig,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -30,7 +27,7 @@ pub struct IdentityConfig {
     pub shard_id: String,
     pub role: String,
     pub region: String,
-    /// What backends would dial to reach us. Defaults to the bind addr.
+
     pub address: String,
     pub max_players: u32,
 }
@@ -38,18 +35,27 @@ pub struct IdentityConfig {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
 pub struct AdminConfig {
-    /// `host:port` for the admin/health/metrics HTTP surface.
+
     pub bind: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
 pub struct LogConfig {
-    /// `json` or `pretty`. Pterodactyl is happier with `json` so it can
-    /// route stdout into a parseable log stream.
+
     pub format: String,
-    /// `EnvFilter` directive — see `tracing-subscriber` docs.
+
     pub filter: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(default)]
+pub struct ConfigExportConfig {
+    pub servers_dir: String,
+    pub domain_suffix: String,
+    pub debounce_ms: u64,
+    pub proxy_mode: String,
+    pub send_proxy_protocol: bool,
 }
 
 impl Default for Config {
@@ -73,6 +79,13 @@ impl Default for Config {
                 format: "json".into(),
                 filter: "info,mythiccord=debug".into(),
             },
+            config_export: ConfigExportConfig {
+                servers_dir: "/etc/infrarust/servers".into(),
+                domain_suffix: "mythicpvp.local".into(),
+                debounce_ms: 1000,
+                proxy_mode: "passthrough".into(),
+                send_proxy_protocol: false,
+            },
         }
     }
 }
@@ -89,6 +102,9 @@ impl Default for AdminConfig {
 impl Default for LogConfig {
     fn default() -> Self { Config::default().log }
 }
+impl Default for ConfigExportConfig {
+    fn default() -> Self { Config::default().config_export }
+}
 
 impl Config {
     pub fn load(path: Option<&Path>) -> anyhow::Result<Self> {
@@ -104,8 +120,7 @@ impl Config {
     }
 
     fn apply_env(&mut self) {
-        // Pterodactyl-egg-friendly env names. Keep these stable — the egg
-        // JSON references them by exact key.
+
         if let Ok(v) = std::env::var("STDB_URI") { self.stdb.uri = v; }
         if let Ok(v) = std::env::var("STDB_MODULE") { self.stdb.module = v; }
         if let Ok(v) = std::env::var("MYTHIC_SHARD_ID") { self.identity.shard_id = v; }
@@ -120,6 +135,9 @@ impl Config {
         if let Ok(v) = std::env::var("MYTHIC_ADMIN_BIND") { self.admin.bind = v; }
         if let Ok(v) = std::env::var("MYTHIC_LOG_FORMAT") { self.log.format = v; }
         if let Ok(v) = std::env::var("RUST_LOG") { self.log.filter = v; }
+        if let Ok(v) = std::env::var("MYTHIC_CONFIG_EXPORT_DIR") { self.config_export.servers_dir = v; }
+        if let Ok(v) = std::env::var("MYTHIC_CONFIG_DOMAIN_SUFFIX") { self.config_export.domain_suffix = v; }
+        if let Ok(v) = std::env::var("MYTHIC_CONFIG_PROXY_MODE") { self.config_export.proxy_mode = v; }
     }
 
     pub fn role(&self) -> anyhow::Result<ServerRole> {

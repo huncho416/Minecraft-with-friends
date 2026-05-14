@@ -12,26 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Owns network-wide broadcasts and the rotating-announcement loop.
- *
- * <p>Two responsibilities, one service:
- *
- * <ul>
- *   <li>{@code broadcast(line)} — fan a single line out to every player
- *       on every server. Uses the {@code core:broadcast} protocol
- *       channel; receivers render via {@link Bukkit#broadcast}.
- *   <li>{@link #tickAnnouncement} — pull the next message from the
- *       rotating list and broadcast it. Called on a fixed-rate tick
- *       installed by {@link MythicCorePlugin} via
- *       {@link net.mythicpvp.suite.scheduler.MythicScheduler}.
- * </ul>
- *
- * <p>Cross-shard echo: when a NETWORK broadcast arrives, the
- * originating shard would receive its own message back. We tag every
- * payload with the originating shard id and ignore self-echoes so the
- * sender doesn't see the message twice.
- */
 public final class BroadcastService {
 
     public static final String CHANNEL = "core:broadcast";
@@ -51,14 +31,13 @@ public final class BroadcastService {
                 message -> receive(message.deserialize(BroadcastNotice.class)));
     }
 
-    /** Reload runtime config from the supplied YAML. Idempotent. */
     public void load(@NotNull MythicConfig config) {
         this.enabled = config.getBoolean("announcements.enabled", true);
         this.intervalSeconds = Math.max(5, config.getInt("announcements.interval-seconds", 300));
         this.announcementMessages = List.copyOf(config.getStringList("announcements.messages"));
         this.broadcastFormat = config.getString(
                 "broadcast.format", "&#FF00F8Broadcast &8» &#FFFFFF%message%");
-        // Reset rotation so a config reload starts from the top.
+
         nextIndex.set(0);
     }
 
@@ -74,25 +53,13 @@ public final class BroadcastService {
         return announcementMessages.size();
     }
 
-    /**
-     * Network-wide broadcast — used by {@code /broadcast <message>} and
-     * by the announcement tick. {@code rawMessage} is the user/template
-     * text; the configured format is applied before the wire send.
-     */
     public void broadcast(@NotNull String rawMessage) {
         String formatted = applyFormat(rawMessage);
         publish(formatted);
-        // Apply locally too — receivers (including us) consume from the
-        // protocol channel, but the originating shard short-circuits to
-        // avoid double-render. So fire the local render path explicitly.
+
         renderLocally(formatted);
     }
 
-    /**
-     * Rotate to the next announcement and broadcast it. Returns the
-     * line that was sent, or {@code null} if announcements are disabled
-     * or no messages are configured.
-     */
     public String tickAnnouncement() {
         if (!enabled || announcementMessages.isEmpty()) {
             return null;
@@ -103,15 +70,13 @@ public final class BroadcastService {
         return raw;
     }
 
-    // ── Internals ────────────────────────────────────────────────────
-
     private void publish(@NotNull String formatted) {
         protocolManager.publish(CHANNEL, new BroadcastNotice(formatted, shardId));
     }
 
     private void receive(@NotNull BroadcastNotice notice) {
         if (notice.origin().equals(shardId)) {
-            // Originating shard rendered locally already; skip echo.
+
             return;
         }
         renderLocally(notice.message());
@@ -122,7 +87,7 @@ public final class BroadcastService {
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendMessage(component);
         }
-        // Also push to console so ops see the broadcast.
+
         Bukkit.getConsoleSender().sendMessage(component);
     }
 
@@ -131,10 +96,6 @@ public final class BroadcastService {
         return interpolate(broadcastFormat, Map.of("message", rawMessage));
     }
 
-    /**
-     * Tiny `%key%` interpolator — same shape as PlaceholderResolver but
-     * without the regex overhead since we only ever expand %message%.
-     */
     @NotNull
     private static String interpolate(@NotNull String template, @NotNull Map<String, String> values) {
         String result = template;

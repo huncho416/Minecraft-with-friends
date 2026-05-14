@@ -16,27 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-/**
- * Wires staff tools to actions:
- *
- * <ul>
- *   <li>INSPECT — print the right-clicked player's rank + gamemode.
- *   <li>FREEZE — toggle frozen state on the right-clicked player.
- *   <li>RANDOM_TELEPORT — teleport the staff to a random online player.
- *   <li>DISABLE — exit staff mode.
- * </ul>
- *
- * <p>Tool dispatch matches by the held item's display name against the
- * configured tool palette — keying on display name (rather than
- * persistent data) means a YAML edit + reload picks up new tools
- * without needing to re-equip every staff member.
- *
- * <p>{@link PlayerInteractEntityEvent} fires when the staff member
- * right-clicks another player; {@link PlayerInteractEvent} fires for
- * air/block clicks (used for DISABLE and RANDOM_TELEPORT, which don't
- * need a target). Frozen-player movement enforcement lives on
- * {@link PlayerMoveEvent}.
- */
 public final class StaffModeToolListener implements Listener {
 
     private final StaffModeService staff;
@@ -73,7 +52,7 @@ public final class StaffModeToolListener implements Listener {
         switch (tool.type()) {
             case "INSPECT" -> handleInspect(player, target);
             case "FREEZE" -> handleFreeze(player, target);
-            default -> { /* targeted-only tool list ends here */ }
+            default -> {  }
         }
     }
 
@@ -91,9 +70,7 @@ public final class StaffModeToolListener implements Listener {
         if (tool == null) {
             return;
         }
-        // Only fire the no-target tools here. Targeted tools (INSPECT,
-        // FREEZE) are dispatched from PlayerInteractEntityEvent so the
-        // staff member needs to actually click another player.
+
         switch (tool.type()) {
             case "RANDOM_TELEPORT" -> {
                 event.setCancelled(true);
@@ -103,7 +80,7 @@ public final class StaffModeToolListener implements Listener {
                 event.setCancelled(true);
                 staff.disable(player);
             }
-            default -> { /* targeted tools handled in onInteractEntity */ }
+            default -> {  }
         }
     }
 
@@ -112,7 +89,7 @@ public final class StaffModeToolListener implements Listener {
         if (!staff.isFrozen(event.getPlayer().getUniqueId())) {
             return;
         }
-        // Allow head turns (yaw/pitch) but cancel positional movement.
+
         if (event.getFrom().getX() != event.getTo().getX()
                 || event.getFrom().getY() != event.getTo().getY()
                 || event.getFrom().getZ() != event.getTo().getZ()) {
@@ -122,12 +99,9 @@ public final class StaffModeToolListener implements Listener {
 
     @EventHandler
     public void onQuit(@NotNull PlayerQuitEvent event) {
-        // Restore inventory if a staff member logs out mid-staff-mode
-        // and clear any frozen flag.
+
         staff.onQuit(event.getPlayer());
     }
-
-    // ── Tool actions ────────────────────────────────────────────────
 
     private void handleInspect(@NotNull Player staffPlayer, @NotNull Player target) {
         String rankId = grants.activeRank(target.getUniqueId());
@@ -163,8 +137,6 @@ public final class StaffModeToolListener implements Listener {
         staffPlayer.teleport(chosen.getLocation());
     }
 
-    // ── Tool match ──────────────────────────────────────────────────
-
     private StaffModeTool matchTool(@NotNull ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         if (meta == null || !meta.hasDisplayName()) {
@@ -172,9 +144,7 @@ public final class StaffModeToolListener implements Listener {
         }
         String displayName = PlainTextComponentSerializer.plainText().serialize(meta.displayName());
         for (StaffModeTool tool : staff.tools()) {
-            // Strip Mythic hex from the configured name to compare on
-            // visible text only. Tools are scarce so the linear scan is
-            // negligible.
+
             String configuredPlain = stripHex(tool.name());
             if (configuredPlain.equals(displayName) && item.getType() == tool.material()) {
                 return tool;
@@ -185,7 +155,7 @@ public final class StaffModeToolListener implements Listener {
 
     @NotNull
     private static String stripHex(@NotNull String input) {
-        // Match MythicHex's `&#RRGGBB` and legacy `&x` codes.
+
         return input.replaceAll("&#[0-9A-Fa-f]{6}", "")
                 .replaceAll("&[0-9a-fk-or]", "")
                 .trim();

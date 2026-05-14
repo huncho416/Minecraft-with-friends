@@ -1,12 +1,4 @@
-//! Tiny admin HTTP surface. Three endpoints:
-//!
-//! * `GET /health`       → `200 OK` with JSON status snapshot
-//! * `GET /metrics`      → Prometheus exposition (manual format, no client crate)
-//! * `POST /admin/drain` → flip status to Draining (Pterodactyl shutdown hook)
-//!
-//! Prometheus format is hand-written instead of pulling in a client crate
-//! — we publish three counters and that's it, so the dep weight isn't
-//! worth it.
+
 
 use crate::state::ProxyState;
 use http_body_util::Full;
@@ -38,9 +30,6 @@ pub async fn run(bind: SocketAddr, state: Arc<ProxyState>) -> anyhow::Result<()>
     }
 }
 
-// `async` is required by hyper's `service_fn` signature even though none
-// of the synchronous handlers await — clippy's `unused_async` is wrong
-// for this idiom.
 #[allow(clippy::unused_async)]
 async fn handle(
     req: Request<hyper::body::Incoming>,
@@ -60,9 +49,7 @@ async fn handle(
 
 fn health(state: &ProxyState) -> Response<Full<Bytes>> {
     let status = *state.status.read();
-    // Only Offline returns 503; every other status (incl. Draining) is
-    // still "live" from a health-check perspective so load balancers don't
-    // panic-kill us during a graceful drain.
+
     let code = match status {
         ServerStatus::Offline => StatusCode::SERVICE_UNAVAILABLE,
         _ => StatusCode::OK,

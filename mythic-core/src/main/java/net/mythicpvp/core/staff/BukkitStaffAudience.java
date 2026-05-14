@@ -9,17 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-/**
- * {@link StaffAudience} implementation that renders inbound staff
- * messages to every online player who holds the channel's permission,
- * plus the console (so ops always see network-wide staff traffic).
- *
- * <p>Uses the {@code messages.staff.format} template from
- * {@code messages.yml} for placeholder substitution. Supported tokens
- * mirror what {@link StaffMessage} carries: {@code %server%},
- * {@code %sender%}, {@code %rank%}, {@code %rank_color%},
- * {@code %message%}, {@code %channel%}.
- */
 public final class BukkitStaffAudience implements StaffAudience {
 
     private final String formatTemplate;
@@ -39,13 +28,12 @@ public final class BukkitStaffAudience implements StaffAudience {
                 "channel", message.channel().id()));
         Component component = MythicHex.colorize(rendered);
 
-        // Render to every online player with the channel's permission.
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             if (viewer.hasPermission(message.channel().permission())) {
                 viewer.sendMessage(component);
             }
         }
-        // And to console so ops can see all staff chats from rcon.
+
         CommandSender console = Bukkit.getConsoleSender();
         console.sendMessage(component);
     }
