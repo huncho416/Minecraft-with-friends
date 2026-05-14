@@ -52,6 +52,8 @@ public interface PersistenceGateway {
 
     void friendAccept(long requestId);
 
+    void friendDeny(long requestId);
+
     void friendRemove(@NotNull UUID owner, @NotNull UUID friend);
 
     void partyCreate(@NotNull UUID leader);
@@ -67,6 +69,8 @@ public interface PersistenceGateway {
                   @NotNull String attachmentsJson);
 
     void mailMarkRead(long mailId);
+
+    void loginStreakRecord(@NotNull UUID player, long loginMillis, int streak);
 
     void hydrate(@NotNull HydrationSink sink);
 }

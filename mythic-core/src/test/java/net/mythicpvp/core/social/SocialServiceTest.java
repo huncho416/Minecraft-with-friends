@@ -4,17 +4,20 @@ import net.mythicpvp.core.persistence.CapturingPersistenceGateway;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SocialServiceTest {
 
-    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-05-14T12:00:00Z"), ZoneOffset.UTC);
+    private static final Instant BASE_INSTANT = Instant.parse("2026-05-14T12:00:00Z");
+    private static final Clock CLOCK = Clock.fixed(BASE_INSTANT, ZoneOffset.UTC);
     private static final UUID ALEX = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static final UUID BLAKE = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
@@ -34,6 +37,30 @@ class SocialServiceTest {
         social.removeFriend(ALEX, BLAKE);
         assertFalse(social.areFriends(ALEX, BLAKE));
         assertFalse(social.areFriends(BLAKE, ALEX));
+    }
+
+    @Test
+    void friendDenyRemovesRequestAndPersists() {
+        CapturingPersistenceGateway gateway = new CapturingPersistenceGateway();
+        SocialService social = new SocialService(gateway, CLOCK);
+
+        FriendRequest request = social.requestFriend(ALEX, BLAKE);
+        assertEquals(1, social.incomingRequests(BLAKE).size());
+
+        assertTrue(social.denyFriend(request.id(), BLAKE));
+        assertEquals(0, social.incomingRequests(BLAKE).size());
+        assertFalse(social.areFriends(ALEX, BLAKE));
+        assertTrue(gateway.calls.stream().anyMatch(CapturingPersistenceGateway.FriendDeny.class::isInstance));
+    }
+
+    @Test
+    void friendDenyFailsForWrongPlayer() {
+        CapturingPersistenceGateway gateway = new CapturingPersistenceGateway();
+        SocialService social = new SocialService(gateway, CLOCK);
+
+        FriendRequest request = social.requestFriend(ALEX, BLAKE);
+        assertFalse(social.denyFriend(request.id(), ALEX));
+        assertEquals(1, social.incomingRequests(BLAKE).size());
     }
 
     @Test
@@ -67,5 +94,56 @@ class SocialServiceTest {
         assertTrue(social.markMailRead(message.id(), BLAKE));
         assertEquals(0, social.unread(BLAKE).size());
         assertTrue(gateway.calls.stream().anyMatch(CapturingPersistenceGateway.MailMarkRead.class::isInstance));
+    }
+
+    @Test
+    void loginStreakIncrementsOnConsecutiveDays() {
+        Instant day1 = BASE_INSTANT;
+        Clock clock1 = Clock.fixed(day1, ZoneOffset.UTC);
+        CapturingPersistenceGateway gateway = new CapturingPersistenceGateway();
+        SocialService social = new SocialService(gateway, clock1);
+
+        LoginStreak streak1 = social.recordLogin(ALEX);
+        assertEquals(1, streak1.currentStreak());
+
+        SocialService social2 = new SocialService(gateway, Clock.fixed(day1.plus(Duration.ofHours(25)), ZoneOffset.UTC));
+        social2.applyLoginStreak(streak1);
+        LoginStreak streak2 = social2.recordLogin(ALEX);
+        assertEquals(2, streak2.currentStreak());
+    }
+
+    @Test
+    void loginStreakResetsAfterTwoDayGap() {
+        Instant day1 = BASE_INSTANT;
+        CapturingPersistenceGateway gateway = new CapturingPersistenceGateway();
+        SocialService social = new SocialService(gateway, Clock.fixed(day1, ZoneOffset.UTC));
+
+        LoginStreak streak1 = social.recordLogin(ALEX);
+        assertEquals(1, streak1.currentStreak());
+
+        SocialService social2 = new SocialService(gateway, Clock.fixed(day1.plus(Duration.ofHours(49)), ZoneOffset.UTC));
+        social2.applyLoginStreak(streak1);
+        LoginStreak streak2 = social2.recordLogin(ALEX);
+        assertEquals(1, streak2.currentStreak());
+    }
+
+    @Test
+    void loginStreakNoChangeOnSameDay() {
+        CapturingPersistenceGateway gateway = new CapturingPersistenceGateway();
+        SocialService social = new SocialService(gateway, CLOCK);
+
+        LoginStreak first = social.recordLogin(ALEX);
+        assertEquals(1, first.currentStreak());
+
+        LoginStreak second = social.recordLogin(ALEX);
+        assertEquals(first.id(), second.id());
+        assertEquals(1, second.currentStreak());
+    }
+
+    @Test
+    void getLoginStreakNullForUnknownPlayer() {
+        CapturingPersistenceGateway gateway = new CapturingPersistenceGateway();
+        SocialService social = new SocialService(gateway, CLOCK);
+        assertNull(social.getLoginStreak(ALEX));
     }
 }

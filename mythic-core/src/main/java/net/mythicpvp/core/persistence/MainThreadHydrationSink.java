@@ -6,6 +6,7 @@ import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.RankGrant;
 import net.mythicpvp.core.social.FriendLink;
 import net.mythicpvp.core.social.FriendRequest;
+import net.mythicpvp.core.social.LoginStreak;
 import net.mythicpvp.core.social.MailMessage;
 import net.mythicpvp.core.social.Party;
 import net.mythicpvp.core.social.PartyMember;
@@ -47,6 +48,7 @@ public final class MainThreadHydrationSink implements HydrationSink {
     @Override public void removePartyMember(long memberId) { schedule(s -> s.removePartyMember(memberId)); }
     @Override public void applyMail(@NotNull MailMessage mail) { schedule(s -> s.applyMail(mail)); }
     @Override public void removeMail(long mailId) { schedule(s -> s.removeMail(mailId)); }
+    @Override public void applyLoginStreak(@NotNull LoginStreak streak) { schedule(s -> s.applyLoginStreak(streak)); }
 
     private void schedule(@NotNull Consumer<HydrationSink> action) {
 

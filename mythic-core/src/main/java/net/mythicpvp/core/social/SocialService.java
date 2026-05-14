@@ -24,6 +24,7 @@ public final class SocialService {
     private final ConcurrentMap<Long, ConcurrentMap<UUID, PartyMember>> partyMembers = new ConcurrentHashMap<>();
     private final ConcurrentMap<UUID, Long> partyByPlayer = new ConcurrentHashMap<>();
     private final ConcurrentMap<Long, MailMessage> mail = new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, LoginStreak> loginStreaks = new ConcurrentHashMap<>();
 
     public SocialService(@NotNull PersistenceGateway persistence, @NotNull Clock clock) {
         this.persistence = persistence;
@@ -57,6 +58,16 @@ public final class SocialService {
         applyFriend(new FriendLink(nextLocalId(), request.from(), request.to(), now));
         applyFriend(new FriendLink(nextLocalId(), request.to(), request.from(), now));
         persistence.friendAccept(requestId);
+        return true;
+    }
+
+    public boolean denyFriend(long requestId, @NotNull UUID denyingPlayer) {
+        FriendRequest request = friendRequests.get(requestId);
+        if (request == null || !request.to().equals(denyingPlayer)) {
+            return false;
+        }
+        removeFriendRequest(requestId);
+        persistence.friendDeny(requestId);
         return true;
     }
 
@@ -179,6 +190,39 @@ public final class SocialService {
     @NotNull
     public List<MailMessage> unread(@NotNull UUID recipient) {
         return inbox(recipient).stream().filter(message -> !message.read()).toList();
+    }
+
+    private static final long ONE_DAY_MILLIS = 86_400_000L;
+    private static final long TWO_DAYS_MILLIS = 172_800_000L;
+
+    public LoginStreak recordLogin(@NotNull UUID player) {
+        long now = clock.millis();
+        LoginStreak existing = loginStreaks.get(player);
+        int streak;
+        if (existing == null) {
+            streak = 1;
+        } else {
+            long elapsed = now - existing.lastLoginMillis();
+            if (elapsed >= ONE_DAY_MILLIS && elapsed < TWO_DAYS_MILLIS) {
+                streak = existing.currentStreak() + 1;
+            } else if (elapsed < ONE_DAY_MILLIS) {
+                return existing;
+            } else {
+                streak = 1;
+            }
+        }
+        LoginStreak updated = new LoginStreak(nextLocalId(), player, now, streak);
+        loginStreaks.put(player, updated);
+        persistence.loginStreakRecord(player, now, streak);
+        return updated;
+    }
+
+    public LoginStreak getLoginStreak(@NotNull UUID player) {
+        return loginStreaks.get(player);
+    }
+
+    public void applyLoginStreak(@NotNull LoginStreak streak) {
+        loginStreaks.put(streak.player(), streak);
     }
 
     public void applyFriend(@NotNull FriendLink link) {

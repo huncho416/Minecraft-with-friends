@@ -45,6 +45,7 @@ public final class ReducerNames {
 
     public static final String FRIEND_REQUEST = "friend_request";
     public static final String FRIEND_ACCEPT = "friend_accept";
+    public static final String FRIEND_DENY = "friend_deny";
     public static final String FRIEND_REMOVE = "friend_remove";
     public static final String PARTY_CREATE = "party_create";
     public static final String PARTY_JOIN = "party_join";
@@ -52,6 +53,7 @@ public final class ReducerNames {
     public static final String PARTY_DISBAND = "party_disband";
     public static final String MAIL_SEND = "mail_send";
     public static final String MAIL_MARK_READ = "mail_mark_read";
+    public static final String LOGIN_STREAK_RECORD = "login_streak_record";
 
     public static final String ISLAND_CREATE = "island_create";
     public static final String SKILL_GRANT_XP = "skill_grant_xp";

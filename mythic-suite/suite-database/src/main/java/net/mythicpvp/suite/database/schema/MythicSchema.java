@@ -354,6 +354,11 @@ public final class MythicSchema {
     }
 
     @NotNull
+    public CompletableFuture<ReducerResult> friendDeny(long requestId) {
+        return call(ReducerNames.FRIEND_DENY, requestId);
+    }
+
+    @NotNull
     public CompletableFuture<ReducerResult> friendRemove(@NotNull UUID owner, @NotNull UUID friend) {
         return call(ReducerNames.FRIEND_REMOVE, hyphenated(owner), hyphenated(friend));
     }
@@ -393,6 +398,11 @@ public final class MythicSchema {
     @NotNull
     public CompletableFuture<ReducerResult> mailMarkRead(long mailId) {
         return call(ReducerNames.MAIL_MARK_READ, mailId);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> loginStreakRecord(@NotNull UUID player, long loginMillis, int streak) {
+        return call(ReducerNames.LOGIN_STREAK_RECORD, hyphenated(player), loginMillis, streak);
     }
 
     @NotNull

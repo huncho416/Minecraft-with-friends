@@ -29,6 +29,7 @@ public final class CapturingPersistenceGateway implements PersistenceGateway {
     public record BlacklistRevoke(long entryId, UUID staff, String reason) {}
     public record FriendRequestCall(UUID from, UUID to) {}
     public record FriendAccept(long requestId) {}
+    public record FriendDeny(long requestId) {}
     public record FriendRemove(UUID owner, UUID friend) {}
     public record PartyCreate(UUID leader) {}
     public record PartyJoin(long partyId, UUID player) {}
@@ -76,6 +77,9 @@ public final class CapturingPersistenceGateway implements PersistenceGateway {
     @Override public void friendAccept(long requestId) {
         calls.add(new FriendAccept(requestId));
     }
+    @Override public void friendDeny(long requestId) {
+        calls.add(new FriendDeny(requestId));
+    }
     @Override public void friendRemove(@NotNull UUID owner, @NotNull UUID friend) {
         calls.add(new FriendRemove(owner, friend));
     }
@@ -98,6 +102,11 @@ public final class CapturingPersistenceGateway implements PersistenceGateway {
     }
     @Override public void mailMarkRead(long mailId) {
         calls.add(new MailMarkRead(mailId));
+    }
+
+    public record LoginStreakRecord(UUID player, long loginMillis, int streak) {}
+    @Override public void loginStreakRecord(@NotNull UUID player, long loginMillis, int streak) {
+        calls.add(new LoginStreakRecord(player, loginMillis, streak));
     }
 
     public record HydrateCall(HydrationSink sink) {}

@@ -85,6 +85,16 @@ pub fn friend_accept(ctx: &ReducerContext, request_id: u64) -> ReducerResult {
 }
 
 #[reducer]
+pub fn friend_deny(ctx: &ReducerContext, request_id: u64) -> ReducerResult {
+    let requests = ctx.db.friend_requests();
+    let Some(_r) = requests.id().find(request_id) else {
+        reject!("request {request_id} not found");
+    };
+    requests.id().delete(request_id);
+    Ok(())
+}
+
+#[reducer]
 pub fn friend_remove(ctx: &ReducerContext, owner: PlayerUuid, friend: PlayerUuid) -> ReducerResult {
     require_uuid(&owner)?;
     require_uuid(&friend)?;
@@ -267,6 +277,45 @@ pub fn mail_mark_read(ctx: &ReducerContext, mail_id: u64) -> ReducerResult {
         m.read = true;
         m.read_at_micros = ctx.timestamp.to_micros_since_unix_epoch();
         mail.id().update(m);
+    }
+    Ok(())
+}
+
+#[table(name = login_streaks, public)]
+pub struct LoginStreakRow {
+    #[primary_key]
+    #[auto_inc]
+    pub id: u64,
+
+    #[unique]
+    #[index(btree)]
+    pub player_uuid: PlayerUuid,
+
+    pub last_login_at: Timestamp,
+    pub current_streak: i32,
+}
+
+#[reducer]
+pub fn login_streak_record(
+    ctx: &ReducerContext,
+    player: PlayerUuid,
+    login_millis: i64,
+    streak: i32,
+) -> ReducerResult {
+    require_uuid(&player)?;
+    let streaks = ctx.db.login_streaks();
+    let existing: Option<LoginStreakRow> = streaks.iter().find(|s| s.player_uuid == player);
+    if let Some(mut row) = existing {
+        row.last_login_at = ctx.timestamp;
+        row.current_streak = streak;
+        streaks.id().update(row);
+    } else {
+        streaks.insert(LoginStreakRow {
+            id: 0,
+            player_uuid: player,
+            last_login_at: ctx.timestamp,
+            current_streak: streak,
+        });
     }
     Ok(())
 }

@@ -37,6 +37,7 @@ public final class NoopPersistenceGateway implements PersistenceGateway {
                                         @NotNull String reference) {}
     @Override public void friendRequest(@NotNull UUID from, @NotNull UUID to) {}
     @Override public void friendAccept(long requestId) {}
+    @Override public void friendDeny(long requestId) {}
     @Override public void friendRemove(@NotNull UUID owner, @NotNull UUID friend) {}
     @Override public void partyCreate(@NotNull UUID leader) {}
     @Override public void partyJoin(long partyId, @NotNull UUID player) {}
@@ -46,5 +47,6 @@ public final class NoopPersistenceGateway implements PersistenceGateway {
                                    @NotNull String subject, @NotNull String body,
                                    @NotNull String attachmentsJson) {}
     @Override public void mailMarkRead(long mailId) {}
+    @Override public void loginStreakRecord(@NotNull UUID player, long loginMillis, int streak) {}
     @Override public void hydrate(@NotNull HydrationSink sink) {}
 }

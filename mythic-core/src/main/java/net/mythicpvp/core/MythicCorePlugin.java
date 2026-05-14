@@ -59,7 +59,9 @@ import net.mythicpvp.core.staff.StaffPresenceListener;
 import net.mythicpvp.core.staff.StaffPresenceService;
 import net.mythicpvp.core.staffmode.StaffModeService;
 import net.mythicpvp.core.staffmode.StaffModeToolListener;
+import net.mythicpvp.core.social.FriendLoginListener;
 import net.mythicpvp.core.social.MailLoginListener;
+import net.mythicpvp.core.social.OfflineRewardService;
 import net.mythicpvp.core.social.SocialService;
 import net.mythicpvp.suite.api.MythicPlugin;
 import net.mythicpvp.suite.command.CommandManager;
@@ -194,11 +196,13 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new PartyCommand(socialService, messages));
         commandManager.register(new MailCommand(socialService, messages));
         getServer().getPluginManager().registerEvents(new MailLoginListener(socialService, messages), this);
+        getServer().getPluginManager().registerEvents(new FriendLoginListener(socialService, messages), this);
+        getServer().getPluginManager().registerEvents(new OfflineRewardService(socialService, messages), this);
         staffChannelService = new StaffChannelService(protocolManager, serverIdentity.id());
 
         String staffFormat = messages.raw(
                 "messages.staff.format",
-                "&#888888[%server%] %rank_color%%rank%%sender% &8Â\u00BB &#FFFFFF%message%",
+                "&#888888[%server%] %rank_color%%rank%%sender% &8ï¿½\u00BB &#FFFFFF%message%",
                 java.util.Map.of());
         staffChannelService.addAudience(new BukkitStaffAudience(staffFormat));
 

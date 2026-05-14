@@ -213,6 +213,11 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     }
 
     @Override
+    public void friendDeny(long requestId) {
+        observe("friendDeny " + requestId, schema.friendDeny(requestId));
+    }
+
+    @Override
     public void friendRemove(@NotNull UUID owner, @NotNull UUID friend) {
         observe("friendRemove " + owner + " <-> " + friend, schema.friendRemove(owner, friend));
     }
@@ -248,6 +253,12 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     @Override
     public void mailMarkRead(long mailId) {
         observe("mailMarkRead " + mailId, schema.mailMarkRead(mailId));
+    }
+
+    @Override
+    public void loginStreakRecord(@NotNull UUID player, long loginMillis, int streak) {
+        observe("loginStreakRecord " + player + " streak=" + streak,
+                schema.loginStreakRecord(player, loginMillis, streak));
     }
 
     @NotNull
