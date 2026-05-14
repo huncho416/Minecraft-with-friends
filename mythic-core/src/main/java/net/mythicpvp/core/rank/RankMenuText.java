@@ -93,6 +93,59 @@ public final class RankMenuText {
         return get("rank.editor.close", "&#FF00F8Close");
     }
 
+    @NotNull
+    public String editorFieldsTitle() {
+        return get("rank.editor.fields-title", "&#FF00F8Edit Fields");
+    }
+
+    @NotNull
+    public String editorFormatsTitle() {
+        return get("rank.editor.formats-title", "&#FF00F8Display Formats");
+    }
+
+    @NotNull
+    public String editorPermissionsTitle(@NotNull String rankId) {
+        return with(get("rank.editor.permissions-title", "&#FF00F8Permissions: %rank-id%"),
+                "%rank-id%", rankId);
+    }
+
+    @NotNull
+    public String editorAddPermission() {
+        return get("rank.editor.add-permission", "&#00FF00Add Permission");
+    }
+
+    @NotNull
+    public String editorAddPermissionLore() {
+        return get("rank.editor.add-permission-lore", "&7Click and type the permission node in chat");
+    }
+
+    @NotNull
+    public String editorRemovePermissionLore() {
+        return get("rank.editor.remove-permission-lore", "&#FF0000Click to remove");
+    }
+
+    @NotNull
+    public String editorFieldPrompt() {
+        return get("rank.editor.field-name-prompt", "&7Type the new value in chat (or 'cancel').");
+    }
+
+    @NotNull
+    public String editorFieldUpdated(@NotNull String field, @NotNull String value) {
+        return with(with(get("rank.editor.field-updated", "&#00FF00Updated %field% to %value%"),
+                "%field%", field), "%value%", value);
+    }
+
+    @NotNull
+    public String editorFieldFailed(@NotNull String field) {
+        return with(get("rank.editor.field-failed", "&#FF0000Failed to update %field%"),
+                "%field%", field);
+    }
+
+    @NotNull
+    public String editorBack() {
+        return get("rank.editor.field-back", "&#FF00F8Back");
+    }
+
     /**
      * Duration presets shown in the /grant duration menu. Empty list →
      * built-in defaults so the menu always has something to render.

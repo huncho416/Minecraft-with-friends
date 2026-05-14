@@ -1,5 +1,6 @@
 package net.mythicpvp.core.command;
 
+import net.mythicpvp.core.rank.RankEditorMenuService;
 import net.mythicpvp.core.rank.RankMenuText;
 import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.suite.command.CommandAlias;
@@ -13,6 +14,7 @@ import net.mythicpvp.suite.menu.MythicMenu;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -22,14 +24,22 @@ public final class RankEditorCommand extends MythicCommand {
 
     private final RankService rankService;
     private final RankMenuText text;
+    @Nullable
+    private final RankEditorMenuService editorMenu;
 
     public RankEditorCommand(@NotNull RankService rankService) {
-        this(rankService, RankMenuText.DEFAULTS);
+        this(rankService, RankMenuText.DEFAULTS, null);
     }
 
     public RankEditorCommand(@NotNull RankService rankService, @NotNull RankMenuText text) {
+        this(rankService, text, null);
+    }
+
+    public RankEditorCommand(@NotNull RankService rankService, @NotNull RankMenuText text,
+                             @Nullable RankEditorMenuService editorMenu) {
         this.rankService = rankService;
         this.text = text;
+        this.editorMenu = editorMenu;
     }
 
     @Default
@@ -38,6 +48,13 @@ public final class RankEditorCommand extends MythicCommand {
         var rank = rankService.get(rankId);
         if (rank == null) {
             player.sendMessage("Unknown rank.");
+            return;
+        }
+        // When wired with the click-driven editor (production), delegate so
+        // every field becomes click-editable. Falls back to the static
+        // read-only menu when no editor is provided (test fixtures).
+        if (editorMenu != null) {
+            editorMenu.openOverview(player, rank.id());
             return;
         }
         MythicMenu.create(3, text.editorTitle(rank.id()))

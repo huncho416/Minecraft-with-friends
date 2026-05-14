@@ -180,7 +180,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new GrantsCommand(grantService, rankService));
         commandManager.register(new CGrantCommand(grantService));
         commandManager.register(new ClearGrantsCommand(grantService));
-        commandManager.register(new RankEditorCommand(rankService, rankMenuText));
+        commandManager.register(new RankEditorCommand(rankService, rankMenuText,
+                new net.mythicpvp.core.rank.RankEditorMenuService(rankService, chatPromptService, rankMenuText)));
         commandManager.register(new PunishCommand(punishmentMenuService));
         commandManager.register(new PunishmentsCommand(punishmentMenuService));
         commandManager.register(new HistoryCommand(punishmentService, punishmentMenuService));
