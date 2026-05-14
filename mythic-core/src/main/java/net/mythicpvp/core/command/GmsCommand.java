@@ -10,7 +10,7 @@ import net.mythicpvp.suite.command.Optional;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-@CommandAlias("gms")
+@CommandAlias("gms|gm0|survival")
 @CommandPermission("mythic.core.gamemode.survival")
 public final class GmsCommand extends MythicCommand {
 

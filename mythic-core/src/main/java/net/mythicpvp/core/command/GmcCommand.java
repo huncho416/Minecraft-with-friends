@@ -10,7 +10,7 @@ import net.mythicpvp.suite.command.Optional;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-@CommandAlias("gmc")
+@CommandAlias("gmc|gm1|creative")
 @CommandPermission("mythic.core.gamemode.creative")
 public final class GmcCommand extends MythicCommand {
 

@@ -1,24 +1,47 @@
 package net.mythicpvp.core.essentials;
 
+import net.mythicpvp.core.audit.CoreAuditLog;
 import net.mythicpvp.core.config.CoreMessages;
+import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 public final class CoreEssentialsService {
 
     private final CoreMessages messages;
+    @Nullable
+    private final CoreAuditLog audit;
+    @Nullable
+    private final JavaPlugin plugin;
 
+    /** Test-friendly constructor: no audit log, no Folia scheduler. */
     public CoreEssentialsService(@NotNull CoreMessages messages) {
+        this(messages, null, null);
+    }
+
+    /**
+     * Production constructor — wires the audit log and a plugin handle so
+     * teleports can use {@link MythicScheduler#runOnEntity} on Folia for
+     * cross-region safety. Pass {@code null} for either to disable that
+     * piece (the service still works, just without that feature).
+     */
+    public CoreEssentialsService(@NotNull CoreMessages messages,
+                                 @Nullable CoreAuditLog audit,
+                                 @Nullable JavaPlugin plugin) {
         this.messages = messages;
+        this.audit = audit;
+        this.plugin = plugin;
     }
 
     public void setGameMode(@NotNull CommandSender sender, @NotNull String modeInput, @Nullable String targetName) {
@@ -31,7 +54,11 @@ public final class CoreEssentialsService {
         if (target == null) {
             return;
         }
+        GameMode previous = target.getGameMode();
         target.setGameMode(mode);
+        auditAction("GAMEMODE", sender, target, Map.of(
+                "from", previous.name(),
+                "to", mode.name()));
         sender.sendMessage(messages.component("essentials.gamemode", "&#FF00F8+ &#FFFFFFSet %target%'s gamemode to %mode%.", Map.of(
                 "target", target.getName(),
                 "mode", display(mode)
@@ -67,7 +94,10 @@ public final class CoreEssentialsService {
             return;
         }
         Location location = destination.getLocation();
-        target.teleport(location);
+        scheduleTeleport(target, location);
+        auditAction("TELEPORT", sender, target, Map.of(
+                "destination", destination.getName(),
+                "world", location.getWorld() == null ? "?" : location.getWorld().getName()));
         sender.sendMessage(messages.component("essentials.teleport", "&#FF00F8+ &#FFFFFFTeleported %target% to %destination%.", Map.of(
                 "target", target.getName(),
                 "destination", destination.getName()
@@ -84,8 +114,41 @@ public final class CoreEssentialsService {
             sender.sendMessage(messages.component("command.player-not-found", "&#FF00F8x &#FFFFFFThat player is not online."));
             return;
         }
-        target.teleport(player.getLocation());
+        scheduleTeleport(target, player.getLocation());
+        auditAction("TELEPORT_HERE", sender, target, Map.of(
+                "world", player.getLocation().getWorld() == null ? "?" : player.getLocation().getWorld().getName()));
         sender.sendMessage(messages.component("essentials.tphere", "&#FF00F8+ &#FFFFFFTeleported %target% to you.", Map.of("target", target.getName())));
+    }
+
+    /**
+     * Teleport {@code target} to {@code location}. On Folia, hops onto
+     * the entity's region thread first via {@link MythicScheduler#runOnEntity}
+     * so cross-region teleports don't trip the threaded-region check.
+     * On vanilla / Paper / MockBukkit it stays synchronous so callers
+     * (and tests) can observe the new position immediately.
+     */
+    private void scheduleTeleport(@NotNull Player target, @NotNull Location location) {
+        if (plugin != null && MythicScheduler.isFolia()) {
+            MythicScheduler.runOnEntity(plugin, target, () -> target.teleport(location));
+        } else {
+            target.teleport(location);
+        }
+    }
+
+    /**
+     * Best-effort audit-log entry. Console-issued actions get a synthetic
+     * {@code SYSTEM} actor uuid since {@link CommandSender} doesn't expose one.
+     */
+    private void auditAction(@NotNull String action,
+                             @NotNull CommandSender sender,
+                             @NotNull Player target,
+                             @NotNull Map<String, String> details) {
+        if (audit == null) {
+            return;
+        }
+        UUID staffUuid = sender instanceof Player p ? p.getUniqueId() : null;
+        String staffName = sender instanceof Player p ? p.getName() : "CONSOLE";
+        audit.log(action, staffUuid, staffName, target.getUniqueId(), target.getName(), details);
     }
 
     public void sendHelp(@NotNull CommandSender sender) {

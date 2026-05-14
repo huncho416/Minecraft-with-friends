@@ -32,3 +32,36 @@ punishment:
     execute: "&#00FF00Execute Punishment"
     state-prefix: "&7State: &f"
     toggle-hint: "&#FF00F8Click to toggle"
+
+# Rank editor + /grant flow menus.
+#
+# Tokens supported:
+#   %target%    — name of the player being granted
+#   %rank-id%   — rank id (e.g. "vip")
+#   %duration%  — chosen grant duration
+rank:
+  grant-rank-title: "&#FF00F8Grant: %target%"
+  grant-duration-title: "&#FF00F8Grant Duration"
+  grant-reason-title: "&#FF00F8Grant Reason"
+  grant-confirm-title: "&#FF00F8Confirm Grant"
+  editor-title: "&#FF00F8Rank Editor: %rank-id%"
+  click-to-select: "&#FF00F8Click to select"
+  custom: "&#FF00F8Custom"
+  summary: "&#FF00F8Grant Summary"
+  confirm: "&#00FF00Confirm"
+  cancel: "&#FF0000Cancel"
+  editor:
+    display-formats: "&#FF00F8Display Formats"
+    permissions: "&#FF00F8Permissions"
+    close: "&#FF00F8Close"
+  duration-presets:
+    - "1d"
+    - "7d"
+    - "30d"
+    - "90d"
+    - "365d"
+    - "permanent"
+  reason-presets:
+    - "Staff Rank"
+    - "Rank Upgrade"
+    - "Purchased Rank"

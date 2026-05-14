@@ -121,7 +121,9 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         serverIdentity = ServerIdentity.fromEnvironment();
         configManager = new ConfigManager(this);
         messages = new CoreMessages(new ConfigText(configManager.getOrCreate("messages"), "messages"));
-        essentialsService = new CoreEssentialsService(messages);
+        // Audit log lives early so essentials + later services can share it.
+        auditLog = new CoreAuditLog(this);
+        essentialsService = new CoreEssentialsService(messages, auditLog, this);
         commandManager = new CommandManager(this);
         // Bring up the persistence gateway BEFORE rank/grant/punishment
         // services so YAML seeding writes through to STDB on first boot.
@@ -132,14 +134,18 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         chatPromptService = new ChatPromptService(this);
         grantService = new GrantService(rankService, Clock.systemUTC());
         grantService.setPersistence(persistenceGateway);
-        grantFlowService = new GrantFlowService(rankService, grantService, chatPromptService);
+        // Operator-overridable menu strings (menus.yml) — shared bundle
+        // for both rank and punishment menus, falls back to built-in
+        // defaults when keys are missing.
+        net.mythicpvp.suite.config.MythicConfig menusConfig = configManager.getOrCreate("menus");
+        net.mythicpvp.core.rank.RankMenuText rankMenuText =
+                new net.mythicpvp.core.rank.RankMenuText(menusConfig);
+        grantFlowService = new GrantFlowService(rankService, grantService, chatPromptService, rankMenuText);
         ProtocolManager protocolManager = ProtocolManager.getInstance();
         punishmentService = new PunishmentService(protocolManager, Clock.systemUTC());
         punishmentService.setPersistence(persistenceGateway);
-        // Operator-overridable menu strings (menus.yml). Falls back to
-        // built-in defaults when the file is absent or partial.
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
-                new net.mythicpvp.core.punishment.PunishmentMenuText(configManager.getOrCreate("menus"));
+                new net.mythicpvp.core.punishment.PunishmentMenuText(menusConfig);
         punishmentMenuService = new PunishmentMenuService(
                 punishmentService, chatPromptService, Clock.systemUTC(), serverIdentity.id(), menuText);
         seedPunishments(configManager.getOrCreate("punishments"));
@@ -174,7 +180,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new GrantsCommand(grantService, rankService));
         commandManager.register(new CGrantCommand(grantService));
         commandManager.register(new ClearGrantsCommand(grantService));
-        commandManager.register(new RankEditorCommand(rankService));
+        commandManager.register(new RankEditorCommand(rankService, rankMenuText));
         commandManager.register(new PunishCommand(punishmentMenuService));
         commandManager.register(new PunishmentsCommand(punishmentMenuService));
         commandManager.register(new HistoryCommand(punishmentService, punishmentMenuService));
@@ -218,10 +224,9 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new StaffModeCommand(staffModeService, messages));
         getServer().getPluginManager().registerEvents(
                 new StaffModeToolListener(staffModeService, messages, grantService, rankService), this);
-        // Audit log + appeal commands. Audit log is a thin file writer
-        // shared across staff actions; appeals route through the
-        // gateway so they persist to STDB.
-        auditLog = new CoreAuditLog(this);
+        // Appeal commands. Audit log is initialized earlier (shared with
+        // essentials); appeals route through the gateway so they persist
+        // to STDB.
         commandManager.register(new AppealCommand(punishmentService, persistenceGateway, messages, auditLog));
         commandManager.register(new AppealsCommand(persistenceGateway, messages, auditLog));
         // Rank ↔ cosmetics bundle integration. Loads ranks.yml's
