@@ -4,8 +4,13 @@ import net.mythicpvp.core.chat.ChatControlService;
 import net.mythicpvp.core.command.CGrantCommand;
 import net.mythicpvp.core.command.ClearGrantsCommand;
 import net.mythicpvp.core.command.CoreCompletions;
+import net.mythicpvp.core.command.DiscordCommand;
+import net.mythicpvp.core.command.GamemodeCommand;
+import net.mythicpvp.core.command.GmcCommand;
+import net.mythicpvp.core.command.GmsCommand;
 import net.mythicpvp.core.command.GrantCommand;
 import net.mythicpvp.core.command.GrantsCommand;
+import net.mythicpvp.core.command.HelpCommand;
 import net.mythicpvp.core.command.HistoryCommand;
 import net.mythicpvp.core.command.PunishCommand;
 import net.mythicpvp.core.command.PunishmentAddCommand;
@@ -14,7 +19,10 @@ import net.mythicpvp.core.command.PunishmentRemoveCommand;
 import net.mythicpvp.core.command.PunishmentsCommand;
 import net.mythicpvp.core.command.RankEditorCommand;
 import net.mythicpvp.core.command.ClearPunishmentsCommand;
+import net.mythicpvp.core.command.TeleportCommand;
+import net.mythicpvp.core.command.TpHereCommand;
 import net.mythicpvp.core.config.CoreMessages;
+import net.mythicpvp.core.essentials.CoreEssentialsService;
 import net.mythicpvp.core.punishment.PunishmentCategory;
 import net.mythicpvp.core.punishment.PunishmentMenuService;
 import net.mythicpvp.core.punishment.PunishmentService;
@@ -37,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.Clock;
 
-public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
+public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
     private ServerIdentity serverIdentity;
     private ConfigManager configManager;
@@ -52,6 +60,7 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private GrantFlowService grantFlowService;
     private ChatPromptService chatPromptService;
     private CoreMessages messages;
+    private CoreEssentialsService essentialsService;
 
     @Override
     public void onEnable() {
@@ -75,6 +84,7 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         serverIdentity = ServerIdentity.fromEnvironment();
         configManager = new ConfigManager(this);
         messages = new CoreMessages(new ConfigText(configManager.getOrCreate("messages"), "messages"));
+        essentialsService = new CoreEssentialsService(messages);
         commandManager = new CommandManager(this);
         rankService = new RankService();
         rankService.load(configManager.getOrCreate("ranks"));
@@ -100,6 +110,13 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new PunishmentAddCommand(punishmentService));
         commandManager.register(new PunishmentRemoveCommand(punishmentService));
         commandManager.register(new PunishmentEditCommand(punishmentService));
+        commandManager.register(new GamemodeCommand(essentialsService));
+        commandManager.register(new GmcCommand(essentialsService));
+        commandManager.register(new GmsCommand(essentialsService));
+        commandManager.register(new TeleportCommand(essentialsService));
+        commandManager.register(new TpHereCommand(essentialsService));
+        commandManager.register(new HelpCommand(essentialsService));
+        commandManager.register(new DiscordCommand(essentialsService));
         staffChannelService = new StaffChannelService(protocolManager, serverIdentity.id());
         staffPresenceService = new StaffPresenceService(protocolManager, serverIdentity.id());
         chatControlService = new ChatControlService(protocolManager);
@@ -176,6 +193,11 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     @NotNull
     public CoreMessages messages() {
         return messages;
+    }
+
+    @NotNull
+    public CoreEssentialsService essentialsService() {
+        return essentialsService;
     }
 
     private void saveResourceIfMissing(@NotNull String path) {

@@ -11,8 +11,10 @@ messages:
       - "&#FF00F8MythicPvP Help"
       - "&#FFFFFFUse /discord for community support."
   essentials:
-    gamemode: "&#FF00F8✔ &#FFFFFFSet your gamemode to %mode%."
-    teleport: "&#FF00F8✔ &#FFFFFFTeleported to %target%."
+    invalid-gamemode: "&#FF00F8✘ &#FFFFFFUnknown gamemode."
+    gamemode: "&#FF00F8✔ &#FFFFFFSet %target%'s gamemode to %mode%."
+    gamemode-received: "&#FF00F8✔ &#FFFFFFYour gamemode was set to %mode%."
+    teleport: "&#FF00F8✔ &#FFFFFFTeleported %target% to %destination%."
     tphere: "&#FF00F8✔ &#FFFFFFTeleported %target% to you."
   staff:
     format: "&#888888[%server%] %rank_color%%rank%%sender% &8» &#FFFFFF%message%"

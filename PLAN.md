@@ -629,7 +629,7 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 | `mythic-core`: server identity, lifecycle, service registry, Folia-safe scheduler wiring, shutdown cleanup | Dev A | 🚧 |
 | `mythic-core`: ranks, rank colors, prefixes, suffixes, permission inheritance, cosmetic display integration | Dev A | 🚧 |
 | `mythic-core`: command blocker coverage for all core commands and permission-hidden tab completion | Dev A | 🚧 |
-| `mythic-core`: essentials commands `/gmc`, `/gms`, `/gamemode`, `/tp`, `/tphere`, `/help`, `/discord` | Dev A | 🚧 |
+| `mythic-core`: essentials commands `/gmc`, `/gms`, `/gamemode`, `/tp`, `/tphere`, `/help`, `/discord` | Dev A | ✅ |
 | `mythic-core`: staff chats for staff, builder, management, admin, owner with cross-server protocol delivery | Dev A | 🚧 |
 | `mythic-core`: staff join, disconnect, and server-switch notifications with origin server and rank color | Dev A | 🚧 |
 | `mythic-core`: staff mode with configurable tools, inventory restore, vanish/fly state, and safe disable | Dev A | 🚧 |
@@ -653,8 +653,11 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 - ✅ Chat prompt handling exists for menu-backed custom values and is covered by MockBukkit tests.
 - ✅ Initial punishment template, handbook, history, clear-history, and `/punish` menu flow exists with category selection, template selection, proof entry, silent toggle, clear-inventory toggle, and execution summary.
 - ✅ Punishment template admin commands exist for add, edit, and remove with live template completions and YAML-backed default seed templates.
+- ✅ Initial essentials command implementation exists for `/gmc`, `/gms`, `/gamemode`, `/tp`, `/tphere`, `/help`, and `/discord`, backed by YAML-configurable response text.
+- ✅ Essentials completions include gamemode values plus permission-aware target-player completions for gamemode and teleport-other flows.
 - 🚧 Rank/grant database persistence, YAML-backed menu text, complete rank editor menus, and SpacetimeDB schema/reducer additions remain pending.
 - 🚧 Punishment database persistence, full YAML-backed menu text, blacklist enforcement, and complete command parsing for quoted multi-word template titles remain pending.
+- 🚧 Essentials command coverage still needs broader aliases, command audit logging, and deeper Folia teleport scheduling before the full core essentials suite is complete.
 
 #### Command Completion Requirements
 
@@ -718,6 +721,7 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 #### Phase 3 Test Additions
 
 - Add tests for permission-aware tab completions.
+- Add tests for essentials gamemode, teleport, help, discord, and permission-aware target completions.
 - Add tests for grant flows, grant history, inactive grant behavior, `/cgrant`, and `/cleargrants`.
 - Add tests for rank editor commands and menus.
 - Add tests for independent chat, tab, and nametag rank formatting.
