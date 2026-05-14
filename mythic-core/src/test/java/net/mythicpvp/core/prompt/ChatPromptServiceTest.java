@@ -4,7 +4,7 @@ import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class ChatPromptServiceTest {
 
     @Test
     void consumesNextChatMessageForPrompt() {
-        ChatPromptService service = new ChatPromptService(mock(Plugin.class));
+        ChatPromptService service = new ChatPromptService(mock(JavaPlugin.class));
         PlayerMock player = server.addPlayer("Executor");
         AtomicReference<String> value = new AtomicReference<>();
 
@@ -45,7 +45,7 @@ class ChatPromptServiceTest {
 
     @Test
     void cancelSkipsPromptHandler() {
-        ChatPromptService service = new ChatPromptService(mock(Plugin.class));
+        ChatPromptService service = new ChatPromptService(mock(JavaPlugin.class));
         PlayerMock player = server.addPlayer("Executor");
         AtomicReference<String> value = new AtomicReference<>();
 

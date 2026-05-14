@@ -1,10 +1,11 @@
 package net.mythicpvp.core.prompt;
 
+import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -15,9 +16,9 @@ import java.util.function.BiConsumer;
 public final class ChatPromptService implements Listener {
 
     private final Map<UUID, BiConsumer<Player, String>> prompts = new ConcurrentHashMap<>();
-    private final Plugin plugin;
+    private final JavaPlugin plugin;
 
-    public ChatPromptService(@NotNull Plugin plugin) {
+    public ChatPromptService(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -45,7 +46,9 @@ public final class ChatPromptService implements Listener {
         String message = event.getMessage();
         if (!message.equalsIgnoreCase("cancel")) {
             if (event.isAsynchronous()) {
-                plugin.getServer().getScheduler().runTask(plugin, () -> handler.accept(event.getPlayer(), message));
+                // Folia-safe via MythicScheduler so prompt callbacks
+                // land on the correct global region thread.
+                MythicScheduler.runSync(plugin, () -> handler.accept(event.getPlayer(), message));
             } else {
                 handler.accept(event.getPlayer(), message);
             }

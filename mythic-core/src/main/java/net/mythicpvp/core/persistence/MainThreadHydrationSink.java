@@ -4,7 +4,8 @@ import net.mythicpvp.core.punishment.PunishmentRecord;
 import net.mythicpvp.core.punishment.PunishmentTemplate;
 import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.RankGrant;
-import org.bukkit.plugin.Plugin;
+import net.mythicpvp.suite.scheduler.MythicScheduler;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -26,10 +27,10 @@ import java.util.function.Consumer;
  */
 public final class MainThreadHydrationSink implements HydrationSink {
 
-    private final Plugin plugin;
+    private final JavaPlugin plugin;
     private final HydrationSink inner;
 
-    public MainThreadHydrationSink(@NotNull Plugin plugin, @NotNull HydrationSink inner) {
+    public MainThreadHydrationSink(@NotNull JavaPlugin plugin, @NotNull HydrationSink inner) {
         this.plugin = plugin;
         this.inner = inner;
     }
@@ -53,6 +54,8 @@ public final class MainThreadHydrationSink implements HydrationSink {
             action.accept(inner);
             return;
         }
-        plugin.getServer().getScheduler().runTask(plugin, () -> action.accept(inner));
+        // Folia-safe via MythicScheduler — global region on Folia,
+        // legacy scheduler on Paper/Spigot.
+        MythicScheduler.runSync(plugin, () -> action.accept(inner));
     }
 }

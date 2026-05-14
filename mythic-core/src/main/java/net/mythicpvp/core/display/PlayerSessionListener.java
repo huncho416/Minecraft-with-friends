@@ -1,5 +1,6 @@
 package net.mythicpvp.core.display;
 
+import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -35,9 +36,8 @@ public final class PlayerSessionListener implements Listener {
         // on the first frame.
         display.apply(event.getPlayer());
         // Then refresh everyone else so the joiner appears in their tab
-        // and the %online% counter advances. Scheduled async-safe via
-        // BukkitScheduler.runTask which always lands on main.
-        display.plugin().getServer().getScheduler().runTask(display.plugin(), display::applyAll);
+        // and the %online% counter advances. Folia-safe via MythicScheduler.
+        MythicScheduler.runSync(display.plugin(), display::applyAll);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -46,6 +46,6 @@ public final class PlayerSessionListener implements Listener {
         // Refresh remaining players so the leaver drops from tab and
         // %online% decrements. Scheduled for next tick because at this
         // event firing the leaver still appears in getOnlinePlayers().
-        display.plugin().getServer().getScheduler().runTask(display.plugin(), display::applyAll);
+        MythicScheduler.runSync(display.plugin(), display::applyAll);
     }
 }

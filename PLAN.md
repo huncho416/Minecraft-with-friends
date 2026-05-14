@@ -626,7 +626,7 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 | Task | Owner | Status |
 |------|-------|--------|
 | `mythic-core`: Maven module, plugin bootstrap, command API vararg support, default YAML resources | Dev A | ✅ |
-| `mythic-core`: server identity, lifecycle, service registry, Folia-safe scheduler wiring, shutdown cleanup | Dev A | 🚧 |
+| `mythic-core`: server identity, Folia-safe scheduler wiring via `MythicScheduler` (ChatGuard/PlayerSessionListener/MainThreadHydrationSink/ChatPromptService), ordered shutdown (config save → UI manager clear → STDB disconnect) | Dev A | ✅ |
 | `mythic-core`: ranks, rank colors, prefixes, suffixes, permission inheritance, cosmetic display integration | Dev A | 🚧 |
 | `mythic-core`: STDB persistence layer — schema v2 tables/reducers + `PersistenceGateway` wiring for ranks, grants, punishments, templates, blacklist | Dev A | ✅ |
 | `mythic-core`: STDB hydration / cross-server read path — subscribe to all 5 Phase 3 tables, dispatch to services via `CoreHydrationSink`, main-thread-safe via `MainThreadHydrationSink` | Dev A | ✅ |

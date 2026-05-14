@@ -169,8 +169,25 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
     @Override
     public void disable() {
+        // Order matters here. Save persistent state first so a slow
+        // shutdown doesn't lose unsaved YAML edits, then tear down
+        // visible UI surfaces, then close network connections.
         if (configManager != null) {
-            configManager.saveAll();
+            try {
+                configManager.saveAll();
+            } catch (RuntimeException e) {
+                getLogger().warning("config save during disable failed: " + e.getMessage());
+            }
+        }
+        // Drop per-player UI state so a re-enable starts from a clean slate.
+        // Each manager's clear() is idempotent and safe even if it was
+        // never populated (e.g. plugin disabled before any join).
+        try {
+            net.mythicpvp.suite.tab.TabManager.getInstance().clear();
+            net.mythicpvp.suite.nametag.NametagManager.getInstance().clear();
+            net.mythicpvp.suite.scoreboard.BoardManager.getInstance().removeAll();
+        } catch (RuntimeException e) {
+            getLogger().warning("UI manager teardown failed: " + e.getMessage());
         }
         // Tear down STDB so the plugin can be cleanly re-enabled (Folia
         // /reload, Pterodactyl restart). disconnectAll is a no-op when

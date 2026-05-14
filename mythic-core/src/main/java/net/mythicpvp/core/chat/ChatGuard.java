@@ -2,13 +2,14 @@ package net.mythicpvp.core.chat;
 
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
+import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -40,11 +41,11 @@ public final class ChatGuard implements Listener {
     /** 100 blank lines is the conventional "wipe" depth — fills any client window. */
     private static final int CLEAR_BLANK_LINES = 100;
 
-    private final Plugin plugin;
+    private final JavaPlugin plugin;
     private final ChatControlService chatControl;
     private final CoreMessages messages;
 
-    public ChatGuard(@NotNull Plugin plugin,
+    public ChatGuard(@NotNull JavaPlugin plugin,
                      @NotNull ChatControlService chatControl,
                      @NotNull CoreMessages messages) {
         this.plugin = plugin;
@@ -91,7 +92,9 @@ public final class ChatGuard implements Listener {
      * tick thread; main keeps it simple and consistent.
      */
     private void scheduleClear() {
-        plugin.getServer().getScheduler().runTask(plugin, this::clearNow);
+        // Folia-safe: routes to globalRegionScheduler on Folia, falls
+        // back to legacy BukkitScheduler on Paper/Spigot.
+        MythicScheduler.runSync(plugin, this::clearNow);
     }
 
     private void clearNow() {

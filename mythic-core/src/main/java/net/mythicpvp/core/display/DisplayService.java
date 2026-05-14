@@ -10,7 +10,7 @@ import net.mythicpvp.suite.scoreboard.MythicBoard;
 import net.mythicpvp.suite.tab.TabManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -36,7 +36,7 @@ public final class DisplayService {
 
     private static final String FALLBACK_RANK_ID = "default";
 
-    private final Plugin plugin;
+    private final JavaPlugin plugin;
     private final RankService rankService;
     private final GrantService grantService;
     private final String serverId;
@@ -48,7 +48,7 @@ public final class DisplayService {
     private List<String> scoreboardLines = List.of();
 
     public DisplayService(
-            @NotNull Plugin plugin,
+            @NotNull JavaPlugin plugin,
             @NotNull RankService rankService,
             @NotNull GrantService grantService,
             @NotNull String serverId) {
@@ -218,7 +218,7 @@ public final class DisplayService {
     @NotNull
     String scoreboardTitle() { return scoreboardTitle; }
 
-    /** Plugin reference — kept for future scheduler hooks. */
+    /** Plugin reference — used by the session listener for scheduled refreshes. */
     @NotNull
-    Plugin plugin() { return plugin; }
+    public JavaPlugin plugin() { return plugin; }
 }
