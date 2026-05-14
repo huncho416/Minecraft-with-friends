@@ -1,16 +1,14 @@
 package net.mythicpvp.core.cosmetic;
 
-import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.MockPlugin;
 import net.mythicpvp.suite.config.MythicConfig;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,18 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RankCosmeticBundlesTest {
 
-    private MockPlugin plugin;
-
-    @BeforeEach
-    void setUp() {
-        MockBukkit.mock();
-        plugin = MockBukkit.createMockPlugin();
-    }
-
-    @AfterEach
-    void tearDown() {
-        MockBukkit.unmock();
-    }
+    @TempDir
+    Path tempDir;
 
     @Test
     void emptyConfigYieldsEmptyRegistry() {
@@ -99,11 +87,11 @@ class RankCosmeticBundlesTest {
 
     private MythicConfig configWith(String yaml) {
         try {
-            File dataFolder = plugin.getDataFolder();
+            File dataFolder = tempDir.toFile();
             dataFolder.mkdirs();
             File file = new File(dataFolder, "ranks.yml");
             Files.writeString(file.toPath(), yaml, StandardCharsets.UTF_8);
-            return new MythicConfig(plugin, "ranks.yml");
+            return new MythicConfig(dataFolder, "ranks.yml");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

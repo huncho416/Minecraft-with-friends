@@ -67,7 +67,7 @@ public final class PunishmentMenuService {
         PaginatedMenu menu = PaginatedMenu.create(6, text.templatesTitle(category.name()));
         for (PunishmentTemplate template : punishmentService.templates(category)) {
             menu.addItem(MythicItem.create(category.material())
-                    .name("&#FF00F8" + template.title())
+                    .name("&#F529BE" + template.title())
                     .lore(templateLore(template, executable))
                     .build(), event -> {
                         if (executable && flow != null) {
@@ -104,7 +104,7 @@ public final class PunishmentMenuService {
         PaginatedMenu menu = PaginatedMenu.create(6, text.historyTitle(targetName));
         for (PunishmentRecord record : history) {
             menu.addItem(MythicItem.create(record.pardoned() ? Material.GRAY_DYE : Material.RED_DYE)
-                    .name("&#FF00F8" + record.type().name())
+                    .name("&#F529BE" + record.type().name())
                     .lore(recordLore(record))
                     .build());
         }

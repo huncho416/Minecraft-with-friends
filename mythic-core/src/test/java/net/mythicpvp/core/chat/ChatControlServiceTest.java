@@ -17,8 +17,8 @@ class ChatControlServiceTest {
 
     @Test
     void networkSlowModeReplicatesThroughProtocol() {
-        ChatControlService skyblock = new ChatControlService(protocolManager);
-        ChatControlService hub = new ChatControlService(protocolManager);
+        ChatControlService skyblock = new ChatControlService(protocolManager, "");
+        ChatControlService hub = new ChatControlService(protocolManager, "");
         skyblock.slow(5, ChatScope.NETWORK);
         assertEquals(5, hub.state().slowSeconds());
         assertEquals(ChatScope.NETWORK, hub.state().scope());
@@ -27,7 +27,7 @@ class ChatControlServiceTest {
 
     @Test
     void negativeSlowModeIsRejected() {
-        ChatControlService service = new ChatControlService(protocolManager);
+        ChatControlService service = new ChatControlService(protocolManager, "");
         assertThrows(IllegalArgumentException.class, () -> service.slow(-1, ChatScope.LOCAL));
     }
 }

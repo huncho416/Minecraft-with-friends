@@ -3,7 +3,6 @@ package net.mythicpvp.suite.command;
 import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;

@@ -19,90 +19,90 @@ public final class RankMenuText {
 
     @NotNull
     public String grantRankTitle(@NotNull String targetName) {
-        return with(get("rank.grant-rank-title", "&#FF00F8Grant: %target%"),
+        return with(get("rank.grant-rank-title", "&#F529BEGrant: %target%"),
                 "%target%", targetName);
     }
 
     @NotNull
     public String grantDurationTitle() {
-        return get("rank.grant-duration-title", "&#FF00F8Grant Duration");
+        return get("rank.grant-duration-title", "&#F529BEGrant Duration");
     }
 
     @NotNull
     public String grantReasonTitle() {
-        return get("rank.grant-reason-title", "&#FF00F8Grant Reason");
+        return get("rank.grant-reason-title", "&#F529BEGrant Reason");
     }
 
     @NotNull
     public String grantConfirmTitle() {
-        return get("rank.grant-confirm-title", "&#FF00F8Confirm Grant");
+        return get("rank.grant-confirm-title", "&#F529BEConfirm Grant");
     }
 
     @NotNull
     public String editorTitle(@NotNull String rankId) {
-        return with(get("rank.editor-title", "&#FF00F8Rank Editor: %rank-id%"),
+        return with(get("rank.editor-title", "&#F529BERank Editor: %rank-id%"),
                 "%rank-id%", rankId);
     }
 
     @NotNull
     public String clickToSelect() {
-        return get("rank.click-to-select", "&#FF00F8Click to select");
+        return get("rank.click-to-select", "&#F529BEClick to select");
     }
 
     @NotNull
     public String custom() {
-        return get("rank.custom", "&#FF00F8Custom");
+        return get("rank.custom", "&#F529BECustom");
     }
 
     @NotNull
     public String summary() {
-        return get("rank.summary", "&#FF00F8Grant Summary");
+        return get("rank.summary", "&#F529BEGrant Summary");
     }
 
     @NotNull
     public String confirm() {
-        return get("rank.confirm", "&#00FF00Confirm");
+        return get("rank.confirm", "&#9CFF9CConfirm");
     }
 
     @NotNull
     public String cancel() {
-        return get("rank.cancel", "&#FF0000Cancel");
+        return get("rank.cancel", "&#FF8A8ACancel");
     }
 
     @NotNull
     public String editorDisplayFormats() {
-        return get("rank.editor.display-formats", "&#FF00F8Display Formats");
+        return get("rank.editor.display-formats", "&#F529BEDisplay Formats");
     }
 
     @NotNull
     public String editorPermissions() {
-        return get("rank.editor.permissions", "&#FF00F8Permissions");
+        return get("rank.editor.permissions", "&#F529BEPermissions");
     }
 
     @NotNull
     public String editorClose() {
-        return get("rank.editor.close", "&#FF00F8Close");
+        return get("rank.editor.close", "&#F529BEClose");
     }
 
     @NotNull
     public String editorFieldsTitle() {
-        return get("rank.editor.fields-title", "&#FF00F8Edit Fields");
+        return get("rank.editor.fields-title", "&#F529BEEdit Fields");
     }
 
     @NotNull
     public String editorFormatsTitle() {
-        return get("rank.editor.formats-title", "&#FF00F8Display Formats");
+        return get("rank.editor.formats-title", "&#F529BEDisplay Formats");
     }
 
     @NotNull
     public String editorPermissionsTitle(@NotNull String rankId) {
-        return with(get("rank.editor.permissions-title", "&#FF00F8Permissions: %rank-id%"),
+        return with(get("rank.editor.permissions-title", "&#F529BEPermissions: %rank-id%"),
                 "%rank-id%", rankId);
     }
 
     @NotNull
     public String editorAddPermission() {
-        return get("rank.editor.add-permission", "&#00FF00Add Permission");
+        return get("rank.editor.add-permission", "&#9CFF9CAdd Permission");
     }
 
     @NotNull
@@ -112,7 +112,7 @@ public final class RankMenuText {
 
     @NotNull
     public String editorRemovePermissionLore() {
-        return get("rank.editor.remove-permission-lore", "&#FF0000Click to remove");
+        return get("rank.editor.remove-permission-lore", "&#FF8A8AClick to remove");
     }
 
     @NotNull
@@ -122,19 +122,19 @@ public final class RankMenuText {
 
     @NotNull
     public String editorFieldUpdated(@NotNull String field, @NotNull String value) {
-        return with(with(get("rank.editor.field-updated", "&#00FF00Updated %field% to %value%"),
+        return with(with(get("rank.editor.field-updated", "&#9CFF9CUpdated %field% to %value%"),
                 "%field%", field), "%value%", value);
     }
 
     @NotNull
     public String editorFieldFailed(@NotNull String field) {
-        return with(get("rank.editor.field-failed", "&#FF0000Failed to update %field%"),
+        return with(get("rank.editor.field-failed", "&#FF8A8AFailed to update %field%"),
                 "%field%", field);
     }
 
     @NotNull
     public String editorBack() {
-        return get("rank.editor.field-back", "&#FF00F8Back");
+        return get("rank.editor.field-back", "&#F529BEBack");
     }
 
     @NotNull

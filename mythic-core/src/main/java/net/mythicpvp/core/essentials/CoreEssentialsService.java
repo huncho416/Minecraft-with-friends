@@ -40,7 +40,7 @@ public final class CoreEssentialsService {
     public void setGameMode(@NotNull CommandSender sender, @NotNull String modeInput, @Nullable String targetName) {
         GameMode mode = parseGameMode(modeInput);
         if (mode == null) {
-            sender.sendMessage(messages.component("essentials.invalid-gamemode", "&#FF00F8x &#FFFFFFUnknown gamemode."));
+            sender.sendMessage(messages.component("essentials.invalid-gamemode", "&#FF8A8AUnknown gamemode."));
             return;
         }
         Player target = target(sender, targetName, "mythic.core.gamemode.others");
@@ -52,12 +52,12 @@ public final class CoreEssentialsService {
         auditAction("GAMEMODE", sender, target, Map.of(
                 "from", previous.name(),
                 "to", mode.name()));
-        sender.sendMessage(messages.component("essentials.gamemode", "&#FF00F8+ &#FFFFFFSet %target%'s gamemode to %mode%.", Map.of(
+        sender.sendMessage(messages.component("essentials.gamemode", "&#9CFF9CSet %target%'s gamemode to %mode%.", Map.of(
                 "target", target.getName(),
                 "mode", display(mode)
         )));
         if (!sender.equals(target)) {
-            target.sendMessage(messages.component("essentials.gamemode-received", "&#FF00F8+ &#FFFFFFYour gamemode was set to %mode%.", Map.of(
+            target.sendMessage(messages.component("essentials.gamemode-received", "&#9CFF9CYour gamemode was set to %mode%.", Map.of(
                     "target", target.getName(),
                     "mode", display(mode)
             )));
@@ -65,8 +65,8 @@ public final class CoreEssentialsService {
     }
 
     public void teleport(@NotNull CommandSender sender, @NotNull String targetName, @Nullable String destinationName) {
-        if (!(sender instanceof Player player) && (destinationName == null || destinationName.isBlank())) {
-            sender.sendMessage(messages.component("command.usage", "&#FF00F8x &#FFFFFFUsage: %usage%", Map.of("usage", "/tp <player> <target>")));
+        if (!(sender instanceof Player) && (destinationName == null || destinationName.isBlank())) {
+            sender.sendMessage(messages.component("command.usage", "&#FF8A8AUsage: %usage%", Map.of("usage", "/tp <player> <target>")));
             return;
         }
         Player destination;
@@ -76,14 +76,14 @@ public final class CoreEssentialsService {
             destination = online(targetName);
         } else {
             if (!sender.hasPermission("mythic.core.teleport.others")) {
-                sender.sendMessage(messages.component("command.no-permission", "&#FF00F8x &#FFFFFFUnknown command."));
+                sender.sendMessage(messages.component("command.no-permission", "&#FF8A8AUnknown command."));
                 return;
             }
             target = online(targetName);
             destination = online(destinationName);
         }
         if (target == null || destination == null) {
-            sender.sendMessage(messages.component("command.player-not-found", "&#FF00F8x &#FFFFFFThat player is not online."));
+            sender.sendMessage(messages.component("command.player-not-found", "&#FF8A8AThat player is not online."));
             return;
         }
         Location location = destination.getLocation();
@@ -91,7 +91,7 @@ public final class CoreEssentialsService {
         auditAction("TELEPORT", sender, target, Map.of(
                 "destination", destination.getName(),
                 "world", location.getWorld() == null ? "?" : location.getWorld().getName()));
-        sender.sendMessage(messages.component("essentials.teleport", "&#FF00F8+ &#FFFFFFTeleported %target% to %destination%.", Map.of(
+        sender.sendMessage(messages.component("essentials.teleport", "&#9CFF9CTeleported %target% to %destination%.", Map.of(
                 "target", target.getName(),
                 "destination", destination.getName()
         )));
@@ -99,18 +99,18 @@ public final class CoreEssentialsService {
 
     public void teleportHere(@NotNull CommandSender sender, @NotNull String targetName) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(messages.component("command.player-only", "&#FF00F8x &#FFFFFFThis command can only be used by players."));
+            sender.sendMessage(messages.component("command.player-only", "&#FF8A8AThis command can only be used by players."));
             return;
         }
         Player target = online(targetName);
         if (target == null) {
-            sender.sendMessage(messages.component("command.player-not-found", "&#FF00F8x &#FFFFFFThat player is not online."));
+            sender.sendMessage(messages.component("command.player-not-found", "&#FF8A8AThat player is not online."));
             return;
         }
         scheduleTeleport(target, player.getLocation());
         auditAction("TELEPORT_HERE", sender, target, Map.of(
                 "world", player.getLocation().getWorld() == null ? "?" : player.getLocation().getWorld().getName()));
-        sender.sendMessage(messages.component("essentials.tphere", "&#FF00F8+ &#FFFFFFTeleported %target% to you.", Map.of("target", target.getName())));
+        sender.sendMessage(messages.component("essentials.tphere", "&#9CFF9CTeleported %target% to you.", Map.of("target", target.getName())));
     }
 
     private void scheduleTeleport(@NotNull Player target, @NotNull Location location) {
@@ -134,11 +134,11 @@ public final class CoreEssentialsService {
     }
 
     public void sendHelp(@NotNull CommandSender sender) {
-        messages.list("links.help", List.of("&#FF00F8MythicPvP Help", "&#FFFFFFUse /discord for community support.")).forEach(sender::sendMessage);
+        messages.list("links.help", List.of("&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFHelp", "&#FFFFFFUse /discord for community support.")).forEach(sender::sendMessage);
     }
 
     public void sendDiscord(@NotNull CommandSender sender) {
-        sender.sendMessage(messages.component("links.discord", "&#FF00F8Discord &8> &#FFFFFFdiscord.gg/mythicpvp"));
+        sender.sendMessage(messages.component("links.discord", "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFdiscord.gg/mythicpvp"));
     }
 
     @Nullable
@@ -158,19 +158,19 @@ public final class CoreEssentialsService {
             if (sender instanceof Player player) {
                 return player;
             }
-            sender.sendMessage(messages.component("command.usage", "&#FF00F8x &#FFFFFFUsage: %usage%", Map.of("usage", "/gamemode <mode> <player>")));
+            sender.sendMessage(messages.component("command.usage", "&#FF8A8AUsage: %usage%", Map.of("usage", "/gamemode <mode> <player>")));
             return null;
         }
         if (sender instanceof Player player && player.getName().equalsIgnoreCase(targetName)) {
             return player;
         }
         if (!sender.hasPermission(othersPermission)) {
-            sender.sendMessage(messages.component("command.no-permission", "&#FF00F8x &#FFFFFFUnknown command."));
+            sender.sendMessage(messages.component("command.no-permission", "&#FF8A8AUnknown command."));
             return null;
         }
         Player target = online(targetName);
         if (target == null) {
-            sender.sendMessage(messages.component("command.player-not-found", "&#FF00F8x &#FFFFFFThat player is not online."));
+            sender.sendMessage(messages.component("command.player-not-found", "&#FF8A8AThat player is not online."));
         }
         return target;
     }

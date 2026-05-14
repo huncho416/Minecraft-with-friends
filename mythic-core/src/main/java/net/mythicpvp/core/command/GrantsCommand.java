@@ -36,11 +36,11 @@ public final class GrantsCommand extends MythicCommand {
     @Complete({"players"})
     public void execute(@NotNull Player player, @NotNull String targetName) {
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        PaginatedMenu menu = PaginatedMenu.create(6, "&#FF00F8Grants: " + targetName);
+        PaginatedMenu menu = PaginatedMenu.create(6, "&#F529BEGrants: " + targetName);
         for (RankGrant grant : grantService.history(target.getUniqueId())) {
             Material material = grant.active() && rankService.get(grant.rankId()) != null ? rankService.get(grant.rankId()).dye() : Material.GRAY_DYE;
             menu.addItem(MythicItem.create(material)
-                    .name("&#FF00F8" + grant.rankId())
+                    .name("&#F529BE" + grant.rankId())
                     .lore(lore(grant))
                     .build(), event -> {
                         if (event.isLeftClick() && grant.active()) {
@@ -62,7 +62,7 @@ public final class GrantsCommand extends MythicCommand {
         lore.add("&7Executor: &f" + grant.executorName());
         lore.add("&7Reason: &f" + grant.reason());
         lore.add("&7State: &f" + (grant.active() ? "Active" : "Inactive"));
-        lore.add(grant.active() ? "&#FF00F8Left click to deactivate" : "&#FF00F8Right click to remove");
+        lore.add(grant.active() ? "&#F529BELeft click to deactivate" : "&#F529BERight click to remove");
         return lore;
     }
 }

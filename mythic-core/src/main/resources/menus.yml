@@ -1,69 +1,69 @@
 # Operator-facing text for the staff menus.
 #
 # Tokens supported:
-#   %target%   — name of the player being acted on (when applicable)
-#   %category% — punishment category name
+#   %target%   - name of the player being acted on (when applicable)
+#   %category% - punishment category name
 #
 # Colours use the suite-hex convention: &#RRGGBB for hex, &7/&f/etc for legacy.
 punishment:
-  punish-title: "&#FF00F8Punish: %target%"
-  handbook-title: "&#FF00F8Punishments"
-  templates-title: "&#FF00F8%category%"
-  proof-title: "&#FF00F8Punishment Proof"
-  confirm-title: "&#FF00F8Confirm Punishment"
-  history-title: "&#FF00F8History: %target%"
+  punish-title: "&#F529BEPunish&8: &#FFFFFF%target%"
+  handbook-title: "&#F529BEPunishments"
+  templates-title: "&#F529BE%category%"
+  proof-title: "&#F529BEPunishment Proof"
+  confirm-title: "&#F529BEConfirm Punishment"
+  history-title: "&#F529BEHistory&8: &#FFFFFF%target%"
   category-button:
-    name: "&#FF00F8%category%"
+    name: "&#F529BE%category%"
     lore-templates: "&7View templates"
     lore-handbook: "&7Open handbook category"
   template-click:
-    executable: "&#FF00F8Click to select"
-    handbook: "&#FF00F8Read-only handbook entry"
+    executable: "&#F529BEClick to select"
+    handbook: "&#D2D8E0Read-only handbook entry"
   buttons:
-    enter-proof: "&#FF00F8Enter Proof"
+    enter-proof: "&#F529BEEnter Proof"
     enter-proof-lore: "&7Click to enter proof in chat"
-    proof-summary: "&#FF00F8Proof"
+    proof-summary: "&#F529BEProof"
     no-proof-yet: "&7No proof entered"
-    no-proof-button: "&#FF0000No proof entered"
-    confirm-proof: "&#00FF00Confirm Proof"
-    clear-inventory: "&#FF00F8Clear Inventory"
-    silent: "&#FF00F8Silent"
-    summary: "&#FF00F8Punishment Summary"
-    execute: "&#00FF00Execute Punishment"
+    no-proof-button: "&#FF8A8ANo proof entered"
+    confirm-proof: "&#9CFF9CConfirm Proof"
+    clear-inventory: "&#F529BEClear Inventory"
+    silent: "&#F529BESilent"
+    summary: "&#F529BEPunishment Summary"
+    execute: "&#9CFF9CExecute Punishment"
     state-prefix: "&7State: &f"
-    toggle-hint: "&#FF00F8Click to toggle"
+    toggle-hint: "&#F529BEClick to toggle"
 
 # Rank editor + /grant flow menus.
 #
 # Tokens supported:
-#   %target%    — name of the player being granted
-#   %rank-id%   — rank id (e.g. "vip")
-#   %duration%  — chosen grant duration
+#   %target%    - name of the player being granted
+#   %rank-id%   - rank id (e.g. "vip")
+#   %duration%  - chosen grant duration
 rank:
-  grant-rank-title: "&#FF00F8Grant: %target%"
-  grant-duration-title: "&#FF00F8Grant Duration"
-  grant-reason-title: "&#FF00F8Grant Reason"
-  grant-confirm-title: "&#FF00F8Confirm Grant"
-  editor-title: "&#FF00F8Rank Editor: %rank-id%"
-  click-to-select: "&#FF00F8Click to select"
-  custom: "&#FF00F8Custom"
-  summary: "&#FF00F8Grant Summary"
-  confirm: "&#00FF00Confirm"
-  cancel: "&#FF0000Cancel"
+  grant-rank-title: "&#F529BEGrant&8: &#FFFFFF%target%"
+  grant-duration-title: "&#F529BEGrant Duration"
+  grant-reason-title: "&#F529BEGrant Reason"
+  grant-confirm-title: "&#F529BEConfirm Grant"
+  editor-title: "&#F529BERank Editor&8: &#FFFFFF%rank-id%"
+  click-to-select: "&#F529BEClick to select"
+  custom: "&#F529BECustom"
+  summary: "&#F529BEGrant Summary"
+  confirm: "&#9CFF9CConfirm"
+  cancel: "&#FF8A8ACancel"
   editor:
-    display-formats: "&#FF00F8Display Formats"
-    permissions: "&#FF00F8Permissions"
-    close: "&#FF00F8Close"
-    fields-title: "&#FF00F8Edit Fields"
-    formats-title: "&#FF00F8Display Formats"
-    permissions-title: "&#FF00F8Permissions: %rank-id%"
-    add-permission: "&#00FF00Add Permission"
+    display-formats: "&#F529BEDisplay Formats"
+    permissions: "&#F529BEPermissions"
+    close: "&#F529BEClose"
+    fields-title: "&#F529BEEdit Fields"
+    formats-title: "&#F529BEDisplay Formats"
+    permissions-title: "&#F529BEPermissions&8: &#FFFFFF%rank-id%"
+    add-permission: "&#9CFF9CAdd Permission"
     add-permission-lore: "&7Click and type the permission node in chat"
-    remove-permission-lore: "&#FF0000Click to remove"
+    remove-permission-lore: "&#FF8A8AClick to remove"
     field-name-prompt: "&7Type the new value in chat (or 'cancel')."
-    field-updated: "&#00FF00Updated %field% to %value%"
-    field-failed: "&#FF0000Failed to update %field%"
-    field-back: "&#FF00F8Back"
+    field-updated: "&#9CFF9CUpdated &#FFFFFF%field% &#9CFF9Cto &#FFFFFF%value%"
+    field-failed: "&#FF8A8AFailed to update &#FFFFFF%field%"
+    field-back: "&#F529BEBack"
   duration-presets:
     - "1d"
     - "7d"

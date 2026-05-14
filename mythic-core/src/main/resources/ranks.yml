@@ -1,9 +1,9 @@
 ranks:
   default:
     name: "Default"
-    color: "#808080"
+    color: "#D2D8E0"
     dye: "LIGHT_GRAY_DYE"
-    prefix: "&7"
+    prefix: "&#D2D8E0"
     suffix: ""
     weight: 1000
     staff: false
@@ -11,11 +11,11 @@ ranks:
     parent: ""
     permissions:
       - "mythic.join"
-    chat-prefix: "&7"
-    chat-format: "%chat_prefix%%player%&7: &f%message%"
-    tab-prefix: "&7"
+    chat-prefix: "&#D2D8E0"
+    chat-format: "%chat_prefix%%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#D2D8E0"
     tab-format: "%tab_prefix%%player%"
-    nametag-prefix: "&7"
+    nametag-prefix: "&#D2D8E0"
     nametag-format: "%nametag_prefix%%player%"
   owner:
     name: "Owner"
@@ -30,7 +30,7 @@ ranks:
     permissions:
       - "mythic.*"
     chat-prefix: "&#DD3838O&#E01B1Bw&#E72C2Cn&#EE3D3De&#EE0B0Br #DE2222"
-    chat-format: "%chat_prefix%%player%&7: &f%message%"
+    chat-format: "%chat_prefix%%player%&7: &#FFFFFF%message%"
     tab-prefix: "&#D22020&lO&#DE2222&lW&#C12D2D&lN&#A43737&lE&#E90000&lR #FFFFFF&l"
     tab-format: "%tab_prefix%%player%"
     nametag-prefix: "&#D22020&lO&#DE2222&lW&#C12D2D&lN&#A43737&lE&#E90000&lR #FFFFFF&l"

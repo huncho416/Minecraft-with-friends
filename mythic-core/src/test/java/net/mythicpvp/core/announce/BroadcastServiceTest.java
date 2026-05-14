@@ -1,8 +1,6 @@
 package net.mythicpvp.core.announce;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.MockPlugin;
-import be.seeseemelk.mockbukkit.ServerMock;
 import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.protocol.ProtocolManager;
 import org.junit.jupiter.api.AfterEach;
@@ -22,8 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BroadcastServiceTest {
 
-    private ServerMock server;
-    private MockPlugin plugin;
     private final ProtocolManager protocolManager = ProtocolManager.getInstance();
 
     @TempDir
@@ -31,8 +27,7 @@ class BroadcastServiceTest {
 
     @BeforeEach
     void setUp() {
-        server = MockBukkit.mock();
-        plugin = MockBukkit.createMockPlugin();
+        MockBukkit.mock();
     }
 
     @AfterEach
@@ -79,9 +74,6 @@ class BroadcastServiceTest {
                 - "beta"
                 - "gamma"
             """));
-
-        server.addPlayer("watcher");
-
         assertEquals("alpha", service.tickAnnouncement());
         assertEquals("beta", service.tickAnnouncement());
         assertEquals("gamma", service.tickAnnouncement());
@@ -131,11 +123,11 @@ class BroadcastServiceTest {
     private MythicConfig configWith(String yaml) {
         try {
 
-            File dataFolder = plugin.getDataFolder();
+            File dataFolder = tempDir.toFile();
             dataFolder.mkdirs();
             File file = new File(dataFolder, "announcements.yml");
             Files.writeString(file.toPath(), yaml, StandardCharsets.UTF_8);
-            return new MythicConfig(plugin, "announcements.yml");
+            return new MythicConfig(dataFolder, "announcements.yml");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

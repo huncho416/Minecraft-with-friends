@@ -57,7 +57,7 @@ public final class GrantFlowService {
         int count = Math.min(slots.length, durations.size());
         for (int i = 0; i < count; i++) {
             String duration = durations.get(i);
-            menu.slot(slots[i], MythicItem.create(Material.CLOCK).name("&#FF00F8" + duration).build(),
+            menu.slot(slots[i], MythicItem.create(Material.CLOCK).name("&#F529BE" + duration).build(),
                     event -> openReason(executor, flow.duration(GrantDuration.parse(duration))));
         }
         menu.slot(16, MythicItem.create(Material.PAPER).name(text.custom()).build(),
@@ -72,7 +72,7 @@ public final class GrantFlowService {
         int count = Math.min(slots.length, reasons.size());
         for (int i = 0; i < count; i++) {
             String reason = reasons.get(i);
-            menu.slot(slots[i], MythicItem.create(Material.BOOK).name("&#FF00F8" + reason).build(),
+            menu.slot(slots[i], MythicItem.create(Material.BOOK).name("&#F529BE" + reason).build(),
                     event -> openConfirm(executor, flow.reason(reason)));
         }
         menu.slot(22, MythicItem.create(Material.PAPER).name(text.custom()).build(),

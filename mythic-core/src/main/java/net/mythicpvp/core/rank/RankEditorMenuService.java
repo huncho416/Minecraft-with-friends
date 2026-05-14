@@ -39,7 +39,7 @@ public final class RankEditorMenuService {
                                 "&7Staff: &f" + rank.staff(),
                                 "&7Donator: &f" + rank.donator(),
                                 "&7Parent: &f" + (rank.parent().isBlank() ? "None" : rank.parent()),
-                                "&#FF00F8Click to edit fields"))
+                                "&#F529BEClick to edit fields"))
                         .build(), event -> openFieldEditor(viewer, rankId))
                 .slot(12, MythicItem.create(Material.NAME_TAG)
                         .name(text.editorDisplayFormats())
@@ -47,7 +47,7 @@ public final class RankEditorMenuService {
                                 "&7Chat: &f" + rank.chatPrefix(),
                                 "&7Tab: &f" + rank.tabPrefix(),
                                 "&7Nametag: &f" + rank.nametagPrefix(),
-                                "&#FF00F8Click to edit"))
+                                "&#F529BEClick to edit"))
                         .build(), event -> openFormatEditor(viewer, rankId))
                 .slot(14, MythicItem.create(Material.BOOK)
                         .name(text.editorPermissions())
@@ -134,7 +134,7 @@ public final class RankEditorMenuService {
                                 @NotNull String currentValue, @NotNull Player viewer,
                                 @NotNull String rankId) {
         menu.slot(slot, MythicItem.create(icon)
-                .name("&#FF00F8" + label)
+                .name("&#F529BE" + label)
                 .lore(List.of(
                         "&7Current: &f" + currentValue,
                         text.editorFieldPrompt()))
@@ -153,10 +153,10 @@ public final class RankEditorMenuService {
                                 boolean current, @NotNull Player viewer,
                                 @NotNull String rankId) {
         menu.slot(slot, MythicItem.create(current ? onIcon : offIcon)
-                .name("&#FF00F8" + label)
+                .name("&#F529BE" + label)
                 .lore(List.of(
                         "&7State: &f" + (current ? "Yes" : "No"),
-                        "&#FF00F8Click to toggle"))
+                        "&#F529BEClick to toggle"))
                 .build(), event -> {
                     rankService.setField(rankId, fieldKey, Boolean.toString(!current));
                     openFieldEditor(viewer, rankId);
@@ -167,7 +167,7 @@ public final class RankEditorMenuService {
     private static List<String> loreWithCount(@NotNull List<String> permissions) {
         List<String> out = new ArrayList<>();
         out.add("&7Count: &f" + permissions.size());
-        out.add("&#FF00F8Click to manage");
+        out.add("&#F529BEClick to manage");
         return out;
     }
 }

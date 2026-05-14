@@ -32,7 +32,7 @@ public final class ChatCommand extends MythicCommand {
     public void usage(@NotNull CommandSender sender) {
         sender.sendMessage(messages.component(
                 "messages.chat-control.usage",
-                "&#FF00F8âœ˜ &#FFFFFFUsage: /chat <mute|unmute|slow|clear|status> [seconds] [local|network]"));
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8AUsage: &#FFFFFF/chat <mute|unmute|slow|clear|status> [seconds] [local|network]"));
     }
 
     @Subcommand("mute")
@@ -42,7 +42,7 @@ public final class ChatCommand extends MythicCommand {
         chatControl.mute(parseScope(scopeArg));
         sender.sendMessage(messages.component(
                 "messages.chat-control.muted",
-                "&#FF00F8Chat &8Â» &#FFFFFFChat has been muted."));
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CChat has been muted."));
     }
 
     @Subcommand("unmute")
@@ -52,7 +52,7 @@ public final class ChatCommand extends MythicCommand {
         chatControl.unmute(parseScope(scopeArg));
         sender.sendMessage(messages.component(
                 "messages.chat-control.unmuted",
-                "&#FF00F8Chat &8Â» &#FFFFFFChat has been unmuted."));
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CChat has been unmuted."));
     }
 
     @Subcommand("slow")
@@ -62,18 +62,18 @@ public final class ChatCommand extends MythicCommand {
         if (seconds < 0) {
             sender.sendMessage(messages.component(
                     "messages.chat-control.usage",
-                    "&#FF00F8âœ˜ &#FFFFFFUsage: /chat <mute|unmute|slow|clear|status> [seconds] [local|network]"));
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8AUsage: &#FFFFFF/chat <mute|unmute|slow|clear|status> [seconds] [local|network]"));
             return;
         }
         chatControl.slow(seconds, parseScope(scopeArg));
         if (seconds == 0) {
             sender.sendMessage(messages.component(
                     "messages.chat-control.slowed-off",
-                    "&#FF00F8Chat &8Â» &#FFFFFFChat slow mode is off."));
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CChat slow mode is off."));
         } else {
             sender.sendMessage(messages.component(
                     "messages.chat-control.slowed",
-                    "&#FF00F8Chat &8Â» &#FFFFFFChat slow mode is now %seconds%s.",
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CChat slow mode is now &#FFFFFF%seconds%s&#9CFF9C.",
                     Map.of("seconds", Integer.toString(seconds))));
         }
     }
@@ -90,7 +90,7 @@ public final class ChatCommand extends MythicCommand {
     public void status(@NotNull CommandSender sender) {
         sender.sendMessage(messages.component(
                 "messages.chat-control.status",
-                "&#FF00F8Chat &8Â» &#FFFFFFmuted=%muted% slow=%seconds%s scope=%scope%",
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFmuted=%muted% slow=%seconds%s scope=%scope%",
                 Map.of(
                         "muted", Boolean.toString(chatControl.muted()),
                         "seconds", Integer.toString(chatControl.slowSeconds()),

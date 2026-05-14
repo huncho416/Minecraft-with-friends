@@ -56,20 +56,20 @@ public final class RankService {
             CoreRank rank = new CoreRank(
                     normalize(id),
                     config.getString(path + "name", id),
-                    config.getString(path + "color", "#808080"),
+                    config.getString(path + "color", "#D2D8E0"),
                     material(config.getString(path + "dye", "LIGHT_GRAY_DYE")),
-                    config.getString(path + "prefix", "&7"),
+                    config.getString(path + "prefix", "&#D2D8E0"),
                     config.getString(path + "suffix", ""),
                     config.getInt(path + "weight", 1000),
                     config.getBoolean(path + "staff", false),
                     config.getBoolean(path + "donator", false),
                     normalize(config.getString(path + "parent", "")),
                     List.copyOf(permissions),
-                    config.getString(path + "chat-prefix", config.getString(path + "prefix", "&7")),
-                    config.getString(path + "chat-format", "%chat_prefix%%player%&7: &f%message%"),
-                    config.getString(path + "tab-prefix", config.getString(path + "prefix", "&7")),
+                    config.getString(path + "chat-prefix", config.getString(path + "prefix", "&#D2D8E0")),
+                    config.getString(path + "chat-format", "%chat_prefix%%player%&7: &#FFFFFF%message%"),
+                    config.getString(path + "tab-prefix", config.getString(path + "prefix", "&#D2D8E0")),
                     config.getString(path + "tab-format", "%tab_prefix%%player%"),
-                    config.getString(path + "nametag-prefix", config.getString(path + "prefix", "&7")),
+                    config.getString(path + "nametag-prefix", config.getString(path + "prefix", "&#D2D8E0")),
                     config.getString(path + "nametag-format", "%nametag_prefix%%player%")
             );
             register(rank);
@@ -209,7 +209,7 @@ public final class RankService {
 
     @NotNull
     private static CoreRank fallbackDefault() {
-        return new CoreRank("default", "Default", "#808080", Material.LIGHT_GRAY_DYE, "&7", "", 1000, false, false, "", List.of("mythic.join"), "&7", "%chat_prefix%%player%&7: &f%message%", "&7", "%tab_prefix%%player%", "&7", "%nametag_prefix%%player%");
+        return new CoreRank("default", "Default", "#D2D8E0", Material.LIGHT_GRAY_DYE, "&#D2D8E0", "", 1000, false, false, "", List.of("mythic.join"), "&#D2D8E0", "%chat_prefix%%player%&7: &#FFFFFF%message%", "&#D2D8E0", "%tab_prefix%%player%", "&#D2D8E0", "%nametag_prefix%%player%");
     }
 
     private static final class SetCopy {

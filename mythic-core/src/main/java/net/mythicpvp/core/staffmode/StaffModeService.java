@@ -154,7 +154,6 @@ public final class StaffModeService {
             }
             if (!viewer.hasPermission(net.mythicpvp.core.staff.StaffPresenceListener.STAFF_PERMISSION)) {
 
-                @SuppressWarnings("deprecation")
                 boolean hidden = hidePlayerLegacy(viewer, staff);
 
                 if (!hidden) {  }
@@ -167,7 +166,6 @@ public final class StaffModeService {
             if (viewer.getUniqueId().equals(staff.getUniqueId())) {
                 continue;
             }
-            @SuppressWarnings("deprecation")
             boolean shown = showPlayerLegacy(viewer, staff);
             if (!shown) {  }
         }

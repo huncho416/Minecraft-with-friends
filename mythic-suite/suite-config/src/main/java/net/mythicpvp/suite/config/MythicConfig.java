@@ -18,16 +18,24 @@ public class MythicConfig {
     private FileConfiguration config;
 
     public MythicConfig(@NotNull JavaPlugin plugin, @NotNull String fileName) {
+        this(plugin, plugin.getDataFolder(), fileName);
+    }
+
+    public MythicConfig(@NotNull File dataFolder, @NotNull String fileName) {
+        this(null, dataFolder, fileName);
+    }
+
+    private MythicConfig(@Nullable JavaPlugin plugin, @NotNull File dataFolder, @NotNull String fileName) {
         this.plugin = plugin;
         this.fileName = fileName.endsWith(".yml") ? fileName : fileName + ".yml";
-        this.file = new File(plugin.getDataFolder(), this.fileName);
+        this.file = new File(dataFolder, this.fileName);
         load();
     }
 
     public final void load() {
         if (!file.exists()) {
             file.getParentFile().mkdirs();
-            if (plugin.getResource(fileName) != null) {
+            if (plugin != null && plugin.getResource(fileName) != null) {
                 plugin.saveResource(fileName, false);
             } else {
                 try {

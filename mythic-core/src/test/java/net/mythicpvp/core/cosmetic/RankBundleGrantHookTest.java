@@ -1,40 +1,37 @@
 package net.mythicpvp.core.cosmetic;
 
-import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.MockPlugin;
 import net.mythicpvp.core.audit.CoreAuditLog;
 import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.GrantDuration;
 import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.suite.cosmetic.CosmeticManager;
+import net.mythicpvp.suite.config.MythicConfig;
 import org.bukkit.Material;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class RankBundleGrantHookTest {
 
-    private MockPlugin plugin;
-
-    @BeforeEach
-    void setUp() {
-        MockBukkit.mock();
-        plugin = MockBukkit.createMockPlugin();
-    }
-
-    @AfterEach
-    void tearDown() {
-        MockBukkit.unmock();
-    }
+    @TempDir
+    Path tempDir;
 
     @Test
     void grantingARankWithBundlesGrantsTheCosmetics() {
@@ -46,23 +43,24 @@ class RankBundleGrantHookTest {
                 Instant.parse("2026-05-14T12:00:00Z"), ZoneOffset.UTC));
         RankCosmeticBundles bundles = new RankCosmeticBundles();
 
-        java.io.File data = plugin.getDataFolder();
+        File data = tempDir.toFile();
         data.mkdirs();
-        java.io.File file = new java.io.File(data, "ranks.yml");
+        File file = new File(data, "ranks.yml");
         try {
-            java.nio.file.Files.writeString(file.toPath(),
+            Files.writeString(file.toPath(),
                     """
                     ranks:
                       vip:
                         bundled-cosmetics:
                           - "hat.party_crown"
                           - "title.vip"
-                    """, java.nio.charset.StandardCharsets.UTF_8);
-        } catch (java.io.IOException e) {
+                    """, StandardCharsets.UTF_8);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        bundles.load(new net.mythicpvp.suite.config.MythicConfig(plugin, "ranks.yml"));
+        bundles.load(new MythicConfig(data, "ranks.yml"));
 
+        Plugin plugin = plugin();
         CoreAuditLog audit = new CoreAuditLog(plugin);
         grants.setGrantObserver(new RankBundleGrantHook(bundles, audit, plugin.getLogger()));
 
@@ -84,6 +82,7 @@ class RankBundleGrantHookTest {
                 Instant.parse("2026-05-14T12:00:00Z"), ZoneOffset.UTC));
         RankCosmeticBundles bundles = new RankCosmeticBundles();
 
+        Plugin plugin = plugin();
         CoreAuditLog audit = new CoreAuditLog(plugin);
         grants.setGrantObserver(new RankBundleGrantHook(bundles, audit, plugin.getLogger()));
 
@@ -101,5 +100,12 @@ class RankBundleGrantHookTest {
                 "&7", "%chat_prefix%%player%: %message%",
                 "&7", "%tab_prefix%%player%",
                 "&7", "%nametag_prefix%%player%");
+    }
+
+    private Plugin plugin() {
+        Plugin plugin = mock(Plugin.class);
+        when(plugin.getDataFolder()).thenReturn(tempDir.toFile());
+        when(plugin.getLogger()).thenReturn(Logger.getLogger("RankBundleGrantHookTest"));
+        return plugin;
     }
 }

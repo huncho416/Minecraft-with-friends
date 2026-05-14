@@ -4,11 +4,11 @@
 #   %cosmetic_chat_tag%, %cosmetic_title%
 # When PlaceholderAPI is installed, %papi_*% tokens resolve too.
 scoreboard:
-  title: "&#FF00F8MythicPvP"
+  title: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP"
   lines:
-    - "&#FFFFFFRank: %rank%"
-    - "&#FFFFFFServer: %server%"
-    - "&#FFFFFFOnline: %online%"
+    - "&#F529BE&lR&#FD37F0&la&#F639EA&ln&#DD35C4&lk&8: &#FFFFFF%rank%"
+    - "&#F529BE&lS&#FD37F0&le&#F639EA&lr&#DD35C4&lv&#F63DF1&le&#EA21FF&lr&8: &#D2D8E0%server%"
+    - "&#F529BE&lO&#FD37F0&ln&#F639EA&ll&#DD35C4&li&#F63DF1&ln&#EA21FF&le&8: &#FFFFFF%online%"
 
 # Per-gamemode overrides. The key is matched as a case-insensitive prefix
 # against the server identity id (server-identity.yml). First match wins,
@@ -16,22 +16,22 @@ scoreboard:
 # for new server families without touching code.
 gamemodes:
   hub:
-    title: "&#FF00F8MythicHub"
+    title: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP"
     lines:
-      - "&#FFFFFFWelcome, %player%"
-      - "&#FFFFFFRank: %rank%"
-      - "&#FFFFFFOnline: %online%"
+      - "&#F529BE&lP&#FD37F0&ll&#F639EA&la&#DD35C4&ly&#F63DF1&le&#EA21FF&lr&8: &#FFFFFF%player%"
+      - "&#F529BE&lR&#FD37F0&la&#F639EA&ln&#DD35C4&lk&8: &#FFFFFF%rank%"
+      - "&#F529BE&lO&#FD37F0&ln&#F639EA&ll&#DD35C4&li&#F63DF1&ln&#EA21FF&le&8: &#FFFFFF%online%"
       - ""
-      - "&#A0A0A0play.mythicpvp.net"
+      - "&#D2D8E0play.mythicpvp.net"
   skyblock:
-    title: "&#FF00F8Skyblock"
+    title: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP"
     lines:
-      - "&#FFFFFFRank: %rank%"
-      - "&#FFFFFFIsland: %server%"
-      - "&#FFFFFFOnline: %online%"
+      - "&#F529BE&lR&#FD37F0&la&#F639EA&ln&#DD35C4&lk&8: &#FFFFFF%rank%"
+      - "&#F529BE&lI&#FD37F0&ls&#F639EA&ll&#DD35C4&la&#F63DF1&ln&#EA21FF&ld&8: &#D2D8E0%server%"
+      - "&#F529BE&lO&#FD37F0&ln&#F639EA&ll&#DD35C4&li&#F63DF1&ln&#EA21FF&le&8: &#FFFFFF%online%"
   practice:
-    title: "&#FF00F8Practice"
+    title: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP"
     lines:
-      - "&#FFFFFFRank: %rank%"
-      - "&#FFFFFFArena: %server%"
-      - "&#FFFFFFOnline: %online%"
+      - "&#F529BE&lR&#FD37F0&la&#F639EA&ln&#DD35C4&lk&8: &#FFFFFF%rank%"
+      - "&#F529BE&lA&#FD37F0&lr&#F639EA&le&#DD35C4&ln&#F63DF1&la&8: &#D2D8E0%server%"
+      - "&#F529BE&lO&#FD37F0&ln&#F639EA&ll&#DD35C4&li&#F63DF1&ln&#EA21FF&le&8: &#FFFFFF%online%"

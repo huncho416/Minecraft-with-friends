@@ -109,7 +109,7 @@ public final class StaffModeToolListener implements Listener {
         String rankName = rank == null ? "default" : rank.name();
         staffPlayer.sendMessage(messages.component(
                 "messages.staff-mode.inspect",
-                "&#FF00F8Inspect &8Â» &#FFFFFF%target%: rank=%rank% gamemode=%gamemode%",
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFF%target%: rank=%rank% gamemode=%gamemode%",
                 Map.of(
                         "target", target.getName(),
                         "rank", rankName,
@@ -121,8 +121,8 @@ public final class StaffModeToolListener implements Listener {
         staffPlayer.sendMessage(messages.component(
                 nowFrozen ? "messages.staff-mode.frozen" : "messages.staff-mode.unfrozen",
                 nowFrozen
-                        ? "&#FF00F8Freeze &8Â» &#FFFFFFFroze %target%."
-                        : "&#FF00F8Freeze &8Â» &#FFFFFFUnfroze %target%.",
+                        ? "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CFroze &#FFFFFF%target%&#9CFF9C."
+                        : "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CUnfroze &#FFFFFF%target%&#9CFF9C.",
                 Map.of("target", target.getName())));
     }
 

@@ -3,7 +3,6 @@ package net.mythicpvp.suite.skin;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;

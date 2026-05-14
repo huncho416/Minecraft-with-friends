@@ -17,40 +17,40 @@ public final class PunishmentMenuText {
 
     @NotNull
     public String punishTitle(@NotNull String targetName) {
-        return with(get("punishment.punish-title", "&#FF00F8Punish: %target%"),
+        return with(get("punishment.punish-title", "&#F529BEPunish: %target%"),
                 "%target%", targetName);
     }
 
     @NotNull
     public String handbookTitle() {
-        return get("punishment.handbook-title", "&#FF00F8Punishments");
+        return get("punishment.handbook-title", "&#F529BEPunishments");
     }
 
     @NotNull
     public String templatesTitle(@NotNull String categoryName) {
-        return with(get("punishment.templates-title", "&#FF00F8%category%"),
+        return with(get("punishment.templates-title", "&#F529BE%category%"),
                 "%category%", categoryName);
     }
 
     @NotNull
     public String proofTitle() {
-        return get("punishment.proof-title", "&#FF00F8Punishment Proof");
+        return get("punishment.proof-title", "&#F529BEPunishment Proof");
     }
 
     @NotNull
     public String confirmTitle() {
-        return get("punishment.confirm-title", "&#FF00F8Confirm Punishment");
+        return get("punishment.confirm-title", "&#F529BEConfirm Punishment");
     }
 
     @NotNull
     public String historyTitle(@NotNull String targetName) {
-        return with(get("punishment.history-title", "&#FF00F8History: %target%"),
+        return with(get("punishment.history-title", "&#F529BEHistory: %target%"),
                 "%target%", targetName);
     }
 
     @NotNull
     public String categoryName(@NotNull String categoryName) {
-        return with(get("punishment.category-button.name", "&#FF00F8%category%"),
+        return with(get("punishment.category-button.name", "&#F529BE%category%"),
                 "%category%", categoryName);
     }
 
@@ -67,13 +67,13 @@ public final class PunishmentMenuText {
     @NotNull
     public String templateClickHint(boolean executable) {
         return executable
-                ? get("punishment.template-click.executable", "&#FF00F8Click to select")
-                : get("punishment.template-click.handbook", "&#FF00F8Read-only handbook entry");
+                ? get("punishment.template-click.executable", "&#F529BEClick to select")
+                : get("punishment.template-click.handbook", "&#F529BERead-only handbook entry");
     }
 
     @NotNull
     public String enterProofName() {
-        return get("punishment.buttons.enter-proof", "&#FF00F8Enter Proof");
+        return get("punishment.buttons.enter-proof", "&#F529BEEnter Proof");
     }
 
     @NotNull
@@ -83,7 +83,7 @@ public final class PunishmentMenuText {
 
     @NotNull
     public String proofSummaryName() {
-        return get("punishment.buttons.proof-summary", "&#FF00F8Proof");
+        return get("punishment.buttons.proof-summary", "&#F529BEProof");
     }
 
     @NotNull
@@ -93,32 +93,32 @@ public final class PunishmentMenuText {
 
     @NotNull
     public String noProofButton() {
-        return get("punishment.buttons.no-proof-button", "&#FF0000No proof entered");
+        return get("punishment.buttons.no-proof-button", "&#FF8A8ANo proof entered");
     }
 
     @NotNull
     public String confirmProof() {
-        return get("punishment.buttons.confirm-proof", "&#00FF00Confirm Proof");
+        return get("punishment.buttons.confirm-proof", "&#9CFF9CConfirm Proof");
     }
 
     @NotNull
     public String clearInventoryName() {
-        return get("punishment.buttons.clear-inventory", "&#FF00F8Clear Inventory");
+        return get("punishment.buttons.clear-inventory", "&#F529BEClear Inventory");
     }
 
     @NotNull
     public String silentName() {
-        return get("punishment.buttons.silent", "&#FF00F8Silent");
+        return get("punishment.buttons.silent", "&#F529BESilent");
     }
 
     @NotNull
     public String summaryName() {
-        return get("punishment.buttons.summary", "&#FF00F8Punishment Summary");
+        return get("punishment.buttons.summary", "&#F529BEPunishment Summary");
     }
 
     @NotNull
     public String executeName() {
-        return get("punishment.buttons.execute", "&#00FF00Execute Punishment");
+        return get("punishment.buttons.execute", "&#9CFF9CExecute Punishment");
     }
 
     @NotNull
@@ -128,7 +128,7 @@ public final class PunishmentMenuText {
 
     @NotNull
     public String toggleHint() {
-        return get("punishment.buttons.toggle-hint", "&#FF00F8Click to toggle");
+        return get("punishment.buttons.toggle-hint", "&#F529BEClick to toggle");
     }
 
     @NotNull

@@ -1,7 +1,7 @@
 # 🏗️ MythicPvP — Grand Master Plan (v2)
 
-> **Server Name:** &#FF00F8M&#FF20F9y&#FF40FAt&#FF60FBh&#FF80FCi&#FF9FFCc&#FFBFFDP&#FFDFFEv&#FFFFFFP
-> **Colors:** Primary: Light Pink `#FF00F8` · Secondary: White `#FFFFFF` · Tertiary: Grey
+> **Server Name:** &#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP
+> **Colors:** Brand gradient pink-to-white/grey (`#F529BE`, `#FD37F0`, `#F639EA`, `#DD35C4`, `#F63DF1`, `#EA21FF`, `#FFFFFF`, `#D2D8E0`, `#DDDBD9`) · Success `#9CFF9C` · Failure `#FF8A8A`
 > **Version:** 1.21.1 · **Server:** Folia · **Proxy:** MythicCord (SpacerCord fork)
 > **Language:** Java 21 (server plugins), Rust (proxy) · **Build:** Maven
 > **Database:** SpacetimeDB (sole database — no Redis) · **Bedrock:** Geyser + Voice Chat
@@ -67,7 +67,7 @@ graph TB
 
 ## 🎨 Branding & Hex System
 
-Gradient identity: `&#FF00F8M&#FF20F9y&#FF40FAt&#FF60FBh&#FF80FCi&#FF9FFCc&#FFBFFDP&#FFDFFEv&#FFFFFFP`
+Gradient identity: `&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP`
 
 The **HexAPI** parses `&#RRGGBB` tags across all text surfaces. The custom **MythicPvP font** (via resource pack) is used in scoreboards, tab, menus, and nametags for a premium branded look.
 
@@ -246,8 +246,10 @@ Cosmetic system powered by resource pack custom models. **EULA compliant** — c
   - **Kill Effects** — Visual/sound on player kill
   - **Win Effects** — Visual on KOTH/event win
   - **Chat Tags** — Cosmetic prefixes/icons in chat
-- **Unlock system:** Achievement rewards, event prizes, rank bundles
-- **Equip GUI:** `/cosmetics` menu via MenuAPI
+- **Unlock system:** Achievement rewards, event prizes, rank bundles, crates, lootboxes, and credit purchases
+- **Equip GUI:** `/cosmetics` menu via MenuAPI with filters for type, rarity, limited status, owned/unowned, equipped state, and tradable state
+- **Redeem / itemize flow:** Players can redeem cosmetics into the account-bound cosmetics menu, equip them from that menu, or withdraw eligible cosmetics as physical items for trading or selling.
+- **Crate rewards:** Cosmetic crates are network-wide `mythic-core` content. Each crate defines weighted item pools with per-item roll percentages and optional limited-item windows.
 - **Preview system:** Try-before-buy particle/hat preview
 - **SpacetimeDB persistence:** Owned cosmetics + equipped loadout per player
 
@@ -292,9 +294,12 @@ Full player disguise system. Uses the **same internal packet layer** as `suite-n
 - CORS whitelist for web origins
 - Secrets managed via environment variables (never in config files)
 
-### EULA Compliance
-- **No store, no real-money transactions:** the project intentionally has no monetization surface; all cosmetics are earned through gameplay, achievements, or staff-issued rank bundles.
-- Ranks are earned or staff-granted; never sold.
+### Store, Credits & EULA Compliance
+- **Store provider:** Tebex is the external checkout surface for purchasing account credits.
+- **Credits:** Credits are the network currency players spend on eligible store/catalog items such as ranks, lootboxes, crate rolls, and cosmetic unlock opportunities.
+- **Cosmetic crates:** Cosmetic crates can be opened on any backend server because the cosmetic system belongs to `mythic-core`, not `mythic-hub`.
+- **Compliance guardrail:** Real-money and credit-purchased rewards must not create pay-to-win gameplay advantages. Any rank, crate, lootbox, or cosmetic reward that touches gameplay must be reviewed before implementation.
+- **Odds transparency:** Lootboxes/crates must expose item pools, per-item roll chances, and limited-item availability in the UI/config before purchase or roll.
 
 ---
 
@@ -641,7 +646,8 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 | `mythic-core`: `/broadcast <message…>` cross-server via `core:broadcast` channel + rotating announcements driven by `MythicScheduler.runTimer` (interval, format, message list in `announcements.yml`); origin-shard skip prevents echo loops | Dev A | ✅ |
 | `mythic-core`: tablist, scoreboard, nametag formatting bound to YAML + ranks via `DisplayService` + `PlayerSessionListener`, with cosmetic chat-tag/title placeholders + disguise rank/name override | Dev A | ✅ |
 | `mythic-core`: friends, party, mail, offline rewards | Dev B | |
-| `mythic-hub`: spawn, server selector, cosmetic preview, hub activities using `mythic-core` services | Dev B | |
+| `mythic-core`: network-wide cosmetics economy — `/cosmetics` redeem/equip/filter menu, itemize/withdraw eligible cosmetics for trade/sale, Tebex credit balance integration, credit-spend hooks for ranks/lootboxes/crates, and weighted cosmetic crate rolls with per-item odds + limited-item windows | Dev B | |
+| `mythic-hub`: spawn, server selector, and hub activities using `mythic-core` services | Dev B | |
 | Resource pack: finalize MythicPvP custom font, rebrand `smpd` → `mythic` namespace | Dev A | ✅ |
 
 #### Current Phase 3 Implementation Notes
@@ -672,6 +678,8 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 - ✅ **Strict-lint pass** — `pom.xml` now compiles with `-Xlint:all`. Resolved warnings: `AsyncPlayerChatEvent` → modern `io.papermc.paper.event.player.AsyncChatEvent` in `ChatGuard` + `ChatPromptService` (test rewritten to mock the event); `MythicConfig` constructor `this`-escape closed by making `load()` final; `SchemaVersionMismatchException` got a `serialVersionUID`; `ResourcePackManager.sendTo` migrated from the deprecated `Player.setResourcePack(String)` to `player.sendResourcePacks(ResourcePackRequest)` with a deterministic per-URL pack id.
 - ✅ **ChatPromptService quit cleanup** — pending prompts are dropped on `PlayerQuitEvent` so disconnected players don't accumulate in the in-memory map on long-running servers.
 - ✅ **Essentials polish** — `/gmc` now also responds to `gm1`/`creative`, `/gms` to `gm0`/`survival`, `/tp` to `teleport`, `/tphere` to `tpme`. `CoreEssentialsService` writes `GAMEMODE` / `TELEPORT` / `TELEPORT_HERE` lines to `CoreAuditLog` (with from/to gamemode and destination world for context). Teleports route through `MythicScheduler.runOnEntity` on Folia so cross-region teleports land on the entity's region thread; on vanilla / Paper / MockBukkit they stay synchronous so callers and tests observe the new position immediately.
+
+Planned **network cosmetic economy** belongs to `mythic-core`, not `mythic-hub`: `/cosmetics` will handle redeem/equip/filter flows, eligible cosmetic item withdrawal for trade/sale, Tebex credit spending, and weighted crate/lootbox rolls across every backend server.
 
 #### Command Completion Requirements
 
@@ -723,6 +731,17 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 - `/punishmentedit <title>` opens an editor menu for title, category, duration, and additional information.
 - `/punishmentremove <title>` removes a punishment template.
 - Punishment templates must include category, duration, title, and additional information.
+
+#### Cosmetics, Credits, Crates, And Lootboxes Requirements
+
+- Cosmetics are a `mythic-core` network system installed on every backend server, not a hub-only preview feature.
+- `/cosmetics` must open a menu where players can redeem cosmetic items into account ownership, equip owned cosmetics, filter/search by type/rarity/limited/owned/equipped/tradable state, and view item details.
+- Eligible cosmetics must be withdrawable from the cosmetics menu as physical items that can be traded or sold, then redeemed back into ownership by the receiving player.
+- Cosmetic ownership, equipped loadouts, itemized/withdrawn state, crate definitions, roll history, and limited-item windows must persist network-wide through SpacetimeDB.
+- Tebex purchases grant account credits. Credits can be spent through server-side flows on ranks, lootboxes, crate rolls, and other configured catalog entries.
+- Cosmetic crates can be won or opened on any server. Each crate must define a weighted item pool, visible per-item roll percentages, rarity/limited metadata, and any limited-time availability window.
+- Crate/lootbox rolls must be auditable and deterministic enough for dispute review: store player, crate id, consumed credit/item source, rolled item, odds snapshot, and timestamp.
+- Credit and crate rewards must be permission/config gated and reviewed for EULA compliance before any gameplay-affecting item or rank benefit is added.
 
 #### Persistence And Config Requirements
 
@@ -793,7 +812,7 @@ Core protocol channels: `core:staff-chat`, `core:staff-presence`, `core:broadcas
 |-------|------|-------|-----------------|
 | **1** | **Mythic Suite** ⭐ | 1–8 | All 23 foundation APIs, YAML-configurable text surfaces, tested and documented |
 | **2** | **MythicCord + Docker** ✅ | 9–12 | STDB schema (wasm32 build clean), Java mirror (20/20 tests), Rust bridge (3/3 tests), routing helpers (4/4 tests), MythicCord sidecar with config exporter (3/3 tests), Pterodactyl egg, Docker scaffold + monitoring, Geyser sidecar, voice deployment, Sentry bootstrap, Infrarust v2.0.0-alpha.6 vendored as git subtree |
-| **3** | Core + Hub | 13–16 | Network-wide essentials/staff suite, punishments with silent mode, ranks, YAML-driven tab/scoreboard/chat, friends/party, hub, resource pack |
+| **3** | Core + Hub | 13–16 | Network-wide essentials/staff suite, punishments with silent mode, ranks, cosmetics/credits/crates, YAML-driven tab/scoreboard/chat, friends/party, hub, resource pack |
 | **4** | Skyblock Core | 17–24 | Islands, economy, enchants, quests |
 | **5** | PvP & Events | 25–30 | PvP zones, KOTH, airdrops, points |
 | **6** | Skills & Leaderboards | 31–36 | 4 skills, leaderboard system |

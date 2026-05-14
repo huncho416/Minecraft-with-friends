@@ -36,9 +36,9 @@ public final class PunishmentEditCommand extends MythicCommand {
             player.sendMessage("Unknown punishment template.");
             return;
         }
-        MythicMenu.create(3, "&#FF00F8Edit: " + template.title())
-                .slot(10, MythicItem.create(template.category().material()).name("&#FF00F8" + template.title()).lore(List.of("&7Category: &f" + template.category().name(), "&7Duration: &f" + template.duration(), "&7Info: &f" + template.information())).build())
-                .slot(16, MythicItem.create(Material.BARRIER).name("&#FF00F8Close").build(), event -> player.closeInventory())
+        MythicMenu.create(3, "&#F529BEEdit: " + template.title())
+                .slot(10, MythicItem.create(template.category().material()).name("&#F529BE" + template.title()).lore(List.of("&7Category: &f" + template.category().name(), "&7Duration: &f" + template.duration(), "&7Info: &f" + template.information())).build())
+                .slot(16, MythicItem.create(Material.BARRIER).name("&#F529BEClose").build(), event -> player.closeInventory())
                 .open(player);
     }
 

@@ -211,13 +211,13 @@ public final class DisplayService {
     @NotNull
     private static CoreRank hardcodedFallback() {
         return new CoreRank(
-                FALLBACK_RANK_ID, "Default", "#808080",
+                FALLBACK_RANK_ID, "Default", "#D2D8E0",
                 org.bukkit.Material.LIGHT_GRAY_DYE,
-                "&7", "", 1000, false, false, "",
+                "&#D2D8E0", "", 1000, false, false, "",
                 List.of(),
-                "&7", "%chat_prefix%%player%&7: &f%message%",
-                "&7", "%tab_prefix%%player%",
-                "&7", "%nametag_prefix%%player%");
+                "&#D2D8E0", "%chat_prefix%%player%&7: &#FFFFFF%message%",
+                "&#D2D8E0", "%tab_prefix%%player%",
+                "&#D2D8E0", "%nametag_prefix%%player%");
     }
 
     @NotNull
