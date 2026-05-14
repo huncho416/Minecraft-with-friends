@@ -4,6 +4,9 @@ import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.suite.config.MythicConfig;
+import net.mythicpvp.suite.cosmetic.CosmeticManager;
+import net.mythicpvp.suite.cosmetic.CosmeticType;
+import net.mythicpvp.suite.disguise.DisguiseManager;
 import net.mythicpvp.suite.nametag.NametagManager;
 import net.mythicpvp.suite.scoreboard.BoardManager;
 import net.mythicpvp.suite.scoreboard.MythicBoard;
@@ -97,7 +100,14 @@ public final class DisplayService {
      * whenever their rank changes.
      */
     public void apply(@NotNull Player player) {
-        CoreRank rank = activeRankOrFallback(player.getUniqueId());
+        // Disguise rank override wins over the player's real grant — the
+        // tab/scoreboard/nametag must look like the disguise, not like
+        // the staff member behind it. Falls through to the real rank
+        // when no override is set.
+        String rankOverride = DisguiseManager.getInstance().getRankOverride(player.getUniqueId());
+        CoreRank rank = rankOverride != null
+                ? rankOrFallback(rankOverride)
+                : activeRankOrFallback(player.getUniqueId());
         PlaceholderResolver ctx = contextFor(player, rank);
 
         applyTab(player, rank, ctx);
@@ -136,7 +146,12 @@ public final class DisplayService {
     @NotNull
     private CoreRank activeRankOrFallback(@NotNull UUID playerUuid) {
         String activeId = grantService.activeRank(playerUuid);
-        CoreRank rank = rankService.get(activeId);
+        return rankOrFallback(activeId);
+    }
+
+    @NotNull
+    private CoreRank rankOrFallback(@NotNull String rankId) {
+        CoreRank rank = rankService.get(rankId);
         if (rank != null) {
             return rank;
         }
@@ -146,8 +161,15 @@ public final class DisplayService {
 
     @NotNull
     private PlaceholderResolver contextFor(@NotNull Player player, @NotNull CoreRank rank) {
+        // Disguise wins for the visible name. We deliberately do NOT
+        // reveal the real name in the suite-side placeholder set —
+        // staff who can see through disguises get the "(realName)"
+        // suffix from DisguiseManager.getVisibleName, which the server
+        // applies at packet time, not here.
+        String displayName = DisguiseManager.getInstance().getDisplayName(
+                player.getUniqueId(), player.getName());
         return new PlaceholderResolver()
-                .set("player", player.getName())
+                .set("player", displayName)
                 .set("rank", rank.name())
                 .set("rank_id", rank.id())
                 .set("rank_color", rank.color())
@@ -157,7 +179,28 @@ public final class DisplayService {
                 .set("tab_prefix", rank.tabPrefix())
                 .set("nametag_prefix", rank.nametagPrefix())
                 .set("prefix", rank.prefix())
-                .set("suffix", rank.suffix());
+                .set("suffix", rank.suffix())
+                // Cosmetic-driven placeholders. Resolve the equipped chat
+                // tag + title via CosmeticManager. Empty when nothing is
+                // equipped or the catalog hasn't hydrated, so existing
+                // templates that don't use these tokens stay untouched.
+                .set("cosmetic_chat_tag", cosmeticDisplay(player.getUniqueId(), CosmeticType.CHAT_TAG))
+                .set("cosmetic_title", cosmeticDisplay(player.getUniqueId(), CosmeticType.TITLE));
+    }
+
+    /**
+     * Resolve the equipped cosmetic of {@code type} for {@code playerUuid}
+     * to its display name. Returns {@code ""} when nothing is equipped or
+     * the cosmetic id is no longer in the catalog.
+     */
+    @NotNull
+    private static String cosmeticDisplay(@NotNull UUID playerUuid, @NotNull CosmeticType type) {
+        String equipped = CosmeticManager.getInstance().getEquipped(playerUuid, type);
+        if (equipped == null) {
+            return "";
+        }
+        CosmeticManager.Cosmetic cosmetic = CosmeticManager.getInstance().get(equipped);
+        return cosmetic == null ? "" : cosmetic.displayName();
     }
 
     private void applyTab(@NotNull Player player, @NotNull CoreRank rank, @NotNull PlaceholderResolver ctx) {

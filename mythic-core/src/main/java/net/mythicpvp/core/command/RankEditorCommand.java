@@ -1,5 +1,7 @@
 package net.mythicpvp.core.command;
 
+import net.mythicpvp.core.rank.RankEditorMenuService;
+import net.mythicpvp.core.rank.RankMenuText;
 import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.CommandPermission;
@@ -12,6 +14,7 @@ import net.mythicpvp.suite.menu.MythicMenu;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -20,9 +23,23 @@ import java.util.List;
 public final class RankEditorCommand extends MythicCommand {
 
     private final RankService rankService;
+    private final RankMenuText text;
+    @Nullable
+    private final RankEditorMenuService editorMenu;
 
     public RankEditorCommand(@NotNull RankService rankService) {
+        this(rankService, RankMenuText.DEFAULTS, null);
+    }
+
+    public RankEditorCommand(@NotNull RankService rankService, @NotNull RankMenuText text) {
+        this(rankService, text, null);
+    }
+
+    public RankEditorCommand(@NotNull RankService rankService, @NotNull RankMenuText text,
+                             @Nullable RankEditorMenuService editorMenu) {
         this.rankService = rankService;
+        this.text = text;
+        this.editorMenu = editorMenu;
     }
 
     @Default
@@ -33,11 +50,18 @@ public final class RankEditorCommand extends MythicCommand {
             player.sendMessage("Unknown rank.");
             return;
         }
-        MythicMenu.create(3, "&#FF00F8Rank Editor: " + rank.id())
+        // When wired with the click-driven editor (production), delegate so
+        // every field becomes click-editable. Falls back to the static
+        // read-only menu when no editor is provided (test fixtures).
+        if (editorMenu != null) {
+            editorMenu.openOverview(player, rank.id());
+            return;
+        }
+        MythicMenu.create(3, text.editorTitle(rank.id()))
                 .slot(10, MythicItem.create(rank.dye()).name(rank.color() + rank.name()).lore(List.of("&7Weight: &f" + rank.weight(), "&7Staff: &f" + rank.staff(), "&7Donator: &f" + rank.donator())).build())
-                .slot(12, MythicItem.create(Material.NAME_TAG).name("&#FF00F8Display Formats").lore(List.of("&7Chat: &f" + rank.chatPrefix(), "&7Tab: &f" + rank.tabPrefix(), "&7Nametag: &f" + rank.nametagPrefix())).build())
-                .slot(14, MythicItem.create(Material.BOOK).name("&#FF00F8Permissions").lore(rank.permissions()).build())
-                .slot(16, MythicItem.create(Material.BARRIER).name("&#FF00F8Close").build(), event -> player.closeInventory())
+                .slot(12, MythicItem.create(Material.NAME_TAG).name(text.editorDisplayFormats()).lore(List.of("&7Chat: &f" + rank.chatPrefix(), "&7Tab: &f" + rank.tabPrefix(), "&7Nametag: &f" + rank.nametagPrefix())).build())
+                .slot(14, MythicItem.create(Material.BOOK).name(text.editorPermissions()).lore(rank.permissions()).build())
+                .slot(16, MythicItem.create(Material.BARRIER).name(text.editorClose()).build(), event -> player.closeInventory())
                 .open(player);
     }
 

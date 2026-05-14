@@ -10,7 +10,7 @@ import net.mythicpvp.suite.command.Optional;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-@CommandAlias("tp")
+@CommandAlias("tp|teleport")
 @CommandPermission("mythic.core.teleport")
 public final class TeleportCommand extends MythicCommand {
 

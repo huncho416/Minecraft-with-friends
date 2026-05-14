@@ -9,7 +9,7 @@ import net.mythicpvp.suite.command.MythicCommand;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-@CommandAlias("tphere")
+@CommandAlias("tphere|tpme")
 @CommandPermission("mythic.core.teleport.here")
 public final class TpHereCommand extends MythicCommand {
 

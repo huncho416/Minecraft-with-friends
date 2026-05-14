@@ -1,3 +1,8 @@
+# Available placeholders:
+#   %player%, %rank%, %rank_id%, %rank_color%, %server%, %online%,
+#   %chat_prefix%, %tab_prefix%, %nametag_prefix%, %prefix%, %suffix%,
+#   %cosmetic_chat_tag%, %cosmetic_title%
+# When PlaceholderAPI is installed, %papi_*% tokens resolve too.
 scoreboard:
   title: "&#FF00F8MythicPvP"
   lines:
