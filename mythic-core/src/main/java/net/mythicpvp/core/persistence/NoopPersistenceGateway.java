@@ -35,5 +35,16 @@ public final class NoopPersistenceGateway implements PersistenceGateway {
     @Override public void cosmeticGrant(@NotNull UUID player, @NotNull String cosmeticId,
                                         @NotNull String cosmeticType, @NotNull String source,
                                         @NotNull String reference) {}
+    @Override public void friendRequest(@NotNull UUID from, @NotNull UUID to) {}
+    @Override public void friendAccept(long requestId) {}
+    @Override public void friendRemove(@NotNull UUID owner, @NotNull UUID friend) {}
+    @Override public void partyCreate(@NotNull UUID leader) {}
+    @Override public void partyJoin(long partyId, @NotNull UUID player) {}
+    @Override public void partyLeave(long partyId, @NotNull UUID player) {}
+    @Override public void partyDisband(long partyId) {}
+    @Override public void mailSend(@NotNull UUID sender, @NotNull UUID recipient,
+                                   @NotNull String subject, @NotNull String body,
+                                   @NotNull String attachmentsJson) {}
+    @Override public void mailMarkRead(long mailId) {}
     @Override public void hydrate(@NotNull HydrationSink sink) {}
 }

@@ -27,6 +27,15 @@ public final class CapturingPersistenceGateway implements PersistenceGateway {
     public record TemplateRemove(String title) {}
     public record BlacklistAdd(UUID target, String targetName, UUID staff, String staffName, String reason) {}
     public record BlacklistRevoke(long entryId, UUID staff, String reason) {}
+    public record FriendRequestCall(UUID from, UUID to) {}
+    public record FriendAccept(long requestId) {}
+    public record FriendRemove(UUID owner, UUID friend) {}
+    public record PartyCreate(UUID leader) {}
+    public record PartyJoin(long partyId, UUID player) {}
+    public record PartyLeave(long partyId, UUID player) {}
+    public record PartyDisband(long partyId) {}
+    public record MailSend(UUID sender, UUID recipient, String subject, String body, String attachmentsJson) {}
+    public record MailMarkRead(long mailId) {}
 
     @Override public void rankDefine(@NotNull CoreRank rank, boolean seeded) { calls.add(new RankDefine(rank, seeded)); }
     @Override public void rankRemove(@NotNull String rankId) { calls.add(new RankRemove(rankId)); }
@@ -60,6 +69,35 @@ public final class CapturingPersistenceGateway implements PersistenceGateway {
                                         @NotNull String cosmeticType, @NotNull String source,
                                         @NotNull String reference) {
         calls.add(new CosmeticGrant(player, cosmeticId, cosmeticType, source, reference));
+    }
+    @Override public void friendRequest(@NotNull UUID from, @NotNull UUID to) {
+        calls.add(new FriendRequestCall(from, to));
+    }
+    @Override public void friendAccept(long requestId) {
+        calls.add(new FriendAccept(requestId));
+    }
+    @Override public void friendRemove(@NotNull UUID owner, @NotNull UUID friend) {
+        calls.add(new FriendRemove(owner, friend));
+    }
+    @Override public void partyCreate(@NotNull UUID leader) {
+        calls.add(new PartyCreate(leader));
+    }
+    @Override public void partyJoin(long partyId, @NotNull UUID player) {
+        calls.add(new PartyJoin(partyId, player));
+    }
+    @Override public void partyLeave(long partyId, @NotNull UUID player) {
+        calls.add(new PartyLeave(partyId, player));
+    }
+    @Override public void partyDisband(long partyId) {
+        calls.add(new PartyDisband(partyId));
+    }
+    @Override public void mailSend(@NotNull UUID sender, @NotNull UUID recipient,
+                                   @NotNull String subject, @NotNull String body,
+                                   @NotNull String attachmentsJson) {
+        calls.add(new MailSend(sender, recipient, subject, body, attachmentsJson));
+    }
+    @Override public void mailMarkRead(long mailId) {
+        calls.add(new MailMarkRead(mailId));
     }
 
     public record HydrateCall(HydrationSink sink) {}

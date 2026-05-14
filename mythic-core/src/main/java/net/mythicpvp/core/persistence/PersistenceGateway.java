@@ -48,5 +48,25 @@ public interface PersistenceGateway {
                        @NotNull String source,
                        @NotNull String reference);
 
+    void friendRequest(@NotNull UUID from, @NotNull UUID to);
+
+    void friendAccept(long requestId);
+
+    void friendRemove(@NotNull UUID owner, @NotNull UUID friend);
+
+    void partyCreate(@NotNull UUID leader);
+
+    void partyJoin(long partyId, @NotNull UUID player);
+
+    void partyLeave(long partyId, @NotNull UUID player);
+
+    void partyDisband(long partyId);
+
+    void mailSend(@NotNull UUID sender, @NotNull UUID recipient,
+                  @NotNull String subject, @NotNull String body,
+                  @NotNull String attachmentsJson);
+
+    void mailMarkRead(long mailId);
+
     void hydrate(@NotNull HydrationSink sink);
 }

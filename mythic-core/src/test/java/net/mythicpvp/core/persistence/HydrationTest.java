@@ -9,6 +9,7 @@ import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.core.rank.RankGrant;
 import net.mythicpvp.core.rank.RankService;
+import net.mythicpvp.core.social.SocialService;
 import net.mythicpvp.suite.protocol.ProtocolManager;
 import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ class HydrationTest {
         RankService ranks = new RankService();
         GrantService grants = new GrantService(ranks, FIXED_CLOCK);
         PunishmentService punishments = new PunishmentService(ProtocolManager.getInstance(), FIXED_CLOCK);
-        CoreHydrationSink sink = new CoreHydrationSink(Logger.getLogger("test"), ranks, grants, punishments);
+        CoreHydrationSink sink = sink(ranks, grants, punishments);
 
         CoreRank vip = rank("vip", 100);
         sink.applyRank(vip);
@@ -55,7 +56,7 @@ class HydrationTest {
         ranks.register(rank("admin", 10));
         GrantService grants = new GrantService(ranks, FIXED_CLOCK);
         PunishmentService punishments = new PunishmentService(ProtocolManager.getInstance(), FIXED_CLOCK);
-        CoreHydrationSink sink = new CoreHydrationSink(Logger.getLogger("test"), ranks, grants, punishments);
+        CoreHydrationSink sink = sink(ranks, grants, punishments);
 
         RankGrant fromStdb = new RankGrant(
                 42L, PLAYER, "Notch", "admin", STAFF, "Console", "from another server",
@@ -82,7 +83,7 @@ class HydrationTest {
         RankService ranks = new RankService();
         GrantService grants = new GrantService(ranks, FIXED_CLOCK);
         PunishmentService punishments = new PunishmentService(ProtocolManager.getInstance(), FIXED_CLOCK);
-        CoreHydrationSink sink = new CoreHydrationSink(Logger.getLogger("test"), ranks, grants, punishments);
+        CoreHydrationSink sink = sink(ranks, grants, punishments);
 
         PunishmentRecord fromStdb = new PunishmentRecord(
                 99L, PLAYER, "Notch", STAFF, "Admin",
@@ -104,7 +105,7 @@ class HydrationTest {
         RankService ranks = new RankService();
         GrantService grants = new GrantService(ranks, FIXED_CLOCK);
         PunishmentService punishments = new PunishmentService(ProtocolManager.getInstance(), FIXED_CLOCK);
-        CoreHydrationSink sink = new CoreHydrationSink(Logger.getLogger("test"), ranks, grants, punishments);
+        CoreHydrationSink sink = sink(ranks, grants, punishments);
 
         PunishmentTemplate cheating = new PunishmentTemplate(
                 PunishmentCategory.BAN, "30d", "Cheating #1", "First offense.");
@@ -129,7 +130,7 @@ class HydrationTest {
         RankService ranks = new RankService();
         GrantService grants = new GrantService(ranks, FIXED_CLOCK);
         PunishmentService punishments = new PunishmentService(ProtocolManager.getInstance(), FIXED_CLOCK);
-        CoreHydrationSink sink = new CoreHydrationSink(Logger.getLogger("test"), ranks, grants, punishments);
+        CoreHydrationSink sink = sink(ranks, grants, punishments);
 
         sink.applyBlacklist(PLAYER, "Notch", true);
         assertTrue(sink.isBlacklisted(PLAYER));
@@ -178,5 +179,13 @@ class HydrationTest {
                 List.of(), "&7", "%chat_prefix%%player%: %message%",
                 "&7", "%tab_prefix%%player%",
                 "&7", "%nametag_prefix%%player%");
+    }
+
+    private static CoreHydrationSink sink(
+            RankService ranks,
+            GrantService grants,
+            PunishmentService punishments) {
+        SocialService social = new SocialService(NoopPersistenceGateway.INSTANCE, FIXED_CLOCK);
+        return new CoreHydrationSink(Logger.getLogger("test"), ranks, grants, punishments, social);
     }
 }

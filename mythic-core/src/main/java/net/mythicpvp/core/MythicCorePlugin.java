@@ -21,6 +21,9 @@ import net.mythicpvp.core.command.GrantCommand;
 import net.mythicpvp.core.command.GrantsCommand;
 import net.mythicpvp.core.command.HelpCommand;
 import net.mythicpvp.core.command.HistoryCommand;
+import net.mythicpvp.core.command.FriendCommand;
+import net.mythicpvp.core.command.MailCommand;
+import net.mythicpvp.core.command.PartyCommand;
 import net.mythicpvp.core.command.PunishCommand;
 import net.mythicpvp.core.command.PunishmentAddCommand;
 import net.mythicpvp.core.command.PunishmentEditCommand;
@@ -56,6 +59,8 @@ import net.mythicpvp.core.staff.StaffPresenceListener;
 import net.mythicpvp.core.staff.StaffPresenceService;
 import net.mythicpvp.core.staffmode.StaffModeService;
 import net.mythicpvp.core.staffmode.StaffModeToolListener;
+import net.mythicpvp.core.social.MailLoginListener;
+import net.mythicpvp.core.social.SocialService;
 import net.mythicpvp.suite.api.MythicPlugin;
 import net.mythicpvp.suite.command.CommandManager;
 import net.mythicpvp.suite.config.ConfigManager;
@@ -94,6 +99,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private BroadcastService broadcastService;
     private StaffModeService staffModeService;
     private CoreAuditLog auditLog;
+    private SocialService socialService;
 
     @Override
     public void onEnable() {
@@ -133,6 +139,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         chatPromptService = new ChatPromptService(this);
         grantService = new GrantService(rankService, Clock.systemUTC());
         grantService.setPersistence(persistenceGateway);
+        socialService = new SocialService(persistenceGateway, Clock.systemUTC());
 
         net.mythicpvp.suite.config.MythicConfig menusConfig = configManager.getOrCreate("menus");
         net.mythicpvp.core.rank.RankMenuText rankMenuText =
@@ -147,7 +154,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 punishmentService, chatPromptService, Clock.systemUTC(), serverIdentity.id(), menuText);
         seedPunishments(configManager.getOrCreate("punishments"));
 
-        hydrationSink = new CoreHydrationSink(getLogger(), rankService, grantService, punishmentService);
+        hydrationSink = new CoreHydrationSink(getLogger(), rankService, grantService, punishmentService, socialService);
         persistenceGateway.hydrate(new MainThreadHydrationSink(this, hydrationSink));
 
         getServer().getPluginManager().registerEvents(
@@ -183,11 +190,15 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new TpHereCommand(essentialsService));
         commandManager.register(new HelpCommand(essentialsService));
         commandManager.register(new DiscordCommand(essentialsService));
+        commandManager.register(new FriendCommand(socialService, messages));
+        commandManager.register(new PartyCommand(socialService, messages));
+        commandManager.register(new MailCommand(socialService, messages));
+        getServer().getPluginManager().registerEvents(new MailLoginListener(socialService, messages), this);
         staffChannelService = new StaffChannelService(protocolManager, serverIdentity.id());
 
         String staffFormat = messages.raw(
                 "messages.staff.format",
-                "&#888888[%server%] %rank_color%%rank%%sender% &8Â» &#FFFFFF%message%",
+                "&#888888[%server%] %rank_color%%rank%%sender% &8Â\u00BB &#FFFFFF%message%",
                 java.util.Map.of());
         staffChannelService.addAudience(new BukkitStaffAudience(staffFormat));
 

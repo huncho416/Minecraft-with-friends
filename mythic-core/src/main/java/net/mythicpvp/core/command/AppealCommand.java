@@ -37,7 +37,7 @@ public final class AppealCommand extends MythicCommand {
         if (words.length == 0) {
             player.sendMessage(messages.component(
                     "messages.punishment.appeal-usage",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8AUsage: &#FFFFFF/appeal <message…>"));
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AUsage: &#FFFFFF/appeal <message...>"));
             return;
         }
 
@@ -47,7 +47,7 @@ public final class AppealCommand extends MythicCommand {
         if (target == null) {
             player.sendMessage(messages.component(
                     "messages.punishment.appeal-none",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8AYou have no active punishment to appeal."));
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AYou have no active punishment to appeal."));
             return;
         }
         String message = String.join(" ", words);
@@ -60,7 +60,7 @@ public final class AppealCommand extends MythicCommand {
                         "kind", target.type().name()));
         player.sendMessage(messages.component(
                 "messages.punishment.appeal-filed",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CYour appeal for punishment &#FFFFFF#%id% &#9CFF9Chas been filed.",
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#9CFF9CYour appeal for punishment &#FFFFFF#%id% &#9CFF9Chas been filed.",
                 Map.of("id", Long.toString(target.id()))));
     }
 }

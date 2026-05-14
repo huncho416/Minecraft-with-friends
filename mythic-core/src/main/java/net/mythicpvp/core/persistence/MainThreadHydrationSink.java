@@ -4,6 +4,11 @@ import net.mythicpvp.core.punishment.PunishmentRecord;
 import net.mythicpvp.core.punishment.PunishmentTemplate;
 import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.RankGrant;
+import net.mythicpvp.core.social.FriendLink;
+import net.mythicpvp.core.social.FriendRequest;
+import net.mythicpvp.core.social.MailMessage;
+import net.mythicpvp.core.social.Party;
+import net.mythicpvp.core.social.PartyMember;
 import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +37,16 @@ public final class MainThreadHydrationSink implements HydrationSink {
     @Override public void applyBlacklist(@NotNull UUID target, @NotNull String targetName, boolean active) {
         schedule(s -> s.applyBlacklist(target, targetName, active));
     }
+    @Override public void applyFriend(@NotNull FriendLink friend) { schedule(s -> s.applyFriend(friend)); }
+    @Override public void removeFriend(long friendId) { schedule(s -> s.removeFriend(friendId)); }
+    @Override public void applyFriendRequest(@NotNull FriendRequest request) { schedule(s -> s.applyFriendRequest(request)); }
+    @Override public void removeFriendRequest(long requestId) { schedule(s -> s.removeFriendRequest(requestId)); }
+    @Override public void applyParty(@NotNull Party party) { schedule(s -> s.applyParty(party)); }
+    @Override public void removeParty(long partyId) { schedule(s -> s.removeParty(partyId)); }
+    @Override public void applyPartyMember(@NotNull PartyMember member) { schedule(s -> s.applyPartyMember(member)); }
+    @Override public void removePartyMember(long memberId) { schedule(s -> s.removePartyMember(memberId)); }
+    @Override public void applyMail(@NotNull MailMessage mail) { schedule(s -> s.applyMail(mail)); }
+    @Override public void removeMail(long mailId) { schedule(s -> s.removeMail(mailId)); }
 
     private void schedule(@NotNull Consumer<HydrationSink> action) {
 

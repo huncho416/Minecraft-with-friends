@@ -7,6 +7,11 @@ import net.mythicpvp.core.punishment.PunishmentTemplate;
 import net.mythicpvp.core.punishment.PunishmentType;
 import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.RankGrant;
+import net.mythicpvp.core.social.FriendLink;
+import net.mythicpvp.core.social.FriendRequest;
+import net.mythicpvp.core.social.MailMessage;
+import net.mythicpvp.core.social.Party;
+import net.mythicpvp.core.social.PartyMember;
 import net.mythicpvp.suite.database.ReducerResult;
 import net.mythicpvp.suite.database.SpacetimeConnection;
 import net.mythicpvp.suite.database.TableEvent;
@@ -15,6 +20,11 @@ import net.mythicpvp.suite.database.schema.MythicSchema;
 import net.mythicpvp.suite.database.schema.PunishmentKind;
 import net.mythicpvp.suite.database.schema.TableNames;
 import net.mythicpvp.suite.database.schema.dto.BlacklistEntryRow;
+import net.mythicpvp.suite.database.schema.dto.FriendRequestRow;
+import net.mythicpvp.suite.database.schema.dto.FriendRow;
+import net.mythicpvp.suite.database.schema.dto.MailRow;
+import net.mythicpvp.suite.database.schema.dto.PartyMemberRow;
+import net.mythicpvp.suite.database.schema.dto.PartyRow;
 import net.mythicpvp.suite.database.schema.dto.PunishmentRow;
 import net.mythicpvp.suite.database.schema.dto.PunishmentTemplateRow;
 import net.mythicpvp.suite.database.schema.dto.RankDefinitionRow;
@@ -192,6 +202,54 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
                 schema.cosmeticGrant(player, cosmeticId, type, source, reference));
     }
 
+    @Override
+    public void friendRequest(@NotNull UUID from, @NotNull UUID to) {
+        observe("friendRequest " + from + " -> " + to, schema.friendRequest(from, to));
+    }
+
+    @Override
+    public void friendAccept(long requestId) {
+        observe("friendAccept " + requestId, schema.friendAccept(requestId));
+    }
+
+    @Override
+    public void friendRemove(@NotNull UUID owner, @NotNull UUID friend) {
+        observe("friendRemove " + owner + " <-> " + friend, schema.friendRemove(owner, friend));
+    }
+
+    @Override
+    public void partyCreate(@NotNull UUID leader) {
+        observe("partyCreate " + leader, schema.partyCreate(leader));
+    }
+
+    @Override
+    public void partyJoin(long partyId, @NotNull UUID player) {
+        observe("partyJoin " + partyId + " " + player, schema.partyJoin(partyId, player));
+    }
+
+    @Override
+    public void partyLeave(long partyId, @NotNull UUID player) {
+        observe("partyLeave " + partyId + " " + player, schema.partyLeave(partyId, player));
+    }
+
+    @Override
+    public void partyDisband(long partyId) {
+        observe("partyDisband " + partyId, schema.partyDisband(partyId));
+    }
+
+    @Override
+    public void mailSend(@NotNull UUID sender, @NotNull UUID recipient,
+                         @NotNull String subject, @NotNull String body,
+                         @NotNull String attachmentsJson) {
+        observe("mailSend " + sender + " -> " + recipient,
+                schema.mailSend(sender, recipient, subject, body, attachmentsJson));
+    }
+
+    @Override
+    public void mailMarkRead(long mailId) {
+        observe("mailMarkRead " + mailId, schema.mailMarkRead(mailId));
+    }
+
     @NotNull
     private static PunishmentKind kindFor(@NotNull PunishmentType type) {
         return switch (type) {
@@ -256,7 +314,22 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         subscribe(TableNames.PUNISHMENT_BLACKLIST, BlacklistEntryRow.class,
                 row -> applyBlacklistRow(sink, row),
                 row -> applyBlacklistRow(sink, row));
-        logger.info("[stdb] hydration subscriptions registered for 5 tables");
+        subscribe(TableNames.FRIENDS, FriendRow.class,
+                row -> sink.applyFriend(toFriendLink(row)),
+                row -> sink.removeFriend(row.id()));
+        subscribe(TableNames.FRIEND_REQUESTS, FriendRequestRow.class,
+                row -> sink.applyFriendRequest(toFriendRequest(row)),
+                row -> sink.removeFriendRequest(row.id()));
+        subscribe(TableNames.PARTIES, PartyRow.class,
+                row -> sink.applyParty(toParty(row)),
+                row -> sink.removeParty(row.id()));
+        subscribe(TableNames.PARTY_MEMBERS, PartyMemberRow.class,
+                row -> sink.applyPartyMember(toPartyMember(row)),
+                row -> sink.removePartyMember(row.id()));
+        subscribe(TableNames.MAIL, MailRow.class,
+                row -> sink.applyMail(toMailMessage(row)),
+                row -> sink.removeMail(row.id()));
+        logger.info("[stdb] hydration subscriptions registered for 10 tables");
     }
 
     private <D> void subscribe(
@@ -396,6 +469,52 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
 
     static long microsToMillis(long micros) {
         return micros == 0L ? 0L : micros / 1_000L;
+    }
+
+    @NotNull
+    static FriendLink toFriendLink(@NotNull FriendRow row) {
+        return new FriendLink(
+                row.id(),
+                UUID.fromString(row.owner_uuid()),
+                UUID.fromString(row.friend_uuid()),
+                microsToMillis(row.added_at()));
+    }
+
+    @NotNull
+    static FriendRequest toFriendRequest(@NotNull FriendRequestRow row) {
+        return new FriendRequest(
+                row.id(),
+                UUID.fromString(row.from_uuid()),
+                UUID.fromString(row.to_uuid()),
+                microsToMillis(row.created_at()));
+    }
+
+    @NotNull
+    static Party toParty(@NotNull PartyRow row) {
+        return new Party(row.id(), UUID.fromString(row.leader_uuid()), microsToMillis(row.created_at()));
+    }
+
+    @NotNull
+    static PartyMember toPartyMember(@NotNull PartyMemberRow row) {
+        return new PartyMember(
+                row.id(),
+                row.party_id(),
+                UUID.fromString(row.player_uuid()),
+                microsToMillis(row.joined_at()));
+    }
+
+    @NotNull
+    static MailMessage toMailMessage(@NotNull MailRow row) {
+        return new MailMessage(
+                row.id(),
+                UUID.fromString(row.recipient_uuid()),
+                UUID.fromString(row.sender_uuid()),
+                row.subject(),
+                row.body(),
+                row.attachments_json(),
+                row.read(),
+                microsToMillis(row.sent_at()),
+                microsToMillis(row.read_at_micros()));
     }
 
     @NotNull

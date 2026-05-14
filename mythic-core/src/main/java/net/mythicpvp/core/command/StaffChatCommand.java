@@ -34,7 +34,7 @@ public abstract class StaffChatCommand extends MythicCommand {
     @Default
     public void execute(@NotNull Player sender, @NotNull String[] words) {
         if (words.length == 0) {
-            sender.sendMessage("Usage: /" + channel.id() + "chat <message…>");
+            sender.sendMessage("Usage: /" + channel.id() + "chat <message...>");
             return;
         }
         String message = String.join(" ", words);
