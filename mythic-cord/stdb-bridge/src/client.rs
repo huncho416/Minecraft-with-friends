@@ -6,7 +6,7 @@
 //! same parameter order so call sites stay statically typed.
 
 use crate::handle::{StdbHandle, StdbResult};
-use crate::schema::{reducer, PunishmentKind, ServerRole, ServerStatus};
+use crate::schema::{reducer, GrantSource, PunishmentCategory, PunishmentKind, ServerRole, ServerStatus};
 use serde_json::{json, Value};
 use uuid::Uuid;
 
@@ -122,25 +122,38 @@ impl MythicStdbClient {
 
     // ── punishments ──────────────────────────────────────────────────
 
+    /// Issue a punishment. Phase 3 signature — denormalizes target/staff
+    /// names plus carries silent / clear-inventory / origin-server flags.
+    #[allow(clippy::too_many_arguments)]
     pub async fn punish_issue(
         &self,
         target: Uuid,
+        target_name: &str,
         staff: Uuid,
+        staff_name: &str,
         kind: PunishmentKind,
         reason: &str,
-        evidence: &str,
+        proof: &str,
         duration_seconds: i64,
+        silent: bool,
+        clear_inventory: bool,
+        server: &str,
     ) -> StdbResult<Value> {
         self.handle
             .call_raw(
                 reducer::PUNISH_ISSUE,
                 json!([
                     target.to_string(),
+                    target_name,
                     staff.to_string(),
+                    staff_name,
                     kind.wire(),
                     reason,
-                    evidence,
+                    proof,
                     duration_seconds,
+                    silent,
+                    clear_inventory,
+                    server,
                 ]),
             )
             .await
@@ -159,6 +172,181 @@ impl MythicStdbClient {
             )
             .await
     }
+
+    pub async fn punish_clear_history(
+        &self,
+        target: Uuid,
+        staff: Uuid,
+    ) -> StdbResult<Value> {
+        self.handle
+            .call_raw(
+                reducer::PUNISH_CLEAR_HISTORY,
+                json!([target.to_string(), staff.to_string()]),
+            )
+            .await
+    }
+
+    // ── templates ───────────────────────────────────────────────────
+
+    pub async fn template_upsert(
+        &self,
+        title: &str,
+        category: PunishmentCategory,
+        duration: &str,
+        information: &str,
+        seeded: bool,
+    ) -> StdbResult<Value> {
+        self.handle
+            .call_raw(
+                reducer::TEMPLATE_UPSERT,
+                json!([title, category.wire(), duration, information, seeded]),
+            )
+            .await
+    }
+
+    pub async fn template_remove(&self, title: &str) -> StdbResult<Value> {
+        self.handle
+            .call_raw(reducer::TEMPLATE_REMOVE, json!([title]))
+            .await
+    }
+
+    // ── blacklist ───────────────────────────────────────────────────
+
+    pub async fn blacklist_add(
+        &self,
+        target: Uuid,
+        target_name: &str,
+        staff: Uuid,
+        staff_name: &str,
+        reason: &str,
+    ) -> StdbResult<Value> {
+        self.handle
+            .call_raw(
+                reducer::BLACKLIST_ADD,
+                json!([
+                    target.to_string(),
+                    target_name,
+                    staff.to_string(),
+                    staff_name,
+                    reason,
+                ]),
+            )
+            .await
+    }
+
+    pub async fn blacklist_revoke(
+        &self,
+        entry_id: u64,
+        staff: Uuid,
+        reason: &str,
+    ) -> StdbResult<Value> {
+        self.handle
+            .call_raw(
+                reducer::BLACKLIST_REVOKE,
+                json!([entry_id, staff.to_string(), reason]),
+            )
+            .await
+    }
+
+    // ── ranks: definitions ──────────────────────────────────────────
+
+    /// Insert-or-update a rank definition. Args mirror the Rust reducer
+    /// signature in `mythic-stdb/src/ranks.rs::rank_define`. The
+    /// permissions list is JSON-encoded by the caller — we don't try to
+    /// type it because the wire format is a single string.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn rank_define(
+        &self,
+        id: &str,
+        display_name: &str,
+        color: &str,
+        dye: &str,
+        prefix: &str,
+        suffix: &str,
+        weight: i32,
+        staff: bool,
+        donator: bool,
+        parent: &str,
+        permissions_json: &str,
+        chat_prefix: &str,
+        chat_format: &str,
+        tab_prefix: &str,
+        tab_format: &str,
+        nametag_prefix: &str,
+        nametag_format: &str,
+        seeded: bool,
+    ) -> StdbResult<Value> {
+        self.handle
+            .call_raw(
+                reducer::RANK_DEFINE,
+                json!([
+                    id, display_name, color, dye, prefix, suffix, weight,
+                    staff, donator, parent, permissions_json,
+                    chat_prefix, chat_format, tab_prefix, tab_format,
+                    nametag_prefix, nametag_format, seeded,
+                ]),
+            )
+            .await
+    }
+
+    pub async fn rank_remove(&self, id: &str) -> StdbResult<Value> {
+        self.handle
+            .call_raw(reducer::RANK_REMOVE, json!([id]))
+            .await
+    }
+
+    // ── ranks: grants ───────────────────────────────────────────────
+
+    #[allow(clippy::too_many_arguments)]
+    pub async fn grant_issue(
+        &self,
+        target: Uuid,
+        target_name: &str,
+        rank_id: &str,
+        executor: Uuid,
+        executor_name: &str,
+        reason: &str,
+        source: GrantSource,
+        duration_seconds: i64,
+    ) -> StdbResult<Value> {
+        self.handle
+            .call_raw(
+                reducer::GRANT_ISSUE,
+                json!([
+                    target.to_string(),
+                    target_name,
+                    rank_id,
+                    executor.to_string(),
+                    executor_name,
+                    reason,
+                    source.wire(),
+                    duration_seconds,
+                ]),
+            )
+            .await
+    }
+
+    pub async fn grant_deactivate(&self, grant_id: u64) -> StdbResult<Value> {
+        self.handle
+            .call_raw(reducer::GRANT_DEACTIVATE, json!([grant_id]))
+            .await
+    }
+
+    pub async fn grant_remove_inactive(&self, grant_id: u64) -> StdbResult<Value> {
+        self.handle
+            .call_raw(reducer::GRANT_REMOVE_INACTIVE, json!([grant_id]))
+            .await
+    }
+
+    pub async fn grant_clear(&self, target: Uuid) -> StdbResult<Value> {
+        self.handle
+            .call_raw(reducer::GRANT_CLEAR, json!([target.to_string()]))
+            .await
+    }
+
+    pub async fn grant_expire(&self) -> StdbResult<Value> {
+        self.handle.call_raw(reducer::GRANT_EXPIRE, json!([])).await
+    }
 }
 
 #[cfg(test)]
@@ -173,8 +361,34 @@ mod tests {
         assert_eq!(ServerRole::Skyblock.wire(), "SKYBLOCK");
         assert_eq!(ServerStatus::Healthy.wire(), "HEALTHY");
         assert_eq!(ServerStatus::Draining.wire(), "DRAINING");
-        assert_eq!(PunishmentKind::PermaBan.wire(), "PERMA_BAN");
+        assert_eq!(PunishmentKind::Ban.wire(), "BAN");
         assert_eq!(PunishmentKind::TempBan.wire(), "TEMP_BAN");
+        assert_eq!(PunishmentKind::TempMute.wire(), "TEMP_MUTE");
+        assert_eq!(PunishmentKind::Blacklist.wire(), "BLACKLIST");
+        assert_eq!(PunishmentCategory::Ban.wire(), "BAN");
+        assert_eq!(GrantSource::Staff.wire(), "STAFF");
+        assert_eq!(GrantSource::Purchase.wire(), "PURCHASE");
+    }
+
+    /// New-in-v2 reducer arg shape — sanity-checks the grant_issue
+    /// positional packaging since that signature has 8 args.
+    #[test]
+    fn grant_issue_args_shape() {
+        let args = json!([
+            "11111111-1111-1111-1111-111111111111",
+            "Notch",
+            "vip",
+            "22222222-2222-2222-2222-222222222222",
+            "Staff",
+            "purchased rank",
+            GrantSource::Purchase.wire(),
+            0i64,
+        ]);
+        let arr = args.as_array().unwrap();
+        assert_eq!(arr.len(), 8);
+        assert_eq!(arr[2].as_str(), Some("vip"));
+        assert_eq!(arr[6].as_str(), Some("PURCHASE"));
+        assert_eq!(arr[7].as_i64(), Some(0));
     }
 
     /// Verifies the JSON shape the driver puts on the wire matches what

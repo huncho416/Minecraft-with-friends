@@ -1,5 +1,7 @@
 package net.mythicpvp.core.rank;
 
+import net.mythicpvp.core.persistence.NoopPersistenceGateway;
+import net.mythicpvp.core.persistence.PersistenceGateway;
 import net.mythicpvp.suite.permission.PermissionManager;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,10 +18,18 @@ public final class GrantService {
     private final Clock clock;
     private final AtomicLong ids = new AtomicLong();
     private final List<RankGrant> grants = new CopyOnWriteArrayList<>();
+    // Optional persistence sink. Defaults to no-op so existing tests stay
+    // green; production wiring sets this to StdbPersistenceGateway in
+    // MythicCorePlugin.onEnable.
+    private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
 
     public GrantService(@NotNull RankService rankService, @NotNull Clock clock) {
         this.rankService = rankService;
         this.clock = clock;
+    }
+
+    public void setPersistence(@NotNull PersistenceGateway persistence) {
+        this.persistence = persistence;
     }
 
     @NotNull
@@ -32,6 +42,7 @@ public final class GrantService {
         RankGrant grant = new RankGrant(ids.incrementAndGet(), targetUuid, targetName, rank.id(), executorUuid, executorName, reason, now, duration.expiresAt(now), true);
         grants.add(grant);
         PermissionManager.getInstance().setPlayerRank(targetUuid, activeRank(targetUuid));
+        persistence.grantIssue(grant);
         return grant;
     }
 
@@ -58,6 +69,7 @@ public final class GrantService {
                 grants.remove(grant);
                 grants.add(new RankGrant(grant.id(), grant.targetUuid(), grant.targetName(), grant.rankId(), grant.executorUuid(), grant.executorName(), grant.reason(), grant.createdAtMillis(), grant.expiresAtMillis(), false));
                 PermissionManager.getInstance().setPlayerRank(grant.targetUuid(), activeRank(grant.targetUuid()));
+                persistence.grantDeactivate(grantId);
                 return true;
             }
         }
@@ -67,7 +79,11 @@ public final class GrantService {
     public boolean removeInactive(long grantId) {
         for (RankGrant grant : grants) {
             if (grant.id() == grantId && !grant.active()) {
-                return grants.remove(grant);
+                boolean removed = grants.remove(grant);
+                if (removed) {
+                    persistence.grantRemoveInactive(grantId);
+                }
+                return removed;
             }
         }
         return false;
@@ -77,7 +93,11 @@ public final class GrantService {
         int before = grants.size();
         grants.removeIf(grant -> grant.targetUuid().equals(targetUuid));
         PermissionManager.getInstance().setPlayerRank(targetUuid, "default");
-        return before - grants.size();
+        int removed = before - grants.size();
+        if (removed > 0) {
+            persistence.grantClear(targetUuid);
+        }
+        return removed;
     }
 
     @NotNull

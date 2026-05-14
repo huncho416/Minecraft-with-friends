@@ -57,6 +57,7 @@ pub mod economy;
 pub mod gameplay;
 pub mod players;
 pub mod punishments;
+pub mod ranks;
 pub mod registry;
 pub mod sessions;
 pub mod social;
@@ -65,7 +66,22 @@ use spacetimedb::{reducer, table, ReducerContext, Table};
 
 /// Bump on every backward-incompatible schema change.
 /// The Java suite reads this at boot and refuses to start on mismatch.
-pub const SCHEMA_VERSION: u32 = 1;
+///
+/// Version history:
+/// - **1**: Initial schema (Phase 2). players, server_registry, sessions,
+///   punishments, punishment_appeals, transactions, cosmetic_grants,
+///   cosmetic_equipped, friends, friend_requests, parties, party_members,
+///   mail, islands, island_members, skills, stats, leaderboards.
+/// - **2**: Phase 3 persistence. Renamed `punishments.evidence` → `proof`;
+///   added `target_name`, `staff_name`, `silent`, `clear_inventory`,
+///   `server` columns to `punishments`; widened `punishment_kind`
+///   (added `BAN`, `TEMP_MUTE`, `BLACKLIST`; renamed `PERMA_BAN` → `BAN`).
+///   New tables: `punishment_templates`, `punishment_blacklist`,
+///   `rank_definitions`, `rank_grants`. New reducers: `punish_clear_history`,
+///   `template_upsert`, `template_remove`, `blacklist_add`, `blacklist_revoke`,
+///   `rank_define`, `rank_remove`, `grant_issue`, `grant_deactivate`,
+///   `grant_remove_inactive`, `grant_clear`, `grant_expire`.
+pub const SCHEMA_VERSION: u32 = 2;
 
 /// Singleton row holding module-wide metadata.
 #[table(name = module_meta, public)]

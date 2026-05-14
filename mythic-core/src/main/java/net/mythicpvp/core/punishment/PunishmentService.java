@@ -1,5 +1,7 @@
 package net.mythicpvp.core.punishment;
 
+import net.mythicpvp.core.persistence.NoopPersistenceGateway;
+import net.mythicpvp.core.persistence.PersistenceGateway;
 import net.mythicpvp.suite.protocol.ProtocolManager;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,17 +17,27 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class PunishmentService {
 
     public static final String CHANNEL = "core:punishment-update";
+    /** Sentinel staff UUID for system-issued pardons (auto-expire, history clear). */
+    public static final UUID SYSTEM_STAFF = new UUID(0L, 0L);
+
     private final ProtocolManager protocolManager;
     private final Clock clock;
     private final AtomicLong ids = new AtomicLong();
     private final List<PunishmentRecord> records = new CopyOnWriteArrayList<>();
     private final List<PunishmentNotice> notices = new CopyOnWriteArrayList<>();
     private final List<PunishmentTemplate> templates = new CopyOnWriteArrayList<>();
+    // Optional persistence sink. Defaults to no-op so existing tests stay
+    // green; production wiring sets this in MythicCorePlugin.onEnable.
+    private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
 
     public PunishmentService(@NotNull ProtocolManager protocolManager, @NotNull Clock clock) {
         this.protocolManager = protocolManager;
         this.clock = clock;
         this.protocolManager.subscribe(CHANNEL, message -> receive(message.deserialize(PunishmentNotice.class)));
+    }
+
+    public void setPersistence(@NotNull PersistenceGateway persistence) {
+        this.persistence = persistence;
     }
 
     @NotNull
@@ -35,14 +47,26 @@ public final class PunishmentService {
         PunishmentRecord record = new PunishmentRecord(ids.incrementAndGet(), request.targetUuid(), request.targetName(), request.staffUuid(), request.staffName(), request.type(), request.reason(), request.proof(), now.toEpochMilli(), expiresAtMillis, request.silent(), request.clearInventory(), false, request.server());
         records.add(record);
         protocolManager.publish(CHANNEL, new PunishmentNotice(record, !request.silent()));
+        persistence.punishIssue(record);
         return record;
     }
 
+    /**
+     * Backward-compatible pardon — used by callers that don't have an
+     * explicit staff context (e.g. /pardon executed by console, auto-
+     * expiry janitors). Routes through {@link #SYSTEM_STAFF}.
+     */
     public boolean pardon(long id) {
+        return pardon(id, SYSTEM_STAFF, "");
+    }
+
+    /** Pardon with an explicit staff context — preferred for staff actions. */
+    public boolean pardon(long id, @NotNull UUID staff, @NotNull String reason) {
         for (PunishmentRecord record : records) {
             if (record.id() == id && !record.pardoned()) {
                 records.remove(record);
                 records.add(new PunishmentRecord(record.id(), record.targetUuid(), record.targetName(), record.staffUuid(), record.staffName(), record.type(), record.reason(), record.proof(), record.createdAtMillis(), record.expiresAtMillis(), record.silent(), record.clearInventory(), true, record.server()));
+                persistence.punishPardon(id, staff, reason);
                 return true;
             }
         }
@@ -50,9 +74,17 @@ public final class PunishmentService {
     }
 
     public int clearHistory(@NotNull UUID targetUuid) {
+        return clearHistory(targetUuid, SYSTEM_STAFF);
+    }
+
+    public int clearHistory(@NotNull UUID targetUuid, @NotNull UUID staff) {
         int before = records.size();
         records.removeIf(record -> record.targetUuid().equals(targetUuid));
-        return before - records.size();
+        int removed = before - records.size();
+        if (removed > 0) {
+            persistence.punishClearHistory(targetUuid, staff);
+        }
+        return removed;
     }
 
     @NotNull
@@ -78,9 +110,26 @@ public final class PunishmentService {
 
     @NotNull
     public PunishmentTemplate addTemplate(@NotNull PunishmentCategory category, @NotNull String duration, @NotNull String title, @NotNull String information) {
+        return addTemplateInternal(category, duration, title, information, false);
+    }
+
+    /**
+     * Bootstrap a template from YAML. Behaviour identical to {@link
+     * #addTemplate(PunishmentCategory, String, String, String)} except
+     * the gateway records the row as {@code seeded=true} so ops can tell
+     * defaults from staff edits.
+     */
+    @NotNull
+    public PunishmentTemplate seedTemplate(@NotNull PunishmentCategory category, @NotNull String duration, @NotNull String title, @NotNull String information) {
+        return addTemplateInternal(category, duration, title, information, true);
+    }
+
+    @NotNull
+    private PunishmentTemplate addTemplateInternal(@NotNull PunishmentCategory category, @NotNull String duration, @NotNull String title, @NotNull String information, boolean seeded) {
         removeTemplate(title);
         PunishmentTemplate template = new PunishmentTemplate(category, duration, title, information);
         templates.add(template);
+        persistence.templateUpsert(template, seeded);
         return template;
     }
 
@@ -90,12 +139,22 @@ public final class PunishmentService {
             return false;
         }
         templates.remove(existing);
-        templates.add(new PunishmentTemplate(category, duration, nextTitle, information));
+        // If the title changed, drop the old STDB row before upserting the new one.
+        if (!normalize(title).equals(normalize(nextTitle))) {
+            persistence.templateRemove(title);
+        }
+        PunishmentTemplate updated = new PunishmentTemplate(category, duration, nextTitle, information);
+        templates.add(updated);
+        persistence.templateUpsert(updated, false);
         return true;
     }
 
     public boolean removeTemplate(@NotNull String title) {
-        return templates.removeIf(template -> normalize(template.title()).equals(normalize(title)));
+        boolean removed = templates.removeIf(template -> normalize(template.title()).equals(normalize(title)));
+        if (removed) {
+            persistence.templateRemove(title);
+        }
+        return removed;
     }
 
     public PunishmentTemplate template(@NotNull String title) {

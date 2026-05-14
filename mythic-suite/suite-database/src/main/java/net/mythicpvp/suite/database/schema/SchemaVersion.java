@@ -16,8 +16,20 @@ import java.util.concurrent.TimeoutException;
  */
 public final class SchemaVersion {
 
-    /** Must equal {@code SCHEMA_VERSION} in {@code mythic-cord/stdb/src/lib.rs}. */
-    public static final int CURRENT = 1;
+    /**
+     * Must equal {@code SCHEMA_VERSION} in {@code mythic-cord/stdb/src/lib.rs}.
+     *
+     * <p>History:
+     * <ul>
+     *   <li><b>1</b> — Phase 2 initial schema.
+     *   <li><b>2</b> — Phase 3 persistence: punishments widened (target/staff
+     *       names, silent, clear_inventory, server, evidence renamed proof);
+     *       new tables {@code punishment_templates}, {@code punishment_blacklist},
+     *       {@code rank_definitions}, {@code rank_grants}; expanded
+     *       punishment kinds (BAN, TEMP_MUTE, BLACKLIST; PERMA_BAN→BAN).
+     * </ul>
+     */
+    public static final int CURRENT = 2;
 
     private SchemaVersion() {}
 

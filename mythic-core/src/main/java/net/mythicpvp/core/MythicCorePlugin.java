@@ -23,6 +23,9 @@ import net.mythicpvp.core.command.TeleportCommand;
 import net.mythicpvp.core.command.TpHereCommand;
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.essentials.CoreEssentialsService;
+import net.mythicpvp.core.persistence.NoopPersistenceGateway;
+import net.mythicpvp.core.persistence.PersistenceGateway;
+import net.mythicpvp.core.persistence.StdbPersistenceGateway;
 import net.mythicpvp.core.punishment.PunishmentCategory;
 import net.mythicpvp.core.punishment.PunishmentMenuService;
 import net.mythicpvp.core.punishment.PunishmentService;
@@ -37,6 +40,9 @@ import net.mythicpvp.suite.command.CommandManager;
 import net.mythicpvp.suite.config.ConfigManager;
 import net.mythicpvp.suite.config.ConfigText;
 import net.mythicpvp.suite.config.MythicConfig;
+import net.mythicpvp.suite.database.DatabaseManager;
+import net.mythicpvp.suite.database.SpacetimeConnection;
+import net.mythicpvp.suite.database.schema.MythicSchema;
 import net.mythicpvp.suite.menu.MenuListener;
 import net.mythicpvp.suite.protocol.ProtocolManager;
 import org.bukkit.configuration.ConfigurationSection;
@@ -61,6 +67,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private ChatPromptService chatPromptService;
     private CoreMessages messages;
     private CoreEssentialsService essentialsService;
+    private PersistenceGateway persistenceGateway;
 
     @Override
     public void onEnable() {
@@ -86,13 +93,19 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         messages = new CoreMessages(new ConfigText(configManager.getOrCreate("messages"), "messages"));
         essentialsService = new CoreEssentialsService(messages);
         commandManager = new CommandManager(this);
+        // Bring up the persistence gateway BEFORE rank/grant/punishment
+        // services so YAML seeding writes through to STDB on first boot.
+        persistenceGateway = createPersistenceGateway();
         rankService = new RankService();
+        rankService.setPersistence(persistenceGateway);
         rankService.load(configManager.getOrCreate("ranks"));
         chatPromptService = new ChatPromptService(this);
         grantService = new GrantService(rankService, Clock.systemUTC());
+        grantService.setPersistence(persistenceGateway);
         grantFlowService = new GrantFlowService(rankService, grantService, chatPromptService);
         ProtocolManager protocolManager = ProtocolManager.getInstance();
         punishmentService = new PunishmentService(protocolManager, Clock.systemUTC());
+        punishmentService.setPersistence(persistenceGateway);
         punishmentMenuService = new PunishmentMenuService(punishmentService, chatPromptService, Clock.systemUTC(), serverIdentity.id());
         seedPunishments(configManager.getOrCreate("punishments"));
         CoreCompletions.register(commandManager, rankService, punishmentService);
@@ -127,6 +140,10 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         if (configManager != null) {
             configManager.saveAll();
         }
+        // Tear down STDB so the plugin can be cleanly re-enabled (Folia
+        // /reload, Pterodactyl restart). disconnectAll is a no-op when
+        // no connection was ever established.
+        DatabaseManager.getInstance().disconnectAll();
     }
 
     @Override
@@ -212,20 +229,52 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         }
         ConfigurationSection section = config.getConfig().getConfigurationSection("punishments.templates");
         if (section == null) {
-            punishmentService.addTemplate(PunishmentCategory.WARN, "permanent", "General Warning", "Used for minor rule reminders.");
-            punishmentService.addTemplate(PunishmentCategory.MUTE, "1d", "Chat Offense #1", "First chat offense.");
-            punishmentService.addTemplate(PunishmentCategory.BAN, "30d", "Cheating #1", "First cheating offense.");
-            punishmentService.addTemplate(PunishmentCategory.BLACKLIST, "permanent", "Network Removal", "Severe network-level punishment.");
+            punishmentService.seedTemplate(PunishmentCategory.WARN, "permanent", "General Warning", "Used for minor rule reminders.");
+            punishmentService.seedTemplate(PunishmentCategory.MUTE, "1d", "Chat Offense #1", "First chat offense.");
+            punishmentService.seedTemplate(PunishmentCategory.BAN, "30d", "Cheating #1", "First cheating offense.");
+            punishmentService.seedTemplate(PunishmentCategory.BLACKLIST, "permanent", "Network Removal", "Severe network-level punishment.");
             return;
         }
         for (String id : section.getKeys(false)) {
             String path = "punishments.templates." + id + ".";
-            punishmentService.addTemplate(
+            punishmentService.seedTemplate(
                     PunishmentCategory.parse(config.getString(path + "category", "WARN")),
                     config.getString(path + "duration", "permanent"),
                     config.getString(path + "title", id),
                     config.getString(path + "information", "")
             );
+        }
+    }
+
+    /**
+     * Best-effort STDB connection. Returns the no-op gateway when:
+     * <ul>
+     *   <li>{@code STDB_URI} env var is unset (single-server / dev runs)
+     *   <li>The STDB connection fails to construct
+     * </ul>
+     * Logs the chosen mode so ops know whether mutations are persisting.
+     */
+    @NotNull
+    private PersistenceGateway createPersistenceGateway() {
+        String uri = System.getenv("STDB_URI");
+        String module = System.getenv().getOrDefault("STDB_MODULE", "mythicpvp");
+        if (uri == null || uri.isBlank()) {
+            getLogger().info("STDB_URI not set — mythic-core running in single-server / no-op persistence mode");
+            return NoopPersistenceGateway.INSTANCE;
+        }
+        try {
+            SpacetimeConnection connection = DatabaseManager.getInstance()
+                    .createConnection("mythic-core", uri, module);
+            // Connect asynchronously; the gateway tolerates calls before
+            // the socket is fully open (writes return failed futures).
+            connection.connect();
+            MythicSchema schema = new MythicSchema(connection);
+            getLogger().info("STDB persistence active: uri=" + uri + " module=" + module);
+            return new StdbPersistenceGateway(getLogger(), schema);
+        } catch (Exception failure) {
+            getLogger().warning("Failed to construct STDB connection (" + failure.getMessage()
+                    + "); falling back to no-op persistence");
+            return NoopPersistenceGateway.INSTANCE;
         }
     }
 }

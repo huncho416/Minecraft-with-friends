@@ -99,32 +99,96 @@ class MythicSchemaTest {
 
     @Test
     void punishIssueArgsCarryEnumWireValue() {
+        // Schema v2: positional args are (target_uuid, target_name, staff_uuid,
+        // staff_name, kind, reason, proof, duration, silent, clear_inv, server).
         JsonArray args = encodeArgs(
                 ReducerNames.PUNISH_ISSUE,
                 MythicSchema.hyphenated(PLAYER),
+                "Notch",
                 MythicSchema.hyphenated(STAFF),
+                "Admin",
                 PunishmentKind.TEMP_BAN.wireValue(),
-                "exploit", "https://evidence", 3600L);
-        assertEquals("TEMP_BAN", args.get(2).getAsString());
-        assertEquals(3600L, args.get(5).getAsLong());
+                "exploit", "https://evidence", 3600L,
+                false, true, "hub-1");
+        assertEquals(11, args.size());
+        assertEquals("TEMP_BAN", args.get(4).getAsString());
+        assertEquals(3600L, args.get(7).getAsLong());
+        assertTrue(args.get(9).getAsBoolean(), "clear_inventory");
+        assertEquals("hub-1", args.get(10).getAsString());
+    }
+
+    @Test
+    void grantIssueArgsShape() {
+        JsonArray args = encodeArgs(
+                ReducerNames.GRANT_ISSUE,
+                MythicSchema.hyphenated(PLAYER),
+                "Notch",
+                "vip",
+                MythicSchema.hyphenated(STAFF),
+                "Admin",
+                "purchased rank",
+                GrantSource.PURCHASE.wireValue(),
+                0L);
+        assertEquals(8, args.size());
+        assertEquals("vip", args.get(2).getAsString());
+        assertEquals("PURCHASE", args.get(6).getAsString());
+        assertEquals(0L, args.get(7).getAsLong(), "0 = permanent");
+    }
+
+    @Test
+    void rankDefineArgsShape() {
+        JsonArray args = encodeArgs(
+                ReducerNames.RANK_DEFINE,
+                "vip", "VIP", "#FFFF00", "YELLOW_DYE", "[VIP]", "",
+                100, false, true, "default", "[]",
+                "&e[VIP] ", "%chat_prefix%%player%&7: &f%message%",
+                "&e[VIP] ", "%tab_prefix%%player%",
+                "&e[VIP] ", "%nametag_prefix%%player%",
+                false);
+        assertEquals(18, args.size());
+        assertEquals("vip", args.get(0).getAsString());
+        assertEquals(100, args.get(6).getAsInt());
+        assertEquals(false, args.get(17).getAsBoolean());
+    }
+
+    @Test
+    void templateUpsertRejectsEmptyTitle() {
+        MythicSchema schema = new MythicSchema(conn);
+        assertThrows(IllegalArgumentException.class, () ->
+                schema.templateUpsert("", PunishmentCategory.WARN, "1d", "info", false));
+    }
+
+    @Test
+    void rankDefineRejectsEmptyId() {
+        MythicSchema schema = new MythicSchema(conn);
+        assertThrows(IllegalArgumentException.class, () ->
+                schema.rankDefine("", "Display", "#000", "DYE", "", "", 0, false, false,
+                        "", "[]", "", "", "", "", "", "", false));
     }
 
     @Test
     void allEnumWireValuesMatchRustConstants() {
         // Spot-check parity: a typo in either side breaks the round-trip.
         assertEquals("COINS", StdbCurrency.COINS.wireValue());
-        assertEquals("PERMA_BAN", PunishmentKind.PERMA_BAN.wireValue());
+        assertEquals("BAN", PunishmentKind.BAN.wireValue());
+        assertEquals("TEMP_MUTE", PunishmentKind.TEMP_MUTE.wireValue());
+        assertEquals("BLACKLIST", PunishmentKind.BLACKLIST.wireValue());
         assertEquals("SKYBLOCK", ServerRole.SKYBLOCK.wireValue());
         assertEquals("HEALTHY", ServerStatus.HEALTHY.wireValue());
         assertEquals("CHAT_TAG", StdbCosmeticType.CHAT_TAG.wireValue());
+        assertEquals("BAN", PunishmentCategory.BAN.wireValue());
+        assertEquals("STAFF", GrantSource.STAFF.wireValue());
 
         assertEquals(StdbCurrency.GEMS, StdbCurrency.fromWire("GEMS"));
         assertEquals(PunishmentKind.MUTE, PunishmentKind.fromWire("MUTE"));
         assertEquals(ServerRole.HUB, ServerRole.fromWire("HUB"));
         assertEquals(ServerStatus.DRAINING, ServerStatus.fromWire("DRAINING"));
         assertEquals(StdbCosmeticType.HAT, StdbCosmeticType.fromWire("HAT"));
+        assertEquals(PunishmentCategory.BLACKLIST, PunishmentCategory.fromWire("BLACKLIST"));
+        assertEquals(GrantSource.PROMOTION, GrantSource.fromWire("PROMOTION"));
 
         assertEquals(null, StdbCurrency.fromWire("BITCOIN"));
+        assertEquals(null, PunishmentKind.fromWire("PERMA_BAN"), "PERMA_BAN was renamed in v2");
     }
 
     @Test
@@ -143,7 +207,7 @@ class MythicSchemaTest {
     @Test
     void schemaVersionConstantMatchesCurrentWireExpectation() {
         // Bump in lockstep with mythic-cord/stdb/src/lib.rs::SCHEMA_VERSION.
-        assertEquals(1, SchemaVersion.CURRENT);
+        assertEquals(2, SchemaVersion.CURRENT);
     }
 
     /**

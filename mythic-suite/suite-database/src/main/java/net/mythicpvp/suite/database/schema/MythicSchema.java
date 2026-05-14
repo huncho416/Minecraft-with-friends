@@ -117,18 +117,30 @@ public final class MythicSchema {
 
     // ── punishments ──────────────────────────────────────────────────
 
+    /**
+     * Issue a punishment. Schema v2 signature — denormalized target/staff
+     * usernames, plus silent / clear-inventory / origin-server flags.
+     */
     @NotNull
     public CompletableFuture<ReducerResult> punishIssue(
             @NotNull UUID target,
+            @NotNull String targetName,
             @NotNull UUID staff,
+            @NotNull String staffName,
             @NotNull PunishmentKind kind,
             @NotNull String reason,
-            @NotNull String evidence,
-            long durationSeconds) {
+            @NotNull String proof,
+            long durationSeconds,
+            boolean silent,
+            boolean clearInventory,
+            @NotNull String server) {
         return call(
                 ReducerNames.PUNISH_ISSUE,
-                hyphenated(target), hyphenated(staff), kind.wireValue(),
-                reason, evidence, durationSeconds);
+                hyphenated(target), targetName,
+                hyphenated(staff), staffName,
+                kind.wireValue(),
+                reason, proof, durationSeconds,
+                silent, clearInventory, server);
     }
 
     @NotNull
@@ -140,6 +152,133 @@ public final class MythicSchema {
     @NotNull
     public CompletableFuture<ReducerResult> punishExpire() {
         return call(ReducerNames.PUNISH_EXPIRE);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> punishClearHistory(@NotNull UUID target, @NotNull UUID staff) {
+        return call(ReducerNames.PUNISH_CLEAR_HISTORY, hyphenated(target), hyphenated(staff));
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> templateUpsert(
+            @NotNull String title,
+            @NotNull PunishmentCategory category,
+            @NotNull String duration,
+            @NotNull String information,
+            boolean seeded) {
+        if (title.isEmpty()) {
+            throw new IllegalArgumentException("template title required");
+        }
+        return call(
+                ReducerNames.TEMPLATE_UPSERT,
+                title, category.wireValue(), duration, information, seeded);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> templateRemove(@NotNull String title) {
+        return call(ReducerNames.TEMPLATE_REMOVE, title);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> blacklistAdd(
+            @NotNull UUID target,
+            @NotNull String targetName,
+            @NotNull UUID staff,
+            @NotNull String staffName,
+            @NotNull String reason) {
+        return call(
+                ReducerNames.BLACKLIST_ADD,
+                hyphenated(target), targetName,
+                hyphenated(staff), staffName, reason);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> blacklistRevoke(
+            long entryId, @NotNull UUID staff, @NotNull String reason) {
+        return call(ReducerNames.BLACKLIST_REVOKE, entryId, hyphenated(staff), reason);
+    }
+
+    // ── ranks: definitions ──────────────────────────────────────────
+
+    /**
+     * Insert-or-update a rank definition. Args mirror the Rust reducer
+     * signature in {@code mythic-stdb/src/ranks.rs::rank_define}.
+     * {@code permissionsJson} is a serialized JSON array string (the
+     * caller does the encoding so this method stays type-stable).
+     */
+    @NotNull
+    public CompletableFuture<ReducerResult> rankDefine(
+            @NotNull String id,
+            @NotNull String displayName,
+            @NotNull String color,
+            @NotNull String dye,
+            @NotNull String prefix,
+            @NotNull String suffix,
+            int weight,
+            boolean staff,
+            boolean donator,
+            @NotNull String parent,
+            @NotNull String permissionsJson,
+            @NotNull String chatPrefix,
+            @NotNull String chatFormat,
+            @NotNull String tabPrefix,
+            @NotNull String tabFormat,
+            @NotNull String nametagPrefix,
+            @NotNull String nametagFormat,
+            boolean seeded) {
+        if (id.isEmpty()) {
+            throw new IllegalArgumentException("rank id required");
+        }
+        return call(
+                ReducerNames.RANK_DEFINE,
+                id, displayName, color, dye, prefix, suffix, weight,
+                staff, donator, parent, permissionsJson,
+                chatPrefix, chatFormat, tabPrefix, tabFormat,
+                nametagPrefix, nametagFormat, seeded);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> rankRemove(@NotNull String id) {
+        return call(ReducerNames.RANK_REMOVE, id);
+    }
+
+    // ── ranks: grants ───────────────────────────────────────────────
+
+    @NotNull
+    public CompletableFuture<ReducerResult> grantIssue(
+            @NotNull UUID target,
+            @NotNull String targetName,
+            @NotNull String rankId,
+            @NotNull UUID executor,
+            @NotNull String executorName,
+            @NotNull String reason,
+            @NotNull GrantSource source,
+            long durationSeconds) {
+        return call(
+                ReducerNames.GRANT_ISSUE,
+                hyphenated(target), targetName, rankId,
+                hyphenated(executor), executorName, reason,
+                source.wireValue(), durationSeconds);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> grantDeactivate(long grantId) {
+        return call(ReducerNames.GRANT_DEACTIVATE, grantId);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> grantRemoveInactive(long grantId) {
+        return call(ReducerNames.GRANT_REMOVE_INACTIVE, grantId);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> grantClear(@NotNull UUID target) {
+        return call(ReducerNames.GRANT_CLEAR, hyphenated(target));
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> grantExpire() {
+        return call(ReducerNames.GRANT_EXPIRE);
     }
 
     @NotNull

@@ -582,7 +582,7 @@ erDiagram
 
 | Module | Path | Notes |
 |---|---|---|
-| **STDB schema** | [`mythic-cord/stdb/`](mythic-cord/stdb/) | 9 modules, 24 tables, 31 reducers, `SCHEMA_VERSION=1` |
+| **STDB schema** | [`mythic-cord/stdb/`](mythic-cord/stdb/) | 10 modules, 28 tables, 43 reducers, `SCHEMA_VERSION=2` (Phase 3 added rank_definitions, rank_grants, punishment_templates, punishment_blacklist; widened punishments) |
 | **Java mirror** | [`mythic-suite/suite-database/schema/`](mythic-suite/suite-database/src/main/java/net/mythicpvp/suite/database/schema/) | 28 files (5 enums, 18 DTO records, `MythicSchema` typed client, `SchemaVersion` boot check) — **17 new tests, all green** |
 | **Rust bridge** | [`mythic-cord/stdb-bridge/`](mythic-cord/stdb-bridge/) | Driver thread + `StdbHandle` + `MythicStdbClient` (typed reducer wrappers) |
 | **Routing plugin** | [`mythic-cord/plugin-routing/`](mythic-cord/plugin-routing/) | `pick_shard` (mirrors STDB pure fn), `RegistryView`, heartbeat task, Infrarust event hooks (gated by `with-infrarust` feature) |
@@ -628,6 +628,7 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 | `mythic-core`: Maven module, plugin bootstrap, command API vararg support, default YAML resources | Dev A | ✅ |
 | `mythic-core`: server identity, lifecycle, service registry, Folia-safe scheduler wiring, shutdown cleanup | Dev A | 🚧 |
 | `mythic-core`: ranks, rank colors, prefixes, suffixes, permission inheritance, cosmetic display integration | Dev A | 🚧 |
+| `mythic-core`: STDB persistence layer — schema v2 tables/reducers + `PersistenceGateway` wiring for ranks, grants, punishments, templates, blacklist | Dev A | ✅ |
 | `mythic-core`: command blocker coverage for all core commands and permission-hidden tab completion | Dev A | 🚧 |
 | `mythic-core`: essentials commands `/gmc`, `/gms`, `/gamemode`, `/tp`, `/tphere`, `/help`, `/discord` | Dev A | ✅ |
 | `mythic-core`: staff chats for staff, builder, management, admin, owner with cross-server protocol delivery | Dev A | 🚧 |
@@ -655,8 +656,10 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 - ✅ Punishment template admin commands exist for add, edit, and remove with live template completions and YAML-backed default seed templates.
 - ✅ Initial essentials command implementation exists for `/gmc`, `/gms`, `/gamemode`, `/tp`, `/tphere`, `/help`, and `/discord`, backed by YAML-configurable response text.
 - ✅ Essentials completions include gamemode values plus permission-aware target-player completions for gamemode and teleport-other flows.
-- 🚧 Rank/grant database persistence, YAML-backed menu text, complete rank editor menus, and SpacetimeDB schema/reducer additions remain pending.
-- 🚧 Punishment database persistence, full YAML-backed menu text, blacklist enforcement, and complete command parsing for quoted multi-word template titles remain pending.
+- ✅ **Persistence layer** — `mythic-stdb` schema bumped to v2 with new `rank_definitions`, `rank_grants`, `punishment_templates`, `punishment_blacklist` tables; `punishments` widened with `target_name`, `staff_name`, `silent`, `clear_inventory`, `server`, and `proof` (renamed from `evidence`); 12 new reducers (`rank_define`, `rank_remove`, `grant_issue`, `grant_deactivate`, `grant_remove_inactive`, `grant_clear`, `grant_expire`, `template_upsert`, `template_remove`, `blacklist_add`, `blacklist_revoke`, `punish_clear_history`). `RankService` / `GrantService` / `PunishmentService` route every mutation through a `PersistenceGateway` which forwards to STDB in production and is a no-op in tests. Java mirror (`MythicSchema`, DTOs, enums) updated in lockstep; both sides assert `SCHEMA_VERSION = 2` at boot.
+- 🚧 Rank/grant YAML-backed menu text and complete rank editor menus remain pending.
+- 🚧 Punishment full YAML-backed menu text, blacklist enforcement at login/grant time, and complete command parsing for quoted multi-word template titles remain pending.
+- 🚧 STDB → mythic-core hydration on boot (subscribe to tables, repopulate in-memory state) is the next persistence step — currently writes are persisted but reads are still in-memory only; cross-server view will land when subscriptions are wired.
 - 🚧 Essentials command coverage still needs broader aliases, command audit logging, and deeper Folia teleport scheduling before the full core essentials suite is complete.
 
 #### Command Completion Requirements

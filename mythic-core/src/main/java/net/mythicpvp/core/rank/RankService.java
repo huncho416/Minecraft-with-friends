@@ -1,5 +1,7 @@
 package net.mythicpvp.core.rank;
 
+import net.mythicpvp.core.persistence.NoopPersistenceGateway;
+import net.mythicpvp.core.persistence.PersistenceGateway;
 import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.permission.PermissionManager;
 import net.mythicpvp.suite.permission.Rank;
@@ -18,8 +20,27 @@ import java.util.Map;
 public final class RankService {
 
     private final Map<String, CoreRank> ranks = new LinkedHashMap<>();
+    // Optional persistence sink. Defaults to no-op so existing tests stay
+    // green; production wiring sets this in MythicCorePlugin.onEnable.
+    // `seedingFromYaml` distinguishes the YAML seed path (mark seeded=true
+    // in STDB) from runtime edits (seeded=false).
+    private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
+    private boolean seedingFromYaml;
+
+    public void setPersistence(@NotNull PersistenceGateway persistence) {
+        this.persistence = persistence;
+    }
 
     public void load(@NotNull MythicConfig config) {
+        seedingFromYaml = true;
+        try {
+            doLoad(config);
+        } finally {
+            seedingFromYaml = false;
+        }
+    }
+
+    private void doLoad(@NotNull MythicConfig config) {
         ranks.clear();
         ConfigurationSection section = config.getConfig().getConfigurationSection("ranks");
         if (section == null) {
@@ -58,6 +79,7 @@ public final class RankService {
     public void register(@NotNull CoreRank rank) {
         ranks.put(rank.id(), rank);
         PermissionManager.getInstance().registerRank(new Rank(rank.id(), rank.prefix(), rank.color(), rank.weight(), SetCopy.copy(rank.permissions()), rank.parent().isBlank() ? null : rank.parent()));
+        persistence.rankDefine(rank, seedingFromYaml);
     }
 
     public boolean setField(@NotNull String id, @NotNull String field, @NotNull String value) {

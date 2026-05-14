@@ -24,6 +24,12 @@ public final class TableNames {
     // punishments.rs
     public static final String PUNISHMENTS = "punishments";
     public static final String PUNISHMENT_APPEALS = "punishment_appeals";
+    public static final String PUNISHMENT_TEMPLATES = "punishment_templates";
+    public static final String PUNISHMENT_BLACKLIST = "punishment_blacklist";
+
+    // ranks.rs
+    public static final String RANK_DEFINITIONS = "rank_definitions";
+    public static final String RANK_GRANTS = "rank_grants";
 
     // economy.rs
     public static final String TRANSACTIONS = "transactions";

@@ -30,8 +30,22 @@ public final class ReducerNames {
     public static final String PUNISH_ISSUE = "punish_issue";
     public static final String PUNISH_PARDON = "punish_pardon";
     public static final String PUNISH_EXPIRE = "punish_expire";
+    public static final String PUNISH_CLEAR_HISTORY = "punish_clear_history";
+    public static final String TEMPLATE_UPSERT = "template_upsert";
+    public static final String TEMPLATE_REMOVE = "template_remove";
+    public static final String BLACKLIST_ADD = "blacklist_add";
+    public static final String BLACKLIST_REVOKE = "blacklist_revoke";
     public static final String APPEAL_OPEN = "appeal_open";
     public static final String APPEAL_REVIEW = "appeal_review";
+
+    // ranks.rs
+    public static final String RANK_DEFINE = "rank_define";
+    public static final String RANK_REMOVE = "rank_remove";
+    public static final String GRANT_ISSUE = "grant_issue";
+    public static final String GRANT_DEACTIVATE = "grant_deactivate";
+    public static final String GRANT_REMOVE_INACTIVE = "grant_remove_inactive";
+    public static final String GRANT_CLEAR = "grant_clear";
+    public static final String GRANT_EXPIRE = "grant_expire";
 
     // economy.rs
     public static final String ECONOMY_ADJUST = "economy_adjust";

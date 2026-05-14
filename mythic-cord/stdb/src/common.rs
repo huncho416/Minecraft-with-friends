@@ -40,19 +40,44 @@ pub mod currency {
     }
 }
 
-/// Punishment kinds. String-typed for forward-compat with new categories.
+/// Punishment kinds. Mirrors mythic-core's `PunishmentType` enum.
+/// String-typed for forward-compat with new categories.
 pub mod punishment_kind {
     pub const WARN: &str = "WARN";
     pub const MUTE: &str = "MUTE";
+    pub const TEMP_MUTE: &str = "TEMP_MUTE";
     pub const KICK: &str = "KICK";
+    pub const BAN: &str = "BAN";
     pub const TEMP_BAN: &str = "TEMP_BAN";
-    pub const PERMA_BAN: &str = "PERMA_BAN";
+    pub const BLACKLIST: &str = "BLACKLIST";
 
-    pub const ALL: &[&str] = &[WARN, MUTE, KICK, TEMP_BAN, PERMA_BAN];
+    pub const ALL: &[&str] = &[WARN, MUTE, TEMP_MUTE, KICK, BAN, TEMP_BAN, BLACKLIST];
 
     pub fn is_valid(k: &str) -> bool {
         ALL.contains(&k)
     }
+}
+
+/// Punishment template categories. Mirrors mythic-core's `PunishmentCategory`.
+pub mod punishment_category {
+    pub const WARN: &str = "WARN";
+    pub const MUTE: &str = "MUTE";
+    pub const BAN: &str = "BAN";
+    pub const BLACKLIST: &str = "BLACKLIST";
+
+    pub const ALL: &[&str] = &[WARN, MUTE, BAN, BLACKLIST];
+
+    pub fn is_valid(c: &str) -> bool {
+        ALL.contains(&c)
+    }
+}
+
+/// Rank-grant source tags — where the grant came from.
+pub mod grant_source {
+    pub const STAFF: &str = "STAFF";
+    pub const PURCHASE: &str = "PURCHASE";
+    pub const PROMOTION: &str = "PROMOTION";
+    pub const SYSTEM: &str = "SYSTEM";
 }
 
 /// Server-role tags for [`crate::registry`].

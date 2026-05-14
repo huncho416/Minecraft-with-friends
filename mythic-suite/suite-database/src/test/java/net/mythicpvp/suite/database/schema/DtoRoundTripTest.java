@@ -51,21 +51,29 @@ class DtoRoundTripTest {
         String json = "{"
                 + "\"id\":7,"
                 + "\"target_uuid\":\"11111111-1111-1111-1111-111111111111\","
+                + "\"target_name\":\"Notch\","
                 + "\"staff_uuid\":\"22222222-2222-2222-2222-222222222222\","
-                + "\"kind\":\"PERMA_BAN\","
+                + "\"staff_name\":\"Admin\","
+                + "\"kind\":\"BAN\","
                 + "\"reason\":\"exploit\","
-                + "\"evidence\":\"\","
+                + "\"proof\":\"\","
                 + "\"issued_at\":100,"
                 + "\"expires_at_micros\":0,"
                 + "\"active\":true,"
+                + "\"silent\":false,"
+                + "\"clear_inventory\":true,"
+                + "\"server\":\"hub-1\","
                 + "\"pardoned_by\":\"\","
                 + "\"pardoned_at_micros\":0,"
                 + "\"pardon_reason\":\"\""
                 + "}";
         PunishmentRow row = gson.fromJson(json, PunishmentRow.class);
-        assertEquals(PunishmentKind.PERMA_BAN, PunishmentKind.fromWire(row.kind()));
+        assertEquals(PunishmentKind.BAN, PunishmentKind.fromWire(row.kind()));
         assertEquals(0L, row.expires_at_micros(), "0 is the sentinel for 'no expiry'");
         assertTrue(row.active());
+        assertEquals("Notch", row.target_name());
+        assertTrue(row.clear_inventory());
+        assertEquals("hub-1", row.server());
     }
 
     @Test
