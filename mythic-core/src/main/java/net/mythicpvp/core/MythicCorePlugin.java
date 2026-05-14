@@ -28,12 +28,12 @@ import net.mythicpvp.core.display.DisplayService;
 import net.mythicpvp.core.display.PlayerSessionListener;
 import net.mythicpvp.core.essentials.CoreEssentialsService;
 import net.mythicpvp.core.persistence.CoreHydrationSink;
-import net.mythicpvp.core.persistence.HydrationSink;
 import net.mythicpvp.core.persistence.MainThreadHydrationSink;
 import net.mythicpvp.core.persistence.NoopPersistenceGateway;
 import net.mythicpvp.core.persistence.PersistenceGateway;
 import net.mythicpvp.core.persistence.StdbPersistenceGateway;
 import net.mythicpvp.core.punishment.PunishmentCategory;
+import net.mythicpvp.core.punishment.PunishmentLoginGuard;
 import net.mythicpvp.core.punishment.PunishmentMenuService;
 import net.mythicpvp.core.punishment.PunishmentService;
 import net.mythicpvp.core.prompt.ChatPromptService;
@@ -76,6 +76,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private CoreEssentialsService essentialsService;
     private PersistenceGateway persistenceGateway;
     private DisplayService displayService;
+    private CoreHydrationSink hydrationSink;
 
     @Override
     public void onEnable() {
@@ -97,6 +98,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         saveResourceIfMissing("tablist.yml");
         saveResourceIfMissing("nametag.yml");
         saveResourceIfMissing("ranks.yml");
+        saveResourceIfMissing("command-blocker.yml");
         serverIdentity = ServerIdentity.fromEnvironment();
         configManager = new ConfigManager(this);
         messages = new CoreMessages(new ConfigText(configManager.getOrCreate("messages"), "messages"));
@@ -122,8 +124,14 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         // CoreHydrationSink. Wrapped in MainThreadHydrationSink so the
         // PermissionManager + Bukkit-side state stays main-thread-safe.
         // No-op when the gateway is the noop fallback (single-server).
-        HydrationSink coreSink = new CoreHydrationSink(getLogger(), rankService, grantService, punishmentService);
-        persistenceGateway.hydrate(new MainThreadHydrationSink(this, coreSink));
+        hydrationSink = new CoreHydrationSink(getLogger(), rankService, grantService, punishmentService);
+        persistenceGateway.hydrate(new MainThreadHydrationSink(this, hydrationSink));
+        // Login enforcement uses the hydrated blacklist + active
+        // punishments. Registered ASAP so the first connecting player
+        // sees the right answer (subscriptions deliver snapshot rows
+        // synchronously via service_completed_successfully ordering).
+        getServer().getPluginManager().registerEvents(
+                new PunishmentLoginGuard(punishmentService, hydrationSink, messages), this);
         // Display tier — pushes tab/scoreboard/nametag through the suite
         // managers, sourcing rank state from RankService/GrantService.
         // Wired AFTER rank/grant services exist; refresh callbacks let

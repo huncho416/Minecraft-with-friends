@@ -1,0 +1,76 @@
+# Network-wide command blocker for `mythic-core`.
+#
+# - `blocked-commands` are hidden entirely from `/` tab-complete and
+#   reject execution with `messages.blocked`.
+# - `required-permissions` gates a command behind a permission node.
+#   Players without the node can't see or execute it.
+# - Bypass: `bypass-permission` skips both checks (e.g. owners).
+#
+# Reload at runtime via `/mythic reload` or by editing this file and
+# restarting. The blocker fires on PlayerCommandPreprocess (execute),
+# PlayerCommandSend (tab list filtering), and TabCompleteEvent.
+
+enabled: true
+hide-no-permission: true
+bypass-permission: mythic.commandblocker.bypass
+
+messages:
+  blocked: "&#FF00F8✘ &#FFFFFFUnknown command."
+
+# Block server fingerprinting and noisy info commands. Most of these
+# leak plugin identity, server software, or player data we don't want
+# casual users to see.
+blocked-commands:
+  - "pl"
+  - "plugins"
+  - "bukkit:pl"
+  - "bukkit:plugins"
+  - "?"
+  - "help"
+  - "bukkit:?"
+  - "bukkit:help"
+  - "minecraft:help"
+  - "version"
+  - "ver"
+  - "bukkit:version"
+  - "bukkit:ver"
+  - "icanhasbukkit"
+  - "about"
+  - "tps"
+  - "mem"
+
+# Permission gates for staff-only commands. Ops bypass via the bypass
+# permission. Each entry is `<command-with-namespace?>: <permission>`.
+required-permissions:
+  # Staff diagnostics (visible to admins only).
+  pl: "mythic.admin.commands.plugins"
+  plugins: "mythic.admin.commands.plugins"
+  "bukkit:pl": "mythic.admin.commands.plugins"
+  "bukkit:plugins": "mythic.admin.commands.plugins"
+  "?": "mythic.admin.commands.help"
+  help: "mythic.admin.commands.help"
+  "bukkit:?": "mythic.admin.commands.help"
+  "bukkit:help": "mythic.admin.commands.help"
+  "minecraft:help": "mythic.admin.commands.help"
+  version: "mythic.admin.commands.version"
+  ver: "mythic.admin.commands.version"
+  "bukkit:version": "mythic.admin.commands.version"
+  "bukkit:ver": "mythic.admin.commands.version"
+  tps: "mythic.admin.commands.tps"
+  mem: "mythic.admin.commands.tps"
+
+  # mythic-core staff commands. Per-command permissions match the
+  # @CommandPermission annotations on each MythicCommand subclass.
+  grant: "mythic.core.grant"
+  grants: "mythic.core.grant.history"
+  cgrant: "mythic.core.grant"
+  cleargrants: "mythic.core.grant.clear"
+  rankeditor: "mythic.core.rank.editor"
+  punish: "mythic.core.punish"
+  punishments: "mythic.core.punish.handbook"
+  history: "mythic.core.punish.history"
+  clearpunishments: "mythic.core.punish.clear"
+  punishmentadd: "mythic.core.punish.template"
+  punishmentedit: "mythic.core.punish.template"
+  punishmentremove: "mythic.core.punish.template"
+  chat: "mythic.core.chat"

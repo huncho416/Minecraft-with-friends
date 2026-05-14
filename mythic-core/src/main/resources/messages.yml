@@ -26,6 +26,8 @@ messages:
     silent-executed: "&#FF00F8✔ &#FFFFFFSilent %type% issued for %target%."
     broadcast: "&#FF00F8Punishment &8» &#FFFFFF%target% was punished for %reason%."
     history-empty: "&#FF00F8✘ &#FFFFFFNo punishment history found for %target%."
+    login-banned: "&#FF00F8✘ &#FFFFFFYou are banned: %reason% (%expiry%)."
+    login-blacklisted: "&#FF00F8✘ &#FFFFFFYou are blacklisted from this network."
   chat-control:
     muted: "&#FF00F8Chat &8» &#FFFFFFChat has been muted."
     unmuted: "&#FF00F8Chat &8» &#FFFFFFChat has been unmuted."
