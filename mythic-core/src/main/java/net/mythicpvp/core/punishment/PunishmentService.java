@@ -87,6 +87,43 @@ public final class PunishmentService {
         return removed;
     }
 
+    /**
+     * Insert-or-replace a punishment record by id without firing the
+     * persistence gateway. Used by the STDB hydration path; calling
+     * {@link #punish} would re-mint an id and re-broadcast the notice.
+     *
+     * <p>Also bumps the auto-inc id generator ahead of any observed id
+     * so future {@link #punish} calls don't collide with STDB-assigned ids.
+     */
+    public void applyRecord(@NotNull PunishmentRecord record) {
+        records.removeIf(existing -> existing.id() == record.id());
+        records.add(record);
+        long observed = record.id();
+        long current = ids.get();
+        if (observed > current) {
+            ids.compareAndSet(current, observed);
+        }
+    }
+
+    /** Remove a punishment record by id without firing the gateway. */
+    public void removeRecord(long recordId) {
+        records.removeIf(r -> r.id() == recordId);
+    }
+
+    /**
+     * Insert-or-replace a template by title without firing the gateway.
+     * Used by hydration; {@link #addTemplate} would echo back to STDB.
+     */
+    public void applyTemplateRow(@NotNull PunishmentTemplate template) {
+        templates.removeIf(t -> normalize(t.title()).equals(normalize(template.title())));
+        templates.add(template);
+    }
+
+    /** Remove a template by title without firing the gateway. */
+    public void removeTemplateRow(@NotNull String title) {
+        templates.removeIf(t -> normalize(t.title()).equals(normalize(title)));
+    }
+
     @NotNull
     public List<PunishmentRecord> history(@NotNull UUID targetUuid) {
         return records.stream()

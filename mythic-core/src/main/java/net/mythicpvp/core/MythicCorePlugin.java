@@ -23,6 +23,9 @@ import net.mythicpvp.core.command.TeleportCommand;
 import net.mythicpvp.core.command.TpHereCommand;
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.essentials.CoreEssentialsService;
+import net.mythicpvp.core.persistence.CoreHydrationSink;
+import net.mythicpvp.core.persistence.HydrationSink;
+import net.mythicpvp.core.persistence.MainThreadHydrationSink;
 import net.mythicpvp.core.persistence.NoopPersistenceGateway;
 import net.mythicpvp.core.persistence.PersistenceGateway;
 import net.mythicpvp.core.persistence.StdbPersistenceGateway;
@@ -108,6 +111,13 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         punishmentService.setPersistence(persistenceGateway);
         punishmentMenuService = new PunishmentMenuService(punishmentService, chatPromptService, Clock.systemUTC(), serverIdentity.id());
         seedPunishments(configManager.getOrCreate("punishments"));
+        // Open subscriptions to every Phase 3 table. Snapshot rows arrive
+        // asynchronously and fold into the in-memory services via the
+        // CoreHydrationSink. Wrapped in MainThreadHydrationSink so the
+        // PermissionManager + Bukkit-side state stays main-thread-safe.
+        // No-op when the gateway is the noop fallback (single-server).
+        HydrationSink coreSink = new CoreHydrationSink(getLogger(), rankService, grantService, punishmentService);
+        persistenceGateway.hydrate(new MainThreadHydrationSink(this, coreSink));
         CoreCompletions.register(commandManager, rankService, punishmentService);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(chatPromptService, this);
@@ -270,7 +280,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
             connection.connect();
             MythicSchema schema = new MythicSchema(connection);
             getLogger().info("STDB persistence active: uri=" + uri + " module=" + module);
-            return new StdbPersistenceGateway(getLogger(), schema);
+            return new StdbPersistenceGateway(getLogger(), schema, connection);
         } catch (Exception failure) {
             getLogger().warning("Failed to construct STDB connection (" + failure.getMessage()
                     + "); falling back to no-op persistence");

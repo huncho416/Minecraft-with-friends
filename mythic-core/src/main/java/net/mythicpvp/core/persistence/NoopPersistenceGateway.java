@@ -36,4 +36,5 @@ public final class NoopPersistenceGateway implements PersistenceGateway {
                                        @NotNull UUID staff, @NotNull String staffName,
                                        @NotNull String reason) {}
     @Override public void blacklistRevoke(long entryId, @NotNull UUID staff, @NotNull String reason) {}
+    @Override public void hydrate(@NotNull HydrationSink sink) {}
 }

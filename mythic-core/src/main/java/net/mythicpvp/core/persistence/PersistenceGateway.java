@@ -71,4 +71,23 @@ public interface PersistenceGateway {
 
     /** Revoke a blacklist entry by id. */
     void blacklistRevoke(long entryId, @NotNull UUID staff, @NotNull String reason);
+
+    // ── Hydration ────────────────────────────────────────────────────
+
+    /**
+     * Subscribe to every Phase 3 table and route inbound row events into
+     * {@code sink}. Implementations:
+     * <ul>
+     *   <li>Are idempotent w.r.t. already-applied rows (STDB echoes back
+     *       writes we made ourselves).
+     *   <li>Auto-reconnect via the underlying STDB connection.
+     *   <li>For the no-op gateway, simply do nothing — single-server
+     *       deployments need no hydration.
+     * </ul>
+     *
+     * <p>Call once after services are constructed and any local YAML
+     * seeding has completed. Returns immediately; rows arrive
+     * asynchronously on whatever thread the sink is configured to use.
+     */
+    void hydrate(@NotNull HydrationSink sink);
 }

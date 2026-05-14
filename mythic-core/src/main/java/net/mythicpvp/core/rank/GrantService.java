@@ -100,6 +100,41 @@ public final class GrantService {
         return removed;
     }
 
+    /**
+     * Insert-or-replace a grant by id without firing the persistence
+     * gateway. Used by the STDB hydration path when rows arrive from the
+     * database; calling {@link #grant} would re-write the same row to
+     * STDB and infinite-loop.
+     *
+     * <p>Also keeps the auto-inc id generator monotonically ahead of any
+     * id observed from STDB so future {@link #grant} calls don't collide.
+     */
+    public void applyGrant(@NotNull RankGrant grant) {
+        grants.removeIf(existing -> existing.id() == grant.id());
+        grants.add(grant);
+        // Keep the id generator ahead of any seen id so subsequent
+        // grant() calls produce unique ids.
+        long observed = grant.id();
+        long current = ids.get();
+        if (observed > current) {
+            ids.compareAndSet(current, observed);
+        }
+        PermissionManager.getInstance().setPlayerRank(grant.targetUuid(), activeRank(grant.targetUuid()));
+    }
+
+    /** Remove a grant by id without firing the persistence gateway. */
+    public void removeGrant(long grantId) {
+        UUID owner = grants.stream()
+                .filter(g -> g.id() == grantId)
+                .map(RankGrant::targetUuid)
+                .findFirst()
+                .orElse(null);
+        grants.removeIf(g -> g.id() == grantId);
+        if (owner != null) {
+            PermissionManager.getInstance().setPlayerRank(owner, activeRank(owner));
+        }
+    }
+
     @NotNull
     public String activeRank(@NotNull UUID targetUuid) {
         return active(targetUuid).stream()

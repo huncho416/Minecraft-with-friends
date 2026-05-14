@@ -82,6 +82,21 @@ public final class RankService {
         persistence.rankDefine(rank, seedingFromYaml);
     }
 
+    /**
+     * Insert-or-replace a rank without firing the persistence gateway.
+     * Used by the STDB hydration path; calling {@link #register} would
+     * echo the row back to STDB on every replay.
+     */
+    public void applyRank(@NotNull CoreRank rank) {
+        ranks.put(rank.id(), rank);
+        PermissionManager.getInstance().registerRank(new Rank(rank.id(), rank.prefix(), rank.color(), rank.weight(), SetCopy.copy(rank.permissions()), rank.parent().isBlank() ? null : rank.parent()));
+    }
+
+    /** Remove a rank by id without firing the gateway. */
+    public void removeRank(@NotNull String id) {
+        ranks.remove(normalize(id));
+    }
+
     public boolean setField(@NotNull String id, @NotNull String field, @NotNull String value) {
         CoreRank rank = get(id);
         if (rank == null) {

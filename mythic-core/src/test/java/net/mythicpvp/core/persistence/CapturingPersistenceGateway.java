@@ -54,4 +54,9 @@ public final class CapturingPersistenceGateway implements PersistenceGateway {
     @Override public void blacklistRevoke(long entryId, @NotNull UUID staff, @NotNull String reason) {
         calls.add(new BlacklistRevoke(entryId, staff, reason));
     }
+    /** Records the hydrate invocation and the sink so tests can confirm wiring. */
+    public record HydrateCall(HydrationSink sink) {}
+    @Override public void hydrate(@NotNull HydrationSink sink) {
+        calls.add(new HydrateCall(sink));
+    }
 }
