@@ -12,9 +12,11 @@ public record PunishmentRecord(
         @NotNull String staffName,
         @NotNull PunishmentType type,
         @NotNull String reason,
+        @NotNull String proof,
         long createdAtMillis,
         long expiresAtMillis,
         boolean silent,
+        boolean clearInventory,
         boolean pardoned,
         @NotNull String server
 ) {

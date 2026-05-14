@@ -7,6 +7,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -19,6 +20,7 @@ public final class PunishmentService {
     private final AtomicLong ids = new AtomicLong();
     private final List<PunishmentRecord> records = new CopyOnWriteArrayList<>();
     private final List<PunishmentNotice> notices = new CopyOnWriteArrayList<>();
+    private final List<PunishmentTemplate> templates = new CopyOnWriteArrayList<>();
 
     public PunishmentService(@NotNull ProtocolManager protocolManager, @NotNull Clock clock) {
         this.protocolManager = protocolManager;
@@ -30,7 +32,7 @@ public final class PunishmentService {
     public PunishmentRecord punish(@NotNull PunishmentRequest request) {
         Instant now = clock.instant();
         long expiresAtMillis = request.expiresAt() == null ? 0L : request.expiresAt().toEpochMilli();
-        PunishmentRecord record = new PunishmentRecord(ids.incrementAndGet(), request.targetUuid(), request.targetName(), request.staffUuid(), request.staffName(), request.type(), request.reason(), now.toEpochMilli(), expiresAtMillis, request.silent(), false, request.server());
+        PunishmentRecord record = new PunishmentRecord(ids.incrementAndGet(), request.targetUuid(), request.targetName(), request.staffUuid(), request.staffName(), request.type(), request.reason(), request.proof(), now.toEpochMilli(), expiresAtMillis, request.silent(), request.clearInventory(), false, request.server());
         records.add(record);
         protocolManager.publish(CHANNEL, new PunishmentNotice(record, !request.silent()));
         return record;
@@ -40,11 +42,17 @@ public final class PunishmentService {
         for (PunishmentRecord record : records) {
             if (record.id() == id && !record.pardoned()) {
                 records.remove(record);
-                records.add(new PunishmentRecord(record.id(), record.targetUuid(), record.targetName(), record.staffUuid(), record.staffName(), record.type(), record.reason(), record.createdAtMillis(), record.expiresAtMillis(), record.silent(), true, record.server()));
+                records.add(new PunishmentRecord(record.id(), record.targetUuid(), record.targetName(), record.staffUuid(), record.staffName(), record.type(), record.reason(), record.proof(), record.createdAtMillis(), record.expiresAtMillis(), record.silent(), record.clearInventory(), true, record.server()));
                 return true;
             }
         }
         return false;
+    }
+
+    public int clearHistory(@NotNull UUID targetUuid) {
+        int before = records.size();
+        records.removeIf(record -> record.targetUuid().equals(targetUuid));
+        return before - records.size();
     }
 
     @NotNull
@@ -68,7 +76,55 @@ public final class PunishmentService {
         return List.copyOf(notices);
     }
 
+    @NotNull
+    public PunishmentTemplate addTemplate(@NotNull PunishmentCategory category, @NotNull String duration, @NotNull String title, @NotNull String information) {
+        removeTemplate(title);
+        PunishmentTemplate template = new PunishmentTemplate(category, duration, title, information);
+        templates.add(template);
+        return template;
+    }
+
+    public boolean editTemplate(@NotNull String title, @NotNull PunishmentCategory category, @NotNull String duration, @NotNull String nextTitle, @NotNull String information) {
+        PunishmentTemplate existing = template(title);
+        if (existing == null) {
+            return false;
+        }
+        templates.remove(existing);
+        templates.add(new PunishmentTemplate(category, duration, nextTitle, information));
+        return true;
+    }
+
+    public boolean removeTemplate(@NotNull String title) {
+        return templates.removeIf(template -> normalize(template.title()).equals(normalize(title)));
+    }
+
+    public PunishmentTemplate template(@NotNull String title) {
+        return templates.stream()
+                .filter(template -> normalize(template.title()).equals(normalize(title)))
+                .findFirst()
+                .orElse(null);
+    }
+
+    @NotNull
+    public List<PunishmentTemplate> templates() {
+        return templates.stream()
+                .sorted(Comparator.comparing(PunishmentTemplate::category).thenComparing(PunishmentTemplate::title))
+                .toList();
+    }
+
+    @NotNull
+    public List<PunishmentTemplate> templates(@NotNull PunishmentCategory category) {
+        return templates().stream()
+                .filter(template -> template.category() == category)
+                .toList();
+    }
+
     private void receive(@NotNull PunishmentNotice notice) {
         notices.add(notice);
+    }
+
+    @NotNull
+    private static String normalize(@NotNull String input) {
+        return input.trim().toLowerCase(Locale.ROOT);
     }
 }

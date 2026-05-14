@@ -7,6 +7,7 @@ public enum PunishmentType {
     TEMP_BAN("tempban", true, true),
     MUTE("mute", false, false),
     TEMP_MUTE("tempmute", false, true),
+    BLACKLIST("blacklist", true, false),
     WARN("warn", false, false);
 
     private final String command;

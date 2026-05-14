@@ -651,8 +651,10 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 - ✅ `/grant <username>` now opens the core grant menu flow with rank selection, duration presets, custom duration chat input, reason presets, custom reason chat input, and final confirmation.
 - ✅ Runtime rank editor command mutations now exist for setting rank fields and adding or removing permissions, including independent chat, tab, and nametag formatting fields.
 - ✅ Chat prompt handling exists for menu-backed custom values and is covered by MockBukkit tests.
+- ✅ Initial punishment template, handbook, history, clear-history, and `/punish` menu flow exists with category selection, template selection, proof entry, silent toggle, clear-inventory toggle, and execution summary.
+- ✅ Punishment template admin commands exist for add, edit, and remove with live template completions and YAML-backed default seed templates.
 - 🚧 Rank/grant database persistence, YAML-backed menu text, complete rank editor menus, and SpacetimeDB schema/reducer additions remain pending.
-- 🚧 Punishment menu/handbook implementation remains pending beyond the existing punishment service and silent flag foundation.
+- 🚧 Punishment database persistence, full YAML-backed menu text, blacklist enforcement, and complete command parsing for quoted multi-word template titles remain pending.
 
 #### Command Completion Requirements
 

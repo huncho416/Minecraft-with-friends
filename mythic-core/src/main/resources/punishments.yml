@@ -9,3 +9,24 @@ punishments:
     tempmute: "mythic.core.punish.tempmute"
     warn: "mythic.core.punish.warn"
     history: "mythic.core.punish.history"
+  templates:
+    general-warning:
+      category: "WARN"
+      duration: "permanent"
+      title: "General Warning"
+      information: "Used for minor rule reminders."
+    chat-offense-1:
+      category: "MUTE"
+      duration: "1d"
+      title: "Chat Offense #1"
+      information: "First chat offense."
+    cheating-1:
+      category: "BAN"
+      duration: "30d"
+      title: "Cheating #1"
+      information: "First cheating offense."
+    network-removal:
+      category: "BLACKLIST"
+      duration: "permanent"
+      title: "Network Removal"
+      information: "Severe network-level punishment."

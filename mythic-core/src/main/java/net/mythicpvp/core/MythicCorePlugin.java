@@ -6,8 +6,17 @@ import net.mythicpvp.core.command.ClearGrantsCommand;
 import net.mythicpvp.core.command.CoreCompletions;
 import net.mythicpvp.core.command.GrantCommand;
 import net.mythicpvp.core.command.GrantsCommand;
+import net.mythicpvp.core.command.HistoryCommand;
+import net.mythicpvp.core.command.PunishCommand;
+import net.mythicpvp.core.command.PunishmentAddCommand;
+import net.mythicpvp.core.command.PunishmentEditCommand;
+import net.mythicpvp.core.command.PunishmentRemoveCommand;
+import net.mythicpvp.core.command.PunishmentsCommand;
 import net.mythicpvp.core.command.RankEditorCommand;
+import net.mythicpvp.core.command.ClearPunishmentsCommand;
 import net.mythicpvp.core.config.CoreMessages;
+import net.mythicpvp.core.punishment.PunishmentCategory;
+import net.mythicpvp.core.punishment.PunishmentMenuService;
 import net.mythicpvp.core.punishment.PunishmentService;
 import net.mythicpvp.core.prompt.ChatPromptService;
 import net.mythicpvp.core.rank.GrantFlowService;
@@ -19,8 +28,10 @@ import net.mythicpvp.suite.api.MythicPlugin;
 import net.mythicpvp.suite.command.CommandManager;
 import net.mythicpvp.suite.config.ConfigManager;
 import net.mythicpvp.suite.config.ConfigText;
+import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.menu.MenuListener;
 import net.mythicpvp.suite.protocol.ProtocolManager;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,6 +45,7 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private StaffChannelService staffChannelService;
     private StaffPresenceService staffPresenceService;
     private PunishmentService punishmentService;
+    private PunishmentMenuService punishmentMenuService;
     private ChatControlService chatControlService;
     private RankService rankService;
     private GrantService grantService;
@@ -69,7 +81,11 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         chatPromptService = new ChatPromptService(this);
         grantService = new GrantService(rankService, Clock.systemUTC());
         grantFlowService = new GrantFlowService(rankService, grantService, chatPromptService);
-        CoreCompletions.register(commandManager, rankService);
+        ProtocolManager protocolManager = ProtocolManager.getInstance();
+        punishmentService = new PunishmentService(protocolManager, Clock.systemUTC());
+        punishmentMenuService = new PunishmentMenuService(punishmentService, chatPromptService, Clock.systemUTC(), serverIdentity.id());
+        seedPunishments(configManager.getOrCreate("punishments"));
+        CoreCompletions.register(commandManager, rankService, punishmentService);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(chatPromptService, this);
         commandManager.register(new GrantCommand(grantFlowService));
@@ -77,10 +93,15 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new CGrantCommand(grantService));
         commandManager.register(new ClearGrantsCommand(grantService));
         commandManager.register(new RankEditorCommand(rankService));
-        ProtocolManager protocolManager = ProtocolManager.getInstance();
+        commandManager.register(new PunishCommand(punishmentMenuService));
+        commandManager.register(new PunishmentsCommand(punishmentMenuService));
+        commandManager.register(new HistoryCommand(punishmentService, punishmentMenuService));
+        commandManager.register(new ClearPunishmentsCommand(punishmentService));
+        commandManager.register(new PunishmentAddCommand(punishmentService));
+        commandManager.register(new PunishmentRemoveCommand(punishmentService));
+        commandManager.register(new PunishmentEditCommand(punishmentService));
         staffChannelService = new StaffChannelService(protocolManager, serverIdentity.id());
         staffPresenceService = new StaffPresenceService(protocolManager, serverIdentity.id());
-        punishmentService = new PunishmentService(protocolManager, Clock.systemUTC());
         chatControlService = new ChatControlService(protocolManager);
     }
 
@@ -123,6 +144,11 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     }
 
     @NotNull
+    public PunishmentMenuService punishmentMenuService() {
+        return punishmentMenuService;
+    }
+
+    @NotNull
     public ChatControlService chatControlService() {
         return chatControlService;
     }
@@ -155,6 +181,29 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private void saveResourceIfMissing(@NotNull String path) {
         if (!getDataFolder().toPath().resolve(path).toFile().exists()) {
             saveResource(path, false);
+        }
+    }
+
+    private void seedPunishments(@NotNull MythicConfig config) {
+        if (!punishmentService.templates().isEmpty()) {
+            return;
+        }
+        ConfigurationSection section = config.getConfig().getConfigurationSection("punishments.templates");
+        if (section == null) {
+            punishmentService.addTemplate(PunishmentCategory.WARN, "permanent", "General Warning", "Used for minor rule reminders.");
+            punishmentService.addTemplate(PunishmentCategory.MUTE, "1d", "Chat Offense #1", "First chat offense.");
+            punishmentService.addTemplate(PunishmentCategory.BAN, "30d", "Cheating #1", "First cheating offense.");
+            punishmentService.addTemplate(PunishmentCategory.BLACKLIST, "permanent", "Network Removal", "Severe network-level punishment.");
+            return;
+        }
+        for (String id : section.getKeys(false)) {
+            String path = "punishments.templates." + id + ".";
+            punishmentService.addTemplate(
+                    PunishmentCategory.parse(config.getString(path + "category", "WARN")),
+                    config.getString(path + "duration", "permanent"),
+                    config.getString(path + "title", id),
+                    config.getString(path + "information", "")
+            );
         }
     }
 }
