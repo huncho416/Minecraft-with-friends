@@ -632,8 +632,8 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 | `mythic-core`: STDB hydration / cross-server read path — subscribe to all 5 Phase 3 tables, dispatch to services via `CoreHydrationSink`, main-thread-safe via `MainThreadHydrationSink` | Dev A | ✅ |
 | `mythic-core`: command blocker coverage — `command-blocker.yml` ships with full per-command perm map for all `mythic.core.*` commands + noisy info commands (pl, plugins, ?, help, version, tps, mem); permission-hidden tab completion + execute rejection inherited from `suite-command`'s `CommandBlocker` listeners (PlayerCommandSendEvent, TabCompleteEvent, PlayerCommandPreprocessEvent) | Dev A | ✅ |
 | `mythic-core`: essentials commands `/gmc`, `/gms`, `/gamemode`, `/tp`, `/tphere`, `/help`, `/discord` | Dev A | ✅ |
-| `mythic-core`: staff chats for staff, builder, management, admin, owner with cross-server protocol delivery | Dev A | 🚧 |
-| `mythic-core`: staff join, disconnect, and server-switch notifications with origin server and rank color | Dev A | 🚧 |
+| `mythic-core`: 5 staff chats (`/staffchat`, `/builderchat`, `/managementchat`, `/adminchat`, `/ownerchat`) over `core:staff-chat` → `BukkitStaffAudience` renders to permitted players + console with `messages.staff.format`. Sender's rank/color resolved via `GrantService.activeRank` so cross-server messages carry the right prefix | Dev A | ✅ |
+| `mythic-core`: staff join/quit notifications via `StaffPresenceListener` (gated by `mythic.core.staff.notify`) → `core:staff-presence` channel → `BukkitStaffPresenceAudience` renders `messages.staff.{join,quit,switch}` to permitted players + console. Server-switch path is ready (service supports it) — proxy emits the SWITCH event in Phase 2 | Dev A | ✅ |
 | `mythic-core`: staff mode with configurable tools, inventory restore, vanish/fly state, and safe disable | Dev A | 🚧 |
 | `mythic-core`: punishments for bans, tempbans, mutes, tempmutes, warns, pardons, history, appeals, audit log | Dev A | 🚧 |
 | `mythic-core`: silent punishment flag `-s` for all punishment commands, including `/ban -s <player>` | Dev A | ✅ |

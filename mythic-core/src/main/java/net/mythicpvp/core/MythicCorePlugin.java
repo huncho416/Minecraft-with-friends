@@ -23,6 +23,7 @@ import net.mythicpvp.core.command.PunishmentRemoveCommand;
 import net.mythicpvp.core.command.PunishmentsCommand;
 import net.mythicpvp.core.command.RankEditorCommand;
 import net.mythicpvp.core.command.ClearPunishmentsCommand;
+import net.mythicpvp.core.command.StaffChatCommand;
 import net.mythicpvp.core.command.TeleportCommand;
 import net.mythicpvp.core.command.TpHereCommand;
 import net.mythicpvp.core.config.CoreMessages;
@@ -42,7 +43,10 @@ import net.mythicpvp.core.prompt.ChatPromptService;
 import net.mythicpvp.core.rank.GrantFlowService;
 import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.core.rank.RankService;
+import net.mythicpvp.core.staff.BukkitStaffAudience;
+import net.mythicpvp.core.staff.BukkitStaffPresenceAudience;
 import net.mythicpvp.core.staff.StaffChannelService;
+import net.mythicpvp.core.staff.StaffPresenceListener;
 import net.mythicpvp.core.staff.StaffPresenceService;
 import net.mythicpvp.suite.api.MythicPlugin;
 import net.mythicpvp.suite.command.CommandManager;
@@ -170,7 +174,28 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new HelpCommand(essentialsService));
         commandManager.register(new DiscordCommand(essentialsService));
         staffChannelService = new StaffChannelService(protocolManager, serverIdentity.id());
+        // Render every inbound staff message to permitted players + console.
+        // Format pulled from messages.yml so ops can re-style without code.
+        String staffFormat = messages.raw(
+                "messages.staff.format",
+                "&#888888[%server%] %rank_color%%rank%%sender% &8» &#FFFFFF%message%",
+                java.util.Map.of());
+        staffChannelService.addAudience(new BukkitStaffAudience(staffFormat));
+        // Five channel-specific commands. Distinct aliases instead of a
+        // single /sc <channel> so the command-blocker / permission check
+        // matches the friend's StaffChannel enum 1:1.
+        commandManager.register(new StaffChatCommand.Staff(staffChannelService, rankService, grantService));
+        commandManager.register(new StaffChatCommand.Builder(staffChannelService, rankService, grantService));
+        commandManager.register(new StaffChatCommand.Management(staffChannelService, rankService, grantService));
+        commandManager.register(new StaffChatCommand.Admin(staffChannelService, rankService, grantService));
+        commandManager.register(new StaffChatCommand.Owner(staffChannelService, rankService, grantService));
         staffPresenceService = new StaffPresenceService(protocolManager, serverIdentity.id());
+        // Render presence events to staff + console.
+        staffPresenceService.addAudience(new BukkitStaffPresenceAudience(
+                new net.mythicpvp.suite.config.ConfigText(
+                        configManager.getOrCreate("messages"), "messages")));
+        getServer().getPluginManager().registerEvents(
+                new StaffPresenceListener(staffPresenceService, rankService, grantService), this);
         // Pass shardId so LOCAL-scope chat-control changes from other
         // servers are dropped — see ChatControlService.apply.
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());
