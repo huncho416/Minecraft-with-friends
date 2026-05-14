@@ -9,6 +9,7 @@ import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.RankGrant;
 import net.mythicpvp.core.social.FriendLink;
 import net.mythicpvp.core.social.FriendRequest;
+import net.mythicpvp.core.social.LoginStreak;
 import net.mythicpvp.core.social.MailMessage;
 import net.mythicpvp.core.social.Party;
 import net.mythicpvp.core.social.PartyMember;
@@ -22,6 +23,7 @@ import net.mythicpvp.suite.database.schema.TableNames;
 import net.mythicpvp.suite.database.schema.dto.BlacklistEntryRow;
 import net.mythicpvp.suite.database.schema.dto.FriendRequestRow;
 import net.mythicpvp.suite.database.schema.dto.FriendRow;
+import net.mythicpvp.suite.database.schema.dto.LoginStreakRow;
 import net.mythicpvp.suite.database.schema.dto.MailRow;
 import net.mythicpvp.suite.database.schema.dto.PartyMemberRow;
 import net.mythicpvp.suite.database.schema.dto.PartyRow;
@@ -340,7 +342,10 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         subscribe(TableNames.MAIL, MailRow.class,
                 row -> sink.applyMail(toMailMessage(row)),
                 row -> sink.removeMail(row.id()));
-        logger.info("[stdb] hydration subscriptions registered for 10 tables");
+        subscribe(TableNames.LOGIN_STREAKS, LoginStreakRow.class,
+                row -> sink.applyLoginStreak(toLoginStreak(row)),
+                row -> {});
+        logger.info("[stdb] hydration subscriptions registered for 11 tables");
     }
 
     private <D> void subscribe(
@@ -526,6 +531,15 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
                 row.read(),
                 microsToMillis(row.sent_at()),
                 microsToMillis(row.read_at_micros()));
+    }
+
+    @NotNull
+    static LoginStreak toLoginStreak(@NotNull LoginStreakRow row) {
+        return new LoginStreak(
+                row.id(),
+                UUID.fromString(row.player_uuid()),
+                microsToMillis(row.last_login_at()),
+                row.current_streak());
     }
 
     @NotNull

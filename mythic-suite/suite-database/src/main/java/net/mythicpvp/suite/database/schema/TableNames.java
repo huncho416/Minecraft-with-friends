@@ -31,6 +31,7 @@ public final class TableNames {
     public static final String PARTIES = "parties";
     public static final String PARTY_MEMBERS = "party_members";
     public static final String MAIL = "mail";
+    public static final String LOGIN_STREAKS = "login_streaks";
 
     public static final String ISLANDS = "islands";
     public static final String ISLAND_MEMBERS = "island_members";

@@ -86,6 +86,46 @@ class GrantServiceTest {
         assertEquals(10, rankService.get("admin").weight());
     }
 
+    @Test
+    void clearRemovesAllGrantsForTarget() {
+        RankService rankService = new RankService();
+        rankService.register(rank("default", 1000));
+        rankService.register(rank("admin", 10));
+        rankService.register(rank("mod", 50));
+        GrantService grantService = new GrantService(rankService, Clock.fixed(Instant.parse("2026-05-13T00:00:00Z"), ZoneOffset.UTC));
+        UUID target = UUID.randomUUID();
+        UUID other = UUID.randomUUID();
+
+        grantService.grant(target, "Target", "admin", GrantDuration.parse("permanent"), UUID.randomUUID(), "Console", "Staff");
+        grantService.grant(target, "Target", "mod", GrantDuration.parse("7d"), UUID.randomUUID(), "Console", "Upgrade");
+        grantService.grant(other, "Other", "admin", GrantDuration.parse("permanent"), UUID.randomUUID(), "Console", "Staff");
+
+        assertEquals(2, grantService.clear(target));
+        assertTrue(grantService.history(target).isEmpty());
+        assertEquals("default", grantService.activeRank(target));
+        assertEquals(1, grantService.history(other).size());
+    }
+
+    @Test
+    void cgrantStyleGrantPersistsWithDurationAndReason() {
+        RankService rankService = new RankService();
+        rankService.register(rank("default", 1000));
+        rankService.register(rank("vip", 100));
+        GrantService grantService = new GrantService(rankService, Clock.fixed(Instant.parse("2026-05-13T00:00:00Z"), ZoneOffset.UTC));
+        UUID target = UUID.randomUUID();
+        UUID executor = UUID.randomUUID();
+
+        RankGrant grant = grantService.grant(target, "TargetPlayer", "vip", GrantDuration.parse("30d"), executor, "Admin", "Purchased");
+
+        assertEquals("vip", grant.rankId());
+        assertEquals(target, grant.targetUuid());
+        assertEquals(executor, grant.executorUuid());
+        assertEquals("Purchased", grant.reason());
+        assertTrue(grant.expiresAtMillis() > 0);
+        assertFalse(grant.permanent());
+        assertEquals("vip", grantService.activeRank(target));
+    }
+
     private static CoreRank rank(String id, int weight) {
         return new CoreRank(id, id, "#808080", Material.LIGHT_GRAY_DYE, "&7", "", weight, false, false, "", List.of(), "&7", "%chat_prefix%%player%: %message%", "&7", "%tab_prefix%%player%", "&7", "%nametag_prefix%%player%");
     }
