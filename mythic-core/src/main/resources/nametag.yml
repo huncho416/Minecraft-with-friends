@@ -1,0 +1,16 @@
+# Nametag rendering for player heads.
+#
+# Per-rank prefix/suffix come from ranks.yml; the values here apply only
+# when a player has no rank entry (e.g. permanent guests or pre-grant
+# fallbacks). The %placeholder% values are resolved by mythic-core's
+# PlaceholderResolver at apply time.
+nametag:
+  default:
+    # Prefix shown above the player's head. Use rank's nametag-prefix when
+    # set; this is the network-wide fallback.
+    prefix: "%nametag_prefix%"
+    suffix: ""
+    # Lower wins. Tied to CoreRank.weight so ranks order top-down in tab.
+    sort-weight: 1000
+    # Bukkit ChatColor name, or empty for no glow.
+    glow-color: ""

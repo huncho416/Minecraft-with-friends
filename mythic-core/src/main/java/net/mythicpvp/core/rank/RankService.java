@@ -25,10 +25,19 @@ public final class RankService {
     // `seedingFromYaml` distinguishes the YAML seed path (mark seeded=true
     // in STDB) from runtime edits (seeded=false).
     private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
+    // Optional callback invoked after every rank-set mutation. The
+    // DisplayService uses it to re-push tab/scoreboard/nametag for
+    // every player holding the affected rank — a rank-edit must update
+    // all bearers, not just one. No-op in tests by default.
+    private volatile Runnable displayRefresher = () -> {};
     private boolean seedingFromYaml;
 
     public void setPersistence(@NotNull PersistenceGateway persistence) {
         this.persistence = persistence;
+    }
+
+    public void setDisplayRefresher(@NotNull Runnable refresher) {
+        this.displayRefresher = refresher;
     }
 
     public void load(@NotNull MythicConfig config) {
@@ -80,6 +89,13 @@ public final class RankService {
         ranks.put(rank.id(), rank);
         PermissionManager.getInstance().registerRank(new Rank(rank.id(), rank.prefix(), rank.color(), rank.weight(), SetCopy.copy(rank.permissions()), rank.parent().isBlank() ? null : rank.parent()));
         persistence.rankDefine(rank, seedingFromYaml);
+        // Skip the display refresh during the YAML seed path — DisplayService
+        // isn't constructed yet at that point. Runtime registers (rank
+        // editor commands, hot reload) trigger a global refresh because
+        // the change can affect every bearer of the rank.
+        if (!seedingFromYaml) {
+            displayRefresher.run();
+        }
     }
 
     /**
@@ -90,11 +106,14 @@ public final class RankService {
     public void applyRank(@NotNull CoreRank rank) {
         ranks.put(rank.id(), rank);
         PermissionManager.getInstance().registerRank(new Rank(rank.id(), rank.prefix(), rank.color(), rank.weight(), SetCopy.copy(rank.permissions()), rank.parent().isBlank() ? null : rank.parent()));
+        // Hydrated rank can change every bearer's tab/scoreboard/nametag.
+        displayRefresher.run();
     }
 
     /** Remove a rank by id without firing the gateway. */
     public void removeRank(@NotNull String id) {
         ranks.remove(normalize(id));
+        displayRefresher.run();
     }
 
     public boolean setField(@NotNull String id, @NotNull String field, @NotNull String value) {

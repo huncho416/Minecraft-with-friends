@@ -65,6 +65,21 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>net.mythicpvp</groupId>
+            <artifactId>suite-tab</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.mythicpvp</groupId>
+            <artifactId>suite-scoreboard</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.mythicpvp</groupId>
+            <artifactId>suite-nametag</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
         </dependency>

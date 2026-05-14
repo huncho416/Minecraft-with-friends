@@ -22,6 +22,10 @@ public final class GrantService {
     // green; production wiring sets this to StdbPersistenceGateway in
     // MythicCorePlugin.onEnable.
     private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
+    // Optional display refresher. Called with the affected player's UUID
+    // after every grant mutation so the DisplayService can re-push tab,
+    // nametag, and scoreboard for that player. No-op in tests.
+    private volatile java.util.function.Consumer<UUID> displayRefresher = uuid -> {};
 
     public GrantService(@NotNull RankService rankService, @NotNull Clock clock) {
         this.rankService = rankService;
@@ -30,6 +34,10 @@ public final class GrantService {
 
     public void setPersistence(@NotNull PersistenceGateway persistence) {
         this.persistence = persistence;
+    }
+
+    public void setDisplayRefresher(@NotNull java.util.function.Consumer<UUID> refresher) {
+        this.displayRefresher = refresher;
     }
 
     @NotNull
@@ -43,6 +51,7 @@ public final class GrantService {
         grants.add(grant);
         PermissionManager.getInstance().setPlayerRank(targetUuid, activeRank(targetUuid));
         persistence.grantIssue(grant);
+        displayRefresher.accept(targetUuid);
         return grant;
     }
 
@@ -70,6 +79,7 @@ public final class GrantService {
                 grants.add(new RankGrant(grant.id(), grant.targetUuid(), grant.targetName(), grant.rankId(), grant.executorUuid(), grant.executorName(), grant.reason(), grant.createdAtMillis(), grant.expiresAtMillis(), false));
                 PermissionManager.getInstance().setPlayerRank(grant.targetUuid(), activeRank(grant.targetUuid()));
                 persistence.grantDeactivate(grantId);
+                displayRefresher.accept(grant.targetUuid());
                 return true;
             }
         }
@@ -96,6 +106,7 @@ public final class GrantService {
         int removed = before - grants.size();
         if (removed > 0) {
             persistence.grantClear(targetUuid);
+            displayRefresher.accept(targetUuid);
         }
         return removed;
     }
@@ -120,6 +131,10 @@ public final class GrantService {
             ids.compareAndSet(current, observed);
         }
         PermissionManager.getInstance().setPlayerRank(grant.targetUuid(), activeRank(grant.targetUuid()));
+        // Hydration also touches the visible rank, so refresh display.
+        // Refresher schedules onto the main thread itself so this is
+        // safe to call from the STDB driver thread via the sink.
+        displayRefresher.accept(grant.targetUuid());
     }
 
     /** Remove a grant by id without firing the persistence gateway. */
@@ -132,6 +147,7 @@ public final class GrantService {
         grants.removeIf(g -> g.id() == grantId);
         if (owner != null) {
             PermissionManager.getInstance().setPlayerRank(owner, activeRank(owner));
+            displayRefresher.accept(owner);
         }
     }
 

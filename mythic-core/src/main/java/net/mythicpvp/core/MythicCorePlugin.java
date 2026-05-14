@@ -22,6 +22,8 @@ import net.mythicpvp.core.command.ClearPunishmentsCommand;
 import net.mythicpvp.core.command.TeleportCommand;
 import net.mythicpvp.core.command.TpHereCommand;
 import net.mythicpvp.core.config.CoreMessages;
+import net.mythicpvp.core.display.DisplayService;
+import net.mythicpvp.core.display.PlayerSessionListener;
 import net.mythicpvp.core.essentials.CoreEssentialsService;
 import net.mythicpvp.core.persistence.CoreHydrationSink;
 import net.mythicpvp.core.persistence.HydrationSink;
@@ -71,6 +73,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private CoreMessages messages;
     private CoreEssentialsService essentialsService;
     private PersistenceGateway persistenceGateway;
+    private DisplayService displayService;
 
     @Override
     public void onEnable() {
@@ -90,6 +93,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         saveResourceIfMissing("punishments.yml");
         saveResourceIfMissing("scoreboard.yml");
         saveResourceIfMissing("tablist.yml");
+        saveResourceIfMissing("nametag.yml");
         saveResourceIfMissing("ranks.yml");
         serverIdentity = ServerIdentity.fromEnvironment();
         configManager = new ConfigManager(this);
@@ -118,6 +122,17 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         // No-op when the gateway is the noop fallback (single-server).
         HydrationSink coreSink = new CoreHydrationSink(getLogger(), rankService, grantService, punishmentService);
         persistenceGateway.hydrate(new MainThreadHydrationSink(this, coreSink));
+        // Display tier — pushes tab/scoreboard/nametag through the suite
+        // managers, sourcing rank state from RankService/GrantService.
+        // Wired AFTER rank/grant services exist; refresh callbacks let
+        // those services notify display on every mutation.
+        displayService = new DisplayService(this, rankService, grantService, serverIdentity.id());
+        displayService.loadTemplates(
+                configManager.getOrCreate("tablist"),
+                configManager.getOrCreate("scoreboard"));
+        rankService.setDisplayRefresher(displayService::applyAll);
+        grantService.setDisplayRefresher(displayService::refresh);
+        getServer().getPluginManager().registerEvents(new PlayerSessionListener(displayService), this);
         CoreCompletions.register(commandManager, rankService, punishmentService);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(chatPromptService, this);
