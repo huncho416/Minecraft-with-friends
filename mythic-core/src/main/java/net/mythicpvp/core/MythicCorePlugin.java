@@ -1,8 +1,11 @@
 package net.mythicpvp.core;
 
 import net.mythicpvp.core.announce.BroadcastService;
+import net.mythicpvp.core.audit.CoreAuditLog;
 import net.mythicpvp.core.chat.ChatControlService;
 import net.mythicpvp.core.chat.ChatGuard;
+import net.mythicpvp.core.command.AppealCommand;
+import net.mythicpvp.core.command.AppealsCommand;
 import net.mythicpvp.core.command.BroadcastCommand;
 import net.mythicpvp.core.command.CGrantCommand;
 import net.mythicpvp.core.command.ChatCommand;
@@ -88,6 +91,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private CoreHydrationSink hydrationSink;
     private BroadcastService broadcastService;
     private StaffModeService staffModeService;
+    private CoreAuditLog auditLog;
 
     @Override
     public void onEnable() {
@@ -207,6 +211,12 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new StaffModeCommand(staffModeService, messages));
         getServer().getPluginManager().registerEvents(
                 new StaffModeToolListener(staffModeService, messages, grantService, rankService), this);
+        // Audit log + appeal commands. Audit log is a thin file writer
+        // shared across staff actions; appeals route through the
+        // gateway so they persist to STDB.
+        auditLog = new CoreAuditLog(this);
+        commandManager.register(new AppealCommand(punishmentService, persistenceGateway, messages, auditLog));
+        commandManager.register(new AppealsCommand(persistenceGateway, messages, auditLog));
         // Pass shardId so LOCAL-scope chat-control changes from other
         // servers are dropped — see ChatControlService.apply.
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());

@@ -72,6 +72,18 @@ public interface PersistenceGateway {
     /** Revoke a blacklist entry by id. */
     void blacklistRevoke(long entryId, @NotNull UUID staff, @NotNull String reason);
 
+    // ── Appeals ──────────────────────────────────────────────────────
+
+    /** File an appeal against a punishment. */
+    void appealOpen(long punishmentId, @NotNull UUID target, @NotNull String message);
+
+    /**
+     * Staff review of an open appeal. Decision is {@code APPROVED} or
+     * {@code DENIED}; the STDB-side reducer auto-pardons the linked
+     * punishment when approved.
+     */
+    void appealReview(long appealId, @NotNull UUID reviewer, @NotNull String decision, @NotNull String notes);
+
     // ── Hydration ────────────────────────────────────────────────────
 
     /**

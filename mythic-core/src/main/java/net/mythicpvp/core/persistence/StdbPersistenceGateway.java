@@ -200,6 +200,25 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         observe("blacklistRevoke " + entryId, schema.blacklistRevoke(entryId, staff, reason));
     }
 
+    // ── Appeals ──────────────────────────────────────────────────────
+
+    @Override
+    public void appealOpen(long punishmentId, @NotNull UUID target, @NotNull String message) {
+        observe("appealOpen " + punishmentId, schema.appealOpen(punishmentId, target, message));
+    }
+
+    @Override
+    public void appealReview(long appealId, @NotNull UUID reviewer, @NotNull String decision, @NotNull String notes) {
+        // Map the gameplay-side string to the schema enum. Anything other
+        // than APPROVED is treated as DENIED so a typo doesn't accidentally
+        // approve.
+        net.mythicpvp.suite.database.schema.MythicSchema.AppealDecision dec =
+                "APPROVED".equalsIgnoreCase(decision)
+                        ? net.mythicpvp.suite.database.schema.MythicSchema.AppealDecision.APPROVED
+                        : net.mythicpvp.suite.database.schema.MythicSchema.AppealDecision.DENIED;
+        observe("appealReview " + appealId, schema.appealReview(appealId, reviewer, dec, notes));
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────
 
     /** Map mythic-core's {@link PunishmentType} to the schema's wire enum. */

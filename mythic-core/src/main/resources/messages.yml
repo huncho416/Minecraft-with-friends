@@ -28,6 +28,11 @@ messages:
     history-empty: "&#FF00F8✘ &#FFFFFFNo punishment history found for %target%."
     login-banned: "&#FF00F8✘ &#FFFFFFYou are banned: %reason% (%expiry%)."
     login-blacklisted: "&#FF00F8✘ &#FFFFFFYou are blacklisted from this network."
+    appeal-usage: "&#FF00F8✘ &#FFFFFFUsage: /appeal <message…>"
+    appeal-none: "&#FF00F8✘ &#FFFFFFYou have no active punishment to appeal."
+    appeal-filed: "&#FF00F8Appeal &8» &#FFFFFFYour appeal for punishment #%id% has been filed."
+    appeal-reviewed: "&#FF00F8Appeals &8» &#FFFFFFAppeal #%id% %decision%."
+    appeals-usage: "&#FF00F8✘ &#FFFFFFUsage: /appeals review <approve|deny> <appealId> [notes…]"
   chat-control:
     muted: "&#FF00F8Chat &8» &#FFFFFFChat has been muted."
     unmuted: "&#FF00F8Chat &8» &#FFFFFFChat has been unmuted."

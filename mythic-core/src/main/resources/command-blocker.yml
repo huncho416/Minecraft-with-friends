@@ -81,3 +81,5 @@ required-permissions:
   adminchat: "mythic.core.adminchat"
   ownerchat: "mythic.core.ownerchat"
   staffmode: "mythic.core.staffmode"
+  appeals: "mythic.core.punish.appeal"
+  # /appeal is intentionally NOT permission-gated — anyone can file.
