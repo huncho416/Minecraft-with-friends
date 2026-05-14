@@ -26,6 +26,10 @@ public final class GrantService {
     // after every grant mutation so the DisplayService can re-push tab,
     // nametag, and scoreboard for that player. No-op in tests.
     private volatile java.util.function.Consumer<UUID> displayRefresher = uuid -> {};
+    // Optional grant observer — fires once after a successful grant().
+    // Used by the cosmetic-bundle integration to auto-grant the rank's
+    // bundled cosmetics. No-op in tests.
+    private volatile java.util.function.Consumer<RankGrant> grantObserver = grant -> {};
 
     public GrantService(@NotNull RankService rankService, @NotNull Clock clock) {
         this.rankService = rankService;
@@ -40,6 +44,10 @@ public final class GrantService {
         this.displayRefresher = refresher;
     }
 
+    public void setGrantObserver(@NotNull java.util.function.Consumer<RankGrant> observer) {
+        this.grantObserver = observer;
+    }
+
     @NotNull
     public RankGrant grant(@NotNull UUID targetUuid, @NotNull String targetName, @NotNull String rankId, @NotNull GrantDuration duration, @NotNull UUID executorUuid, @NotNull String executorName, @NotNull String reason) {
         CoreRank rank = rankService.get(rankId);
@@ -52,6 +60,9 @@ public final class GrantService {
         PermissionManager.getInstance().setPlayerRank(targetUuid, activeRank(targetUuid));
         persistence.grantIssue(grant);
         displayRefresher.accept(targetUuid);
+        // Fire the post-grant observer last so persistence + display
+        // are already in the right state if the observer reads them.
+        grantObserver.accept(grant);
         return grant;
     }
 

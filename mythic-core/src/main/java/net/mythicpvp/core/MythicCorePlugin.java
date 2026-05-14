@@ -3,6 +3,8 @@ package net.mythicpvp.core;
 import net.mythicpvp.core.announce.BroadcastService;
 import net.mythicpvp.core.audit.CoreAuditLog;
 import net.mythicpvp.core.chat.ChatControlService;
+import net.mythicpvp.core.cosmetic.RankBundleGrantHook;
+import net.mythicpvp.core.cosmetic.RankCosmeticBundles;
 import net.mythicpvp.core.chat.ChatGuard;
 import net.mythicpvp.core.command.AppealCommand;
 import net.mythicpvp.core.command.AppealsCommand;
@@ -217,6 +219,13 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         auditLog = new CoreAuditLog(this);
         commandManager.register(new AppealCommand(punishmentService, persistenceGateway, messages, auditLog));
         commandManager.register(new AppealsCommand(persistenceGateway, messages, auditLog));
+        // Rank ↔ cosmetics bundle integration. Loads ranks.yml's
+        // bundled-cosmetics list per rank, then attaches a grant
+        // observer to GrantService that auto-grants the bundled
+        // cosmetics on every successful /grant. Audit logged.
+        RankCosmeticBundles cosmeticBundles = new RankCosmeticBundles();
+        cosmeticBundles.load(configManager.getOrCreate("ranks"));
+        grantService.setGrantObserver(new RankBundleGrantHook(cosmeticBundles, auditLog, getLogger()));
         // Pass shardId so LOCAL-scope chat-control changes from other
         // servers are dropped — see ChatControlService.apply.
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());
