@@ -25,17 +25,10 @@ public final class CoreEssentialsService {
     @Nullable
     private final JavaPlugin plugin;
 
-    /** Test-friendly constructor: no audit log, no Folia scheduler. */
     public CoreEssentialsService(@NotNull CoreMessages messages) {
         this(messages, null, null);
     }
 
-    /**
-     * Production constructor — wires the audit log and a plugin handle so
-     * teleports can use {@link MythicScheduler#runOnEntity} on Folia for
-     * cross-region safety. Pass {@code null} for either to disable that
-     * piece (the service still works, just without that feature).
-     */
     public CoreEssentialsService(@NotNull CoreMessages messages,
                                  @Nullable CoreAuditLog audit,
                                  @Nullable JavaPlugin plugin) {
@@ -120,13 +113,6 @@ public final class CoreEssentialsService {
         sender.sendMessage(messages.component("essentials.tphere", "&#FF00F8+ &#FFFFFFTeleported %target% to you.", Map.of("target", target.getName())));
     }
 
-    /**
-     * Teleport {@code target} to {@code location}. On Folia, hops onto
-     * the entity's region thread first via {@link MythicScheduler#runOnEntity}
-     * so cross-region teleports don't trip the threaded-region check.
-     * On vanilla / Paper / MockBukkit it stays synchronous so callers
-     * (and tests) can observe the new position immediately.
-     */
     private void scheduleTeleport(@NotNull Player target, @NotNull Location location) {
         if (plugin != null && MythicScheduler.isFolia()) {
             MythicScheduler.runOnEntity(plugin, target, () -> target.teleport(location));
@@ -135,10 +121,6 @@ public final class CoreEssentialsService {
         }
     }
 
-    /**
-     * Best-effort audit-log entry. Console-issued actions get a synthetic
-     * {@code SYSTEM} actor uuid since {@link CommandSender} doesn't expose one.
-     */
     private void auditAction(@NotNull String action,
                              @NotNull CommandSender sender,
                              @NotNull Player target,

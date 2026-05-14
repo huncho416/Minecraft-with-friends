@@ -1,6 +1,5 @@
 package net.mythicpvp.suite.database.schema.dto;
 
-/** Mirrors the {@code islands} table row. */
 public record IslandRow(
         String island_id,
         String owner_uuid,

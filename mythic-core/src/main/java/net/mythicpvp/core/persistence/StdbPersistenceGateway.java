@@ -29,26 +29,6 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Production gateway: forwards every mutation to {@link MythicSchema}.
- *
- * <p>Fire-and-forget. Returned {@link CompletableFuture}s are observed
- * for failure logging only — call sites never block on STDB. The
- * {@link Logger} is the standard JUL one so it integrates with the
- * suite's existing logging configuration without pulling in a new dep.
- *
- * <p>Field mapping notes:
- * <ul>
- *   <li>mythic-core uses {@code expiresAtMillis ≤ 0} for "permanent";
- *       STDB reducers take {@code duration_seconds ≤ 0} for the same.
- *       {@link #durationSecondsFromExpiry} bridges the two.
- *   <li>{@link CoreRank#permissions()} is a {@code List<String>}; STDB
- *       wants a JSON-encoded string column.
- *   <li>{@link CoreRank#dye()} is a Bukkit {@code Material}; STDB stores
- *       the {@code Material.name()} string so the schema doesn't pin a
- *       Bukkit version.
- * </ul>
- */
 public final class StdbPersistenceGateway implements PersistenceGateway {
 
     private static final Gson GSON = new Gson();
@@ -57,12 +37,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     private final MythicSchema schema;
     private final SpacetimeConnection connection;
 
-    /**
-     * Construct with the schema client + the underlying connection. The
-     * connection is needed for {@link #hydrate} which subscribes to
-     * tables. Both must reference the same STDB host so reducer calls
-     * and subscription events are consistent.
-     */
     public StdbPersistenceGateway(
             @NotNull Logger logger,
             @NotNull MythicSchema schema,
@@ -71,8 +45,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         this.schema = schema;
         this.connection = connection;
     }
-
-    // ── Ranks ────────────────────────────────────────────────────────
 
     @Override
     public void rankDefine(@NotNull CoreRank rank, boolean seeded) {
@@ -103,8 +75,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         observe("rankRemove " + rankId, schema.rankRemove(rankId));
     }
 
-    // ── Grants ───────────────────────────────────────────────────────
-
     @Override
     public void grantIssue(@NotNull RankGrant grant) {
         observe("grantIssue " + grant.targetUuid() + " -> " + grant.rankId(),
@@ -115,10 +85,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
                         grant.executorUuid(),
                         grant.executorName(),
                         grant.reason(),
-                        // mythic-core doesn't track grant source today;
-                        // STAFF is the safe default — grants come from the
-                        // /grant menu which is staff-gated. Future work:
-                        // thread an explicit source through GrantService.
+
                         GrantSource.STAFF,
                         durationSecondsFromExpiry(grant.createdAtMillis(), grant.expiresAtMillis())));
     }
@@ -137,8 +104,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     public void grantClear(@NotNull UUID target) {
         observe("grantClear " + target, schema.grantClear(target));
     }
-
-    // ── Punishments ──────────────────────────────────────────────────
 
     @Override
     public void punishIssue(@NotNull PunishmentRecord record) {
@@ -167,8 +132,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         observe("punishClearHistory " + target, schema.punishClearHistory(target, staff));
     }
 
-    // ── Templates ────────────────────────────────────────────────────
-
     @Override
     public void templateUpsert(@NotNull PunishmentTemplate template, boolean seeded) {
         observe("templateUpsert " + template.title(),
@@ -185,8 +148,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         observe("templateRemove " + title, schema.templateRemove(title));
     }
 
-    // ── Blacklist ────────────────────────────────────────────────────
-
     @Override
     public void blacklistAdd(@NotNull UUID target, @NotNull String targetName,
                              @NotNull UUID staff, @NotNull String staffName,
@@ -200,8 +161,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         observe("blacklistRevoke " + entryId, schema.blacklistRevoke(entryId, staff, reason));
     }
 
-    // ── Appeals ──────────────────────────────────────────────────────
-
     @Override
     public void appealOpen(long punishmentId, @NotNull UUID target, @NotNull String message) {
         observe("appealOpen " + punishmentId, schema.appealOpen(punishmentId, target, message));
@@ -209,17 +168,13 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
 
     @Override
     public void appealReview(long appealId, @NotNull UUID reviewer, @NotNull String decision, @NotNull String notes) {
-        // Map the gameplay-side string to the schema enum. Anything other
-        // than APPROVED is treated as DENIED so a typo doesn't accidentally
-        // approve.
+
         net.mythicpvp.suite.database.schema.MythicSchema.AppealDecision dec =
                 "APPROVED".equalsIgnoreCase(decision)
                         ? net.mythicpvp.suite.database.schema.MythicSchema.AppealDecision.APPROVED
                         : net.mythicpvp.suite.database.schema.MythicSchema.AppealDecision.DENIED;
         observe("appealReview " + appealId, schema.appealReview(appealId, reviewer, dec, notes));
     }
-
-    // ── Cosmetics ────────────────────────────────────────────────────
 
     @Override
     public void cosmeticGrant(@NotNull UUID player, @NotNull String cosmeticId,
@@ -228,9 +183,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         net.mythicpvp.suite.database.schema.StdbCosmeticType type =
                 net.mythicpvp.suite.database.schema.StdbCosmeticType.fromWire(cosmeticType);
         if (type == null) {
-            // Unknown type — log + drop rather than throwing. Caller is
-            // fire-and-forget; we don't want one bad lookup to break the
-            // surrounding rank grant.
+
             logger.warning("[stdb] cosmeticGrant skipped: unknown type " + cosmeticType
                     + " for cosmetic " + cosmeticId);
             return;
@@ -239,9 +192,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
                 schema.cosmeticGrant(player, cosmeticId, type, source, reference));
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────
-
-    /** Map mythic-core's {@link PunishmentType} to the schema's wire enum. */
     @NotNull
     private static PunishmentKind kindFor(@NotNull PunishmentType type) {
         return switch (type) {
@@ -265,28 +215,16 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         };
     }
 
-    /**
-     * Convert mythic-core's {@code expiresAtMillis} (absolute epoch ms,
-     * 0 = permanent) into the duration-seconds value the STDB reducers
-     * expect (0 = permanent, otherwise seconds-from-now).
-     *
-     * <p>STDB computes {@code expires_at = now + duration_seconds}
-     * server-side. We send the relative duration so any clock skew
-     * between the proxy and STDB stays bounded.
-     */
     static long durationSecondsFromExpiry(long createdAtMillis, long expiresAtMillis) {
         if (expiresAtMillis <= 0) {
             return 0;
         }
         long deltaMillis = expiresAtMillis - createdAtMillis;
         if (deltaMillis <= 0) {
-            // Expiry not after creation — defensive: defer to STDB's
-            // permanent semantics (0) rather than silently clamp to a
-            // 1-second punishment that the user didn't intend.
+
             return 0;
         }
-        // Sub-second deltas would truncate to 0 (= permanent) which is
-        // wrong for an actually-temporary punishment; clamp to 1s.
+
         return Math.max(1, deltaMillis / 1000);
     }
 
@@ -300,14 +238,9 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         });
     }
 
-    // ── Hydration ────────────────────────────────────────────────────
-
     @Override
     public void hydrate(@NotNull HydrationSink sink) {
-        // Subscribe to every Phase 3 table. The connection auto-resubscribes
-        // on reconnect, so a transient outage doesn't lose us state — STDB
-        // re-delivers the snapshot, and our apply* sinks are idempotent
-        // by id / title.
+
         subscribe(TableNames.RANK_DEFINITIONS, RankDefinitionRow.class,
                 row -> sink.applyRank(toCoreRank(row)),
                 row -> sink.removeRank(row.id()));
@@ -326,11 +259,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         logger.info("[stdb] hydration subscriptions registered for 5 tables");
     }
 
-    /**
-     * Subscribe to a single STDB table, deserialize each event payload
-     * into {@code dtoType}, and dispatch to either the apply or remove
-     * callback based on the operation kind.
-     */
     private <D> void subscribe(
             @NotNull String table,
             @NotNull Class<D> dtoType,
@@ -377,8 +305,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         sink.applyBlacklist(target, row.target_name(), row.active());
     }
 
-    // ── DTO → domain conversions ────────────────────────────────────
-
     @NotNull
     static CoreRank toCoreRank(@NotNull RankDefinitionRow row) {
         Material dye = matchMaterial(row.dye());
@@ -421,10 +347,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     @NotNull
     static PunishmentRecord toPunishmentRecord(@NotNull PunishmentRow row) {
         PunishmentType type = punishmentTypeFor(row.kind());
-        // Active=false on STDB means pardoned/expired. mythic-core's
-        // "pardoned" is the closest semantic match; the audit trail of
-        // who/why pardoned lives in pardoned_by/pardoned_at_micros which
-        // mythic-core's record doesn't model.
+
         boolean pardoned = !row.active();
         return new PunishmentRecord(
                 row.id(),
@@ -452,8 +375,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
                 row.information());
     }
 
-    // ── Mapping helpers ─────────────────────────────────────────────
-
     @NotNull
     private static Material matchMaterial(@NotNull String name) {
         Material m = Material.matchMaterial(name);
@@ -473,10 +394,6 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         }
     }
 
-    /**
-     * STDB Timestamps are microseconds since Unix epoch; mythic-core
-     * uses millis. {@code 0} stays {@code 0} (the "permanent" sentinel).
-     */
     static long microsToMillis(long micros) {
         return micros == 0L ? 0L : micros / 1_000L;
     }
@@ -490,11 +407,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
             case "BAN" -> PunishmentType.BAN;
             case "TEMP_BAN" -> PunishmentType.TEMP_BAN;
             case "BLACKLIST" -> PunishmentType.BLACKLIST;
-            // KICK exists on STDB for proxy emissions; mythic-core has no
-            // kick punishment type — fall through to BAN as the closest
-            // login-blocking analogue. In practice the kick rows never
-            // arrive at the game server from STDB hydration since proxy
-            // kicks are ephemeral.
+
             default -> PunishmentType.BAN;
         };
     }

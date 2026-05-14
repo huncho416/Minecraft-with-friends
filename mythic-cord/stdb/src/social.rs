@@ -1,17 +1,8 @@
-//! Social: friends, parties, mail.
-//!
-//! - Friends are stored as a directed pair `(a, b)` with one row per
-//!   direction so subscriptions for "my friends" are a single index hit.
-//!   The friend-add reducer inserts both directions atomically.
-//! - Parties are ephemeral but live in STDB so cross-shard transfers can
-//!   keep the group together.
-//! - Mail is delivered on next login.
+
 
 use crate::common::{require_uuid, PlayerUuid, ReducerResult};
 use crate::reject;
 use spacetimedb::{reducer, table, ReducerContext, Table, Timestamp};
-
-// ── Friends ──────────────────────────────────────────────────────────
 
 #[table(name = friends, public)]
 pub struct Friend {
@@ -112,8 +103,6 @@ pub fn friend_remove(ctx: &ReducerContext, owner: PlayerUuid, friend: PlayerUuid
     Ok(())
 }
 
-// ── Parties ──────────────────────────────────────────────────────────
-
 #[table(name = parties, public)]
 pub struct Party {
     #[primary_key]
@@ -144,7 +133,7 @@ pub struct PartyMember {
 #[reducer]
 pub fn party_create(ctx: &ReducerContext, leader: PlayerUuid) -> ReducerResult {
     require_uuid(&leader)?;
-    // One party per leader.
+
     let exists = ctx.db.parties().iter().any(|p| p.leader_uuid == leader);
     if exists {
         reject!("{leader} already leads a party");
@@ -197,7 +186,7 @@ pub fn party_leave(ctx: &ReducerContext, party_id: u64, player: PlayerUuid) -> R
     for id in to_delete {
         members.id().delete(id);
     }
-    // If leader leaves, disband.
+
     if let Some(p) = ctx.db.parties().id().find(party_id) {
         if p.leader_uuid == player {
             party_disband(ctx, party_id)?;
@@ -221,8 +210,6 @@ pub fn party_disband(ctx: &ReducerContext, party_id: u64) -> ReducerResult {
     Ok(())
 }
 
-// ── Mail ─────────────────────────────────────────────────────────────
-
 #[table(name = mail, public)]
 pub struct Mail {
     #[primary_key]
@@ -236,8 +223,6 @@ pub struct Mail {
     pub subject: String,
     pub body: String,
 
-    /// JSON-encoded item attachments (so we don't introduce a per-item table
-    /// before we know the shape).
     pub attachments_json: String,
 
     #[index(btree)]

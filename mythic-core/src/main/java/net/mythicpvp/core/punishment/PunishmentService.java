@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class PunishmentService {
 
     public static final String CHANNEL = "core:punishment-update";
-    /** Sentinel staff UUID for system-issued pardons (auto-expire, history clear). */
+
     public static final UUID SYSTEM_STAFF = new UUID(0L, 0L);
 
     private final ProtocolManager protocolManager;
@@ -26,8 +26,7 @@ public final class PunishmentService {
     private final List<PunishmentRecord> records = new CopyOnWriteArrayList<>();
     private final List<PunishmentNotice> notices = new CopyOnWriteArrayList<>();
     private final List<PunishmentTemplate> templates = new CopyOnWriteArrayList<>();
-    // Optional persistence sink. Defaults to no-op so existing tests stay
-    // green; production wiring sets this in MythicCorePlugin.onEnable.
+
     private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
 
     public PunishmentService(@NotNull ProtocolManager protocolManager, @NotNull Clock clock) {
@@ -51,16 +50,10 @@ public final class PunishmentService {
         return record;
     }
 
-    /**
-     * Backward-compatible pardon — used by callers that don't have an
-     * explicit staff context (e.g. /pardon executed by console, auto-
-     * expiry janitors). Routes through {@link #SYSTEM_STAFF}.
-     */
     public boolean pardon(long id) {
         return pardon(id, SYSTEM_STAFF, "");
     }
 
-    /** Pardon with an explicit staff context — preferred for staff actions. */
     public boolean pardon(long id, @NotNull UUID staff, @NotNull String reason) {
         for (PunishmentRecord record : records) {
             if (record.id() == id && !record.pardoned()) {
@@ -87,14 +80,6 @@ public final class PunishmentService {
         return removed;
     }
 
-    /**
-     * Insert-or-replace a punishment record by id without firing the
-     * persistence gateway. Used by the STDB hydration path; calling
-     * {@link #punish} would re-mint an id and re-broadcast the notice.
-     *
-     * <p>Also bumps the auto-inc id generator ahead of any observed id
-     * so future {@link #punish} calls don't collide with STDB-assigned ids.
-     */
     public void applyRecord(@NotNull PunishmentRecord record) {
         records.removeIf(existing -> existing.id() == record.id());
         records.add(record);
@@ -105,21 +90,15 @@ public final class PunishmentService {
         }
     }
 
-    /** Remove a punishment record by id without firing the gateway. */
     public void removeRecord(long recordId) {
         records.removeIf(r -> r.id() == recordId);
     }
 
-    /**
-     * Insert-or-replace a template by title without firing the gateway.
-     * Used by hydration; {@link #addTemplate} would echo back to STDB.
-     */
     public void applyTemplateRow(@NotNull PunishmentTemplate template) {
         templates.removeIf(t -> normalize(t.title()).equals(normalize(template.title())));
         templates.add(template);
     }
 
-    /** Remove a template by title without firing the gateway. */
     public void removeTemplateRow(@NotNull String title) {
         templates.removeIf(t -> normalize(t.title()).equals(normalize(title)));
     }
@@ -150,12 +129,6 @@ public final class PunishmentService {
         return addTemplateInternal(category, duration, title, information, false);
     }
 
-    /**
-     * Bootstrap a template from YAML. Behaviour identical to {@link
-     * #addTemplate(PunishmentCategory, String, String, String)} except
-     * the gateway records the row as {@code seeded=true} so ops can tell
-     * defaults from staff edits.
-     */
     @NotNull
     public PunishmentTemplate seedTemplate(@NotNull PunishmentCategory category, @NotNull String duration, @NotNull String title, @NotNull String information) {
         return addTemplateInternal(category, duration, title, information, true);
@@ -176,7 +149,7 @@ public final class PunishmentService {
             return false;
         }
         templates.remove(existing);
-        // If the title changed, drop the old STDB row before upserting the new one.
+
         if (!normalize(title).equals(normalize(nextTitle))) {
             persistence.templateRemove(title);
         }

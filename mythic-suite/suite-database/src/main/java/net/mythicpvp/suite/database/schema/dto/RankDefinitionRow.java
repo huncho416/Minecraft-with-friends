@@ -1,15 +1,5 @@
 package net.mythicpvp.suite.database.schema.dto;
 
-/**
- * Mirrors the {@code rank_definitions} table row.
- *
- * <p>{@code permissions_json} is a JSON-encoded string array because
- * SpacetimeDB doesn't natively expose {@code Vec<String>} columns.
- * Decode with {@code Gson().fromJson(permissions_json, String[].class)}.
- *
- * <p>{@code dye} is the Bukkit {@code Material} name as a string so the
- * DB layer doesn't import the Bukkit API.
- */
 public record RankDefinitionRow(
         String id,
         String display_name,

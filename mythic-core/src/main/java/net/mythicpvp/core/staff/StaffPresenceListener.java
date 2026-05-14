@@ -10,21 +10,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Bridges Bukkit join/quit events into {@link StaffPresenceService} for
- * staff-flagged players. Non-staff joins/quits stay silent — the
- * staff-presence channel is only meant for cross-server staff visibility.
- *
- * <p>"Staff" is determined by {@code mythic.core.staff.notify} permission,
- * which by convention is granted to every {@code staff=true} rank in
- * {@code ranks.yml}. The check happens on the joining/leaving player
- * (so a staff member sees their own join), not on the audience —
- * audience filtering happens in {@link BukkitStaffPresenceAudience}.
- *
- * <p>Server-switch notifications aren't emitted from here — they fire
- * from the proxy when a player crosses shards (Phase 2 work). This
- * listener only owns local lifecycle.
- */
 public final class StaffPresenceListener implements Listener {
 
     public static final String STAFF_PERMISSION = "mythic.core.staff.notify";

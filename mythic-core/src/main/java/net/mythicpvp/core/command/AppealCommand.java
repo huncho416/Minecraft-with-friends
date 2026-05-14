@@ -14,19 +14,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-/**
- * {@code /appeal <message…>} — file an appeal against the player's
- * most recent active login-blocking punishment.
- *
- * <p>"Most recent active" = scan {@link PunishmentService#active} for
- * the punishment with the latest {@code createdAtMillis}. If the player
- * has no active appealable punishment, the command tells them so.
- *
- * <p>Permission: none (any banned player can appeal, but they're
- * presumably banned so they can't run /appeal in-game — typically
- * they'll appeal through Discord/website. The in-game command exists
- * for muted players and post-pardon record-keeping).
- */
 @CommandAlias("appeal")
 public final class AppealCommand extends MythicCommand {
 
@@ -54,7 +41,7 @@ public final class AppealCommand extends MythicCommand {
                     "&#FF00F8✘ &#FFFFFFUsage: /appeal <message…>"));
             return;
         }
-        // Pick the most recent active punishment as the appeal target.
+
         PunishmentRecord target = punishments.active(player.getUniqueId()).stream()
                 .max(java.util.Comparator.comparingLong(PunishmentRecord::createdAtMillis))
                 .orElse(null);

@@ -23,16 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies that every state-mutating call on RankService, GrantService,
- * and PunishmentService routes through the configured PersistenceGateway.
- *
- * <p>Uses {@link CapturingPersistenceGateway} to record calls; no real
- * STDB connection is involved. The point is parity between in-memory
- * state and what would be persisted — when the gateway is the no-op
- * impl (the default), nothing is persisted; when it's a real impl,
- * every mutation must reach it.
- */
 class PersistenceWiringTest {
 
     private static final UUID TARGET = UUID.fromString("11111111-1111-1111-1111-111111111111");
@@ -46,23 +36,18 @@ class PersistenceWiringTest {
         RankService rankService = new RankService();
         rankService.setPersistence(gateway);
 
-        // Direct register (no YAML) — recorded as seeded=false because
-        // we're not in the load() path.
         rankService.register(rank("default", 1000));
         rankService.register(rank("admin", 10));
 
-        // Field edits and permission edits also re-register.
         assertTrue(rankService.setField("admin", "chat-prefix", "&c[ADMIN]"));
         assertTrue(rankService.addPermission("admin", "mythic.core.test"));
         assertTrue(rankService.removePermission("admin", "mythic.core.test"));
 
-        // 2 registers + 1 setField + 1 addPermission + 1 removePermission = 5 rank defines.
         long defines = gateway.calls.stream()
                 .filter(c -> c instanceof CapturingPersistenceGateway.RankDefine)
                 .count();
         assertEquals(5, defines, "every register() should mirror to gateway");
 
-        // None should be marked seeded — direct register, not YAML load.
         boolean anySeeded = gateway.calls.stream()
                 .filter(c -> c instanceof CapturingPersistenceGateway.RankDefine def && def.seeded())
                 .findAny().isPresent();
@@ -91,7 +76,7 @@ class PersistenceWiringTest {
         assertEquals(1, cleared);
 
         List<Object> calls = gateway.calls;
-        // grantIssue + deactivate + removeInactive + grantIssue + grantClear = 5 calls.
+
         assertEquals(5, calls.size(), "every mutation should fire one gateway call");
         assertTrue(calls.get(0) instanceof CapturingPersistenceGateway.GrantIssue);
         assertTrue(calls.get(1) instanceof CapturingPersistenceGateway.GrantDeactivate);
@@ -110,23 +95,21 @@ class PersistenceWiringTest {
     @Test
     void punishmentServiceMutationsMirrorToGateway() {
         CapturingPersistenceGateway gateway = new CapturingPersistenceGateway();
-        // Real ProtocolManager singleton; we don't subscribe channels in test.
+
         PunishmentService service = new PunishmentService(ProtocolManager.getInstance(), FIXED_CLOCK);
         service.setPersistence(gateway);
 
-        // Seeding goes through the gateway with seeded=true.
         service.seedTemplate(PunishmentCategory.WARN, "permanent",
                 "General Warning", "Used for minor rule reminders.");
-        // addTemplate (runtime, not seeding) is seeded=false.
+
         service.addTemplate(PunishmentCategory.MUTE, "1d", "Chat #1", "First chat offense.");
-        // editTemplate keeps title → no remove call, just upsert.
+
         assertTrue(service.editTemplate("Chat #1", PunishmentCategory.MUTE, "2d", "Chat #1", "Updated."));
-        // editTemplate with rename → remove + upsert.
+
         assertTrue(service.editTemplate("Chat #1", PunishmentCategory.MUTE, "2d", "Chat #2", "Renamed."));
-        // removeTemplate of an existing template fires a single remove call.
+
         assertTrue(service.removeTemplate("Chat #2"));
 
-        // punish + pardon
         PunishmentRequest request = new PunishmentRequest(
                 TARGET, "Notch", STAFF, "Admin",
                 PunishmentType.TEMP_BAN, "exploit", "screenshot.png",
@@ -134,18 +117,8 @@ class PersistenceWiringTest {
         long punishmentId = service.punish(request).id();
         assertTrue(service.pardon(punishmentId, STAFF, "appeal accepted"));
 
-        // Tally:
-        // 1× seedTemplate(seeded=true)
-        // 1× addTemplate(seeded=false)
-        // 1× editTemplate(no rename) → 1 upsert
-        // 1× editTemplate(with rename) → 1 remove + 1 upsert
-        // 1× removeTemplate → 1 remove
-        // 1× punish → 1 punishIssue
-        // 1× pardon → 1 punishPardon
-        // = 8 gateway calls total
         assertEquals(8, gateway.calls.size());
 
-        // Spot-check the seeded flag.
         CapturingPersistenceGateway.TemplateUpsert seeded =
                 (CapturingPersistenceGateway.TemplateUpsert) gateway.calls.get(0);
         assertEquals(true, seeded.seeded());
@@ -153,7 +126,6 @@ class PersistenceWiringTest {
                 (CapturingPersistenceGateway.TemplateUpsert) gateway.calls.get(1);
         assertEquals(false, runtime.seeded());
 
-        // Verify the punish carried all denormalized fields.
         Object punishCall = gateway.calls.stream()
                 .filter(c -> c instanceof CapturingPersistenceGateway.PunishIssue)
                 .findFirst().orElseThrow();
@@ -168,16 +140,11 @@ class PersistenceWiringTest {
 
     @Test
     void noopGatewayIsTheDefault() {
-        // No setPersistence call — gateway slot stays at the no-op singleton.
-        // This is the contract that keeps the friend's pre-existing tests
-        // green without modification.
+
         RankService rankService = new RankService();
-        // Reflection would be heavy; instead, exercise a mutation and
-        // assert no exception is thrown when no gateway is set. The
-        // default singleton is also reachable for direct identity check.
+
         rankService.register(rank("default", 1000));
-        // If the default ever changed away from no-op, this would either
-        // throw or block — both detectable here without a fake gateway.
+
         assertSame(NoopPersistenceGateway.INSTANCE, NoopPersistenceGateway.INSTANCE);
     }
 

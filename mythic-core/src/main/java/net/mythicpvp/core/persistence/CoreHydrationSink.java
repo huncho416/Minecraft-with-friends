@@ -14,21 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 
-/**
- * Hydration sink backed by mythic-core's three runtime services.
- * Routes inbound rows directly into the {@code apply*} / {@code remove*}
- * methods that bypass the persistence gateway (so we don't echo back to
- * STDB on every row).
- *
- * <p>Threading: this class is **not** thread-safe by itself. Wrap it in
- * {@link MainThreadHydrationSink} when the underlying services need
- * Bukkit-main-thread access.
- *
- * <p>Maintains an in-memory {@code blacklist} map mirroring the
- * {@code punishment_blacklist} table — a future enforcement hook can
- * read it on login. For now the sink only tracks the state; gating is
- * follow-up work flagged in PLAN.
- */
 public final class CoreHydrationSink implements HydrationSink {
 
     private final Logger logger;
@@ -69,18 +54,16 @@ public final class CoreHydrationSink implements HydrationSink {
         }
     }
 
-    /** Read-only snapshot of currently-blacklisted player UUIDs. */
     @NotNull
     public java.util.Set<UUID> blacklistedUuids() {
         return java.util.Set.copyOf(blacklist.keySet());
     }
 
-    /** Convenience for login-time enforcement; lazily exposed for future hooks. */
     public boolean isBlacklisted(@NotNull UUID target) {
         return blacklist.containsKey(target);
     }
 
-    @SuppressWarnings("unused") // logger reserved for future apply* error handling
+    @SuppressWarnings("unused")
     private void logSwallowed(@NotNull String op, @NotNull Throwable error) {
         logger.warning("[hydration] " + op + " failed: " + error.getMessage());
     }

@@ -8,18 +8,6 @@ import net.mythicpvp.suite.command.MythicCommand;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * {@code /broadcast <message…>} — fan a single line of staff text to
- * every player on every server in the network.
- *
- * <p>Permission: {@code mythic.core.broadcast}. Console-friendly so it
- * can run from rcon and from scripted hooks.
- *
- * <p>The {@code String[]} vararg captures everything after the command
- * name; the message preserves spaces and any embedded
- * {@code &#RRGGBB} hex sequences (rendered via Mythic's hex parser
- * downstream in {@link BroadcastService#broadcast}).
- */
 @CommandAlias("broadcast")
 @CommandPermission("mythic.core.broadcast")
 public final class BroadcastCommand extends MythicCommand {

@@ -17,6 +17,6 @@ class MythicHexTest {
 
     @Test
     void appliesFontKey() {
-        assertEquals("smpd:font/mythic", MythicHex.font("smpd:font/mythic", "Title").font().asString());
+        assertEquals("mythic:font/title", MythicHex.font("mythic:font/title", "Title").font().asString());
     }
 }

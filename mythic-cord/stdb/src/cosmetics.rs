@@ -1,8 +1,4 @@
-//! Cosmetic ownership and equipped loadout.
-//!
-//! Cosmetics are EULA-safe: hats, titles, particles, chat tags. Catalog
-//! definitions (display name, model id, rarity, source) live in YAML in the
-//! suite — STDB only stores ownership and equip state.
+
 
 use crate::common::{require_backend, require_uuid, PlayerUuid, ReducerResult};
 use crate::reject;
@@ -17,25 +13,19 @@ pub struct CosmeticGrant {
     #[index(btree)]
     pub player_uuid: PlayerUuid,
 
-    /// Catalog id (e.g. `hat.party_crown`).
     #[index(btree)]
     pub cosmetic_id: String,
 
-    /// One of [`cosmetic_type`] constants.
     #[index(btree)]
     pub cosmetic_type: String,
 
-    /// `TEBEX`, `EVENT`, `STAFF_GRANT`, `ACHIEVEMENT`.
     pub source: String,
 
-    /// Optional reference (Tebex tx id, achievement id, …).
     pub reference: String,
 
     pub granted_at: Timestamp,
 }
 
-/// One row per (player, cosmetic_type) — the currently equipped item for
-/// that slot. Empty `cosmetic_id` = nothing equipped.
 #[table(name = cosmetic_equipped, public)]
 pub struct EquippedSlot {
     #[primary_key]
@@ -53,8 +43,6 @@ pub struct EquippedSlot {
     pub equipped_at: Timestamp,
 }
 
-// ── Reducers ──────────────────────────────────────────────────────────
-
 #[reducer]
 pub fn cosmetic_grant(
     ctx: &ReducerContext,
@@ -69,7 +57,7 @@ pub fn cosmetic_grant(
     if cosmetic_id.is_empty() {
         reject!("cosmetic_id required");
     }
-    // Idempotent: don't double-grant the same id to the same player.
+
     let already = ctx
         .db
         .cosmetic_grants()
@@ -100,7 +88,6 @@ pub fn cosmetic_equip(
     require_backend(ctx)?;
     require_uuid(&player_uuid)?;
 
-    // Verify ownership unless unequipping (empty id).
     if !cosmetic_id.is_empty() {
         let owned = ctx
             .db

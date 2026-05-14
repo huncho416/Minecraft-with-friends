@@ -18,7 +18,7 @@ public final class GrantFlowService {
     private final RankMenuText text;
 
     public GrantFlowService(@NotNull RankService rankService, @NotNull GrantService grantService, @NotNull ChatPromptService prompts) {
-        // Back-compat: callers without a menus.yml use defaults.
+
         this(rankService, grantService, prompts, RankMenuText.DEFAULTS);
     }
 
@@ -51,8 +51,7 @@ public final class GrantFlowService {
 
     public void openDuration(@NotNull Player executor, @NotNull GrantFlow flow) {
         MythicMenu menu = MythicMenu.create(3, text.grantDurationTitle());
-        // Six preset slots; anything beyond that is dropped (operators
-        // who need more presets can edit the menu, or fall back to /cgrant).
+
         int[] slots = {10, 11, 12, 13, 14, 15};
         List<String> durations = text.durationPresets();
         int count = Math.min(slots.length, durations.size());

@@ -5,14 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * Pure-fn tests for the scope-arg parser used by {@code /chat <sub> [scope]}.
- *
- * <p>The default-to-LOCAL behaviour is a safety policy — a typo or
- * forgotten arg shouldn't accidentally mute the entire network. Tests
- * pin every shorthand we accept so future refactors don't quietly drop
- * one.
- */
 class ChatCommandTest {
 
     @Test
@@ -32,7 +24,7 @@ class ChatCommandTest {
 
     @Test
     void unknownArgFallsBackToLocal() {
-        // Tolerant rather than rejecting — a typo defaults to the safe scope.
+
         assertEquals(ChatScope.LOCAL, ChatCommand.parseScope("worldwide"));
         assertEquals(ChatScope.LOCAL, ChatCommand.parseScope("local"));
         assertEquals(ChatScope.LOCAL, ChatCommand.parseScope("here"));

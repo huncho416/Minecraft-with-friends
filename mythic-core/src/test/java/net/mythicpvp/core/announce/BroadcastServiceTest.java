@@ -20,15 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies {@link BroadcastService} rotation logic and config loading.
- *
- * <p>The cross-shard echo skip is structurally guarded by the {@code
- * origin} field on {@link BroadcastNotice} and the {@code !equals(shardId)}
- * predicate in {@link BroadcastService#receive}. Pinning that here would
- * require a multi-server harness — the smaller {@link BroadcastNoticeTest}
- * pins the wire shape instead.
- */
 class BroadcastServiceTest {
 
     private ServerMock server;
@@ -88,9 +79,7 @@ class BroadcastServiceTest {
                 - "beta"
                 - "gamma"
             """));
-        // Need an online player so the broadcast render loop has someone
-        // to push to under MockBukkit (otherwise the path is fine but
-        // there's nothing to assert).
+
         server.addPlayer("watcher");
 
         assertEquals("alpha", service.tickAnnouncement());
@@ -101,8 +90,7 @@ class BroadcastServiceTest {
 
     @Test
     void intervalSecondsHasMinimumFiveSeconds() {
-        // Defensive minimum so a typo of `interval-seconds: 0` doesn't
-        // turn into a tight loop pegging the scheduler.
+
         BroadcastService service = new BroadcastService(protocolManager, "hub-1");
         service.load(configWith("""
             announcements:
@@ -140,15 +128,9 @@ class BroadcastServiceTest {
         assertTrue(service.enabled());
     }
 
-    /**
-     * Build a {@link MythicConfig} from inline YAML by writing it to a
-     * temp file the plugin owns, then loading via the production code
-     * path. Avoids fragile reflection / sub-classing.
-     */
     private MythicConfig configWith(String yaml) {
         try {
-            // MythicConfig resolves files inside the plugin's data folder
-            // — point that at our temp dir for the duration of the test.
+
             File dataFolder = plugin.getDataFolder();
             dataFolder.mkdirs();
             File file = new File(dataFolder, "announcements.yml");

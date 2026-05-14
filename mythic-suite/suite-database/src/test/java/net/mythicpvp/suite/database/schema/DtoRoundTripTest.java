@@ -11,11 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies DTO records deserialize correctly from JSON payloads matching
- * the Rust struct field names. Gson uses record component names verbatim,
- * so snake_case in the record definitions is what STDB emits.
- */
 class DtoRoundTripTest {
 
     private final Gson gson = new Gson();
@@ -126,7 +121,7 @@ class DtoRoundTripTest {
                 "vip", 1, 2, 3, "hub-1", "eu-west", false,
                 10, 20, 30);
         String json = gson.toJson(row);
-        // Round-trip parity — if Gson ever renames record fields, this catches it.
+
         PlayerRow back = gson.fromJson(json, PlayerRow.class);
         assertEquals(row, back);
         assertTrue(json.contains("\"username_lower\":\"notch\""));

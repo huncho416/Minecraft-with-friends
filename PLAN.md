@@ -5,7 +5,7 @@
 > **Version:** 1.21.1 · **Server:** Folia · **Proxy:** MythicCord (SpacerCord fork)
 > **Language:** Java 21 (server plugins), Rust (proxy) · **Build:** Maven
 > **Database:** SpacetimeDB (sole database — no Redis) · **Bedrock:** Geyser + Voice Chat
-> **Team:** 2 developers · **Store:** Tebex · **Hosting:** Multi-region bare metal/VPS
+> **Team:** 2 developers · **Hosting:** Multi-region bare metal/VPS
 > **Anti-Cheat:** Custom solution (owner-provided, not in scope of this plan)
 
 ---
@@ -84,10 +84,9 @@ The **HexAPI** parses `&#RRGGBB` tags across all text surfaces. The custom **Myt
 | **Database** | SpacetimeDB (self-hosted, sole DB) | Persistence, real-time sync, pub/sub |
 | **Bedrock** | Geyser (integrated in proxy) | Bedrock→Java translation |
 | **Voice** | SimpleVoice-Geyser | Proximity voice chat |
-| **Resource Pack** | Existing SMP Deluxe base (`smpd` namespace) | Custom textures, models, fonts |
+| **Resource Pack** | MythicPvP custom (`mythic` namespace) | Custom textures, models, fonts |
 | **Web API** | Ktor | REST gateway with JWT + rate limiting |
 | **Website** | Next.js + SpacetimeDB TS SDK | Real-time frontend |
-| **Store** | Tebex (webhook → REST gateway) | Cosmetic-only purchases (EULA compliant) |
 | **CI/CD** | GitHub Actions | Build → test → package → deploy |
 | **Monitoring** | OpenTelemetry + Prometheus + Grafana | Metrics, traces, dashboards |
 | **Errors** | Sentry | Runtime error tracking |
@@ -219,7 +218,7 @@ Universal number/time/date formatting used by economy, scoreboards, chat, and al
 
 ### NEW Module 20: `suite-resourcepack` — ResourcePackAPI
 
-Manages the custom texture pack (based on existing `TexturePack/` with `smpd` namespace).
+Manages the custom texture pack (`TexturePack/` with the `mythic` namespace).
 
 - **Pack serving:** Host pack via HTTP, auto-send to players on join
 - **Bedrock conversion:** Auto-convert Java pack for Geyser/Bedrock clients
@@ -230,7 +229,7 @@ Manages the custom texture pack (based on existing `TexturePack/` with `smpd` na
   ```
 - **Custom font registry:** Register bitmap/TTF fonts for scoreboard, tab, menus
   ```java
-  MythicFont.register("mythic_title", "smpd:font/mythic_title");
+  MythicFont.register("mythic_title", "mythic:font/title");
   // Use in HexAPI: MythicHex.font("mythic_title", "&#FF00F8MythicPvP")
   ```
 - **Pack versioning:** Hash-based, force re-download on update
@@ -247,7 +246,7 @@ Cosmetic system powered by resource pack custom models. **EULA compliant** — c
   - **Kill Effects** — Visual/sound on player kill
   - **Win Effects** — Visual on KOTH/event win
   - **Chat Tags** — Cosmetic prefixes/icons in chat
-- **Unlock system:** Tebex purchases, achievement rewards, event prizes
+- **Unlock system:** Achievement rewards, event prizes, rank bundles
 - **Equip GUI:** `/cosmetics` menu via MenuAPI
 - **Preview system:** Try-before-buy particle/hat preview
 - **SpacetimeDB persistence:** Owned cosmetics + equipped loadout per player
@@ -294,9 +293,8 @@ Full player disguise system. Uses the **same internal packet layer** as `suite-n
 - Secrets managed via environment variables (never in config files)
 
 ### EULA Compliance
-- **Store (Tebex) sells cosmetic-only items:** hats, titles, particles, chat tags
-- **No gameplay-affecting purchases:** No P2W ranks, no enchant boosts, no point multipliers
-- Ranks are earned through gameplay; cosmetics are purchasable
+- **No store, no real-money transactions:** the project intentionally has no monetization surface; all cosmetics are earned through gameplay, achievements, or staff-issued rank bundles.
+- Ranks are earned or staff-granted; never sold.
 
 ---
 
@@ -573,7 +571,7 @@ erDiagram
 | Docker Compose: full network + dev variant (STDB, proxy, Folia, API, monitoring) | Dev A | ✅ |
 | `stdb-publish` container — auto-publishes WASM module on `compose up` | Dev A | ✅ |
 | Monitoring stack: Prometheus + Grafana provisioning, starter dashboard | Dev B | ✅ |
-| Vendor `infrarust/` subtree via `mythic-cord/tools/vendor-infrarust.{sh,ps1}` | Dev A | ⏳ pending bootstrap |
+| Vendor `infrarust/` subtree via `mythic-cord/tools/vendor-infrarust.{sh,ps1}` | Dev A | ✅ |
 | Geyser integration + Bedrock resource pack conversion | Dev B | ✅ |
 | SimpleVoice-Geyser deployment + proximity config | Dev B | ✅ |
 | Sentry integration in Java suite | Dev B | ✅ |
@@ -585,8 +583,9 @@ erDiagram
 | **STDB schema** | [`mythic-cord/stdb/`](mythic-cord/stdb/) | 10 modules, 28 tables, 43 reducers, `SCHEMA_VERSION=2` (Phase 3 added rank_definitions, rank_grants, punishment_templates, punishment_blacklist; widened punishments) |
 | **Java mirror** | [`mythic-suite/suite-database/schema/`](mythic-suite/suite-database/src/main/java/net/mythicpvp/suite/database/schema/) | 28 files (5 enums, 18 DTO records, `MythicSchema` typed client, `SchemaVersion` boot check) — **17 new tests, all green** |
 | **Rust bridge** | [`mythic-cord/stdb-bridge/`](mythic-cord/stdb-bridge/) | Driver thread + `StdbHandle` + `MythicStdbClient` (typed reducer wrappers) |
-| **Routing plugin** | [`mythic-cord/plugin-routing/`](mythic-cord/plugin-routing/) | `pick_shard` (mirrors STDB pure fn), `RegistryView`, heartbeat task, Infrarust event hooks (gated by `with-infrarust` feature) |
-| **Proxy binary** | [`mythic-cord/proxy/`](mythic-cord/proxy/) | Standalone build today (registry citizen + admin HTTP); flips to full proxy after vendor script runs |
+| **Routing helpers** | [`mythic-cord/plugin-routing/`](mythic-cord/plugin-routing/) | `pick_shard` (mirrors STDB pure fn), `RegistryView` (live snapshot of `server_registry` table), heartbeat task. Pure helpers consumed by the sidecar — no Infrarust plugin hooks (modern Infrarust v2 has no per-connection routing API; backend selection is config-file driven). |
+| **MythicCord sidecar** | [`mythic-cord/proxy/`](mythic-cord/proxy/) | Standalone binary that registers in STDB, exposes admin HTTP, and (with `--features with-infrarust`) runs `ConfigExporter` — debounced loop that subscribes to `RegistryView` and writes one `<shard-id>.toml` per healthy server into Infrarust's `servers_dir`, pruning stale files. Infrarust runs as a separate process beside the sidecar and hot-reloads when the directory changes. |
+| **Vendored Infrarust** | [`mythic-cord/infrarust/`](mythic-cord/infrarust/) | `v2.0.0-alpha.6` git subtree pulled by `tools/vendor-infrarust.ps1`. AGPL-3.0 with plugin exception; `mythic-cord/LICENSE` carries both terms. |
 | **Pterodactyl egg** | [`mythic-cord/pterodactyl/egg-mythiccord.json`](mythic-cord/pterodactyl/egg-mythiccord.json) | 11 env variables, install script downloads musl release, default config seeded on first install |
 | **Docker scaffold** | [`tools/docker/`](tools/docker/) | `docker-compose{,dev}.yml`, 5 Dockerfiles, monitoring + provisioning, up/down scripts |
 | **Geyser deployment** | [`tools/docker/geyser/`](tools/docker/geyser/) | Standalone Bedrock sidecar on UDP `19132`, runtime-rendered Geyser target defaults to Hub and switches to MythicCord when traffic support is enabled, Bedrock pack mount at `geyser/packs/`, process-backed `.mcpack` conversion hook |
@@ -597,7 +596,7 @@ erDiagram
 
 - **Forked Infrarust directly, not SpacerCord.** SpacerCord stays a reference — its driver-thread / clone-able-handle pattern is cherry-picked into [`stdb-bridge`](mythic-cord/stdb-bridge/), not its `module_bindings/` (which would conflict with our schema).
 - **AGPL-3.0** carries from Infrarust. The proxy stack is AGPL-3.0-or-later with the upstream plugin exception preserved (closed-source plugins still permitted). The Java suite under `mythic-suite/` is licensed separately at the repo root.
-- **Two operating modes via one cargo feature** (`with-infrarust`). Default standalone build works today (no Infrarust subtree needed). Full proxy is one `--features with-infrarust` away after the vendor script runs. Means the workspace stays buildable through the rebase process instead of being broken-by-design.
+- **Sidecar architecture, not in-process plugin.** Modern Infrarust v2 doesn't expose per-connection routing hooks to plugins (the only public lifecycle action is `deny`, not redirect; `ConfigService` is read-only). Backend selection is config-file driven — Infrarust watches `servers_dir/` and hot-reloads on file change. So MythicCord runs as a separate process beside Infrarust: it owns `servers_dir/`, regenerates one TOML per healthy `server_registry` row, and lets Infrarust's built-in file watcher pick up changes. Two cargo features select runtime mode: default standalone (admin HTTP + heartbeat only); `--features with-infrarust` adds the `ConfigExporter` loop.
 - **Schema versioning is a strict gate.** `SCHEMA_VERSION` is asserted on both the Java side (`SchemaVersion.assertMatches`) and the Rust side (`assert_schema_version`) at boot. Mismatched suite vs STDB module refuses to start.
 - **`pick_shard` lives twice** — once in [`mythic-stdb`](mythic-cord/stdb/src/sessions.rs) for cross-shard transfers, once in [`plugin-routing`](mythic-cord/plugin-routing/src/router.rs) for the proxy hot path. Identical formula, both unit-tested, no network round-trip per login.
 - **Pterodactyl integration is real**, not a placeholder. SIGTERM/SIGINT triggers drain → status flip → 500ms grace → final offline heartbeat → exit 0. Admin HTTP exposes `/health`, `/metrics`, `POST /admin/drain` for manual rolling deploys.
@@ -611,9 +610,10 @@ erDiagram
 | Docker Compose dev syntax | `docker compose -f tools/docker/docker-compose.dev.yml config --quiet` | Clean after voice and Sentry wiring |
 | `suite-database` schema package | `mvn -pl mythic-suite/suite-database test` | **20/20 green** (`MythicSchemaTest` 12, `DtoRoundTripTest` 5, `SpacetimeConnectionTest` 3) |
 | `mythic-stdb` (SpacetimeDB module) | `cargo check -p mythic-stdb --target wasm32-unknown-unknown` | Clean — 0 errors, 0 warnings |
-| `mythiccord-stdb-bridge` | `cargo test -p mythiccord-stdb-bridge` | **2/2 green** (`enum_wire_values`, `registry_announce_args_shape`) |
-| `mythiccord-plugin-routing` | `cargo test -p mythiccord-plugin-routing` | **4/4 green** (3× `router::*` + `registry_view::insert_then_update_then_delete`) |
-| `mythiccord` (proxy binary, standalone) | `cargo check -p mythiccord` | Clean — 0 errors, 0 warnings |
+| `mythiccord-stdb-bridge` | `cargo test -p mythiccord-stdb-bridge` | **3/3 green** |
+| `mythiccord-plugin-routing` | `cargo test -p mythiccord-plugin-routing` | **4/4 green** |
+| `mythiccord` (sidecar, with-infrarust) | `cargo test -p mythiccord --features with-infrarust` | **3/3 green** (`config_export::*` write/prune/fingerprint) |
+| `mythiccord` (sidecar, standalone) | `cargo build -p mythiccord` | Clean |
 
 Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_64-pc-windows-gnu`) + winlibs MinGW-w64 14.2.0 for Rust. All toolchains installed under `.build-tools/` (gitignored) so the host environment stays clean.
 
@@ -642,8 +642,7 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 | `mythic-core`: tablist, scoreboard, nametag formatting bound to YAML + ranks via `DisplayService` + `PlayerSessionListener`, with cosmetic chat-tag/title placeholders + disguise rank/name override | Dev A | ✅ |
 | `mythic-core`: friends, party, mail, offline rewards | Dev B | |
 | `mythic-hub`: spawn, server selector, cosmetic preview, hub activities using `mythic-core` services | Dev B | |
-| Resource pack: finalize MythicPvP custom font, rebrand `smpd` → `mythic` namespace | Dev B | |
-| Tebex webhook integration → cosmetic unlock pipeline | Dev A | |
+| Resource pack: finalize MythicPvP custom font, rebrand `smpd` → `mythic` namespace | Dev A | ✅ |
 
 #### Current Phase 3 Implementation Notes
 
@@ -793,8 +792,8 @@ Core protocol channels: `core:staff-chat`, `core:staff-presence`, `core:broadcas
 | Phase | Name | Weeks | Key Deliverables |
 |-------|------|-------|-----------------|
 | **1** | **Mythic Suite** ⭐ | 1–8 | All 23 foundation APIs, YAML-configurable text surfaces, tested and documented |
-| **2** | **MythicCord + Docker** 🚧 | 9–12 | STDB schema ✅ (wasm32 build clean), Java mirror ✅ (20/20 tests), Rust bridge ✅ (2/2 tests), routing plugin ✅ (4/4 tests), standalone proxy ✅ (cargo check clean), Pterodactyl egg ✅, Docker scaffold + monitoring ✅, Geyser sidecar ✅, voice deployment ✅, Sentry bootstrap ✅. Infrarust subtree vendored on first bootstrap |
-| **3** | Core + Hub | 13–16 | Network-wide essentials/staff suite, punishments with silent mode, ranks, YAML-driven tab/scoreboard/chat, friends/party, hub, Tebex, resource pack |
+| **2** | **MythicCord + Docker** ✅ | 9–12 | STDB schema (wasm32 build clean), Java mirror (20/20 tests), Rust bridge (3/3 tests), routing helpers (4/4 tests), MythicCord sidecar with config exporter (3/3 tests), Pterodactyl egg, Docker scaffold + monitoring, Geyser sidecar, voice deployment, Sentry bootstrap, Infrarust v2.0.0-alpha.6 vendored as git subtree |
+| **3** | Core + Hub | 13–16 | Network-wide essentials/staff suite, punishments with silent mode, ranks, YAML-driven tab/scoreboard/chat, friends/party, hub, resource pack |
 | **4** | Skyblock Core | 17–24 | Islands, economy, enchants, quests |
 | **5** | PvP & Events | 25–30 | PvP zones, KOTH, airdrops, points |
 | **6** | Skills & Leaderboards | 31–36 | 4 skills, leaderboard system |

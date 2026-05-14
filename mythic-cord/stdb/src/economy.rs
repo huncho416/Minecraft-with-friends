@@ -1,14 +1,4 @@
-//! Economy: append-only transaction log + denormalized balances.
-//!
-//! Source-of-truth balances live on the `players` row (see
-//! [`crate::players::adjust_balance`]). The transaction log here exists for:
-//! - **Audit** — every mutation is attributable.
-//! - **Rollback** — `economy_rollback` reverses all transactions in a
-//!   time window for a player or globally (used for dupe incidents).
-//! - **Anomaly detection** — downstream jobs flag balance changes that
-//!   exceed configured σ thresholds.
-//!
-//! We never delete transaction rows. Cold archival is a separate pipeline.
+
 
 use crate::common::{currency, require_backend, require_uuid, PlayerUuid, ReducerResult};
 use crate::players::adjust_balance;
@@ -24,36 +14,23 @@ pub struct Transaction {
     #[index(btree)]
     pub player_uuid: PlayerUuid,
 
-    /// One of [`currency`] constants.
     #[index(btree)]
     pub currency: String,
 
-    /// Signed delta. Positive = credit, negative = debit.
     pub amount: i64,
 
-    /// Balance after this txn — handy for reconciliation reports.
     pub balance_after: i64,
 
-    /// Free-form source tag. Conventional values:
-    /// `KILL_REWARD`, `SHOP_BUY`, `SHOP_SELL`, `STAFF_GRANT`, `TEBEX`,
-    /// `ROLLBACK`, `QUEST`, `EVENT`, `INTEREST`.
     #[index(btree)]
     pub source: String,
 
-    /// Free-form correlator (shop item id, quest id, tebex tx id, …).
     pub reference: String,
 
-    /// `true` if this row was inserted as part of a rollback. These are
-    /// excluded from rollback windows to prevent recursive reversal.
     pub is_rollback: bool,
 
     pub at: Timestamp,
 }
 
-// ── Reducers ──────────────────────────────────────────────────────────
-
-/// Credit `amount` of `currency` to `uuid`. Negative `amount` debits.
-/// Atomically updates the denormalized balance and appends a txn row.
 #[reducer]
 pub fn economy_adjust(
     ctx: &ReducerContext,
@@ -86,8 +63,6 @@ pub fn economy_adjust(
     Ok(())
 }
 
-/// Atomic transfer between two players (e.g. trade, /pay).
-/// Both legs succeed or both fail.
 #[reducer]
 pub fn economy_transfer(
     ctx: &ReducerContext,
@@ -109,7 +84,7 @@ pub fn economy_transfer(
     if !currency::is_valid(&currency_code) {
         reject!("invalid currency: {currency_code}");
     }
-    // Order matters: debit first so insufficient-funds rejects atomically.
+
     let from_balance = adjust_balance(ctx, &from_uuid, &currency_code, -amount)?;
     let to_balance = adjust_balance(ctx, &to_uuid, &currency_code, amount)?;
     let now = ctx.timestamp;
@@ -139,13 +114,6 @@ pub fn economy_transfer(
     Ok(())
 }
 
-/// Reverse every non-rollback transaction for `uuid` in
-/// `[since_micros, until_micros]` (inclusive). Each reversal appends a
-/// new txn row tagged `is_rollback=true`.
-///
-/// Performance note: this is O(N) over `transactions` for the player.
-/// Acceptable since rollbacks are operator-triggered and rare. If we
-/// outgrow it, add a (player_uuid, at) composite index.
 #[reducer]
 pub fn economy_rollback(
     ctx: &ReducerContext,

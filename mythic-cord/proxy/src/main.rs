@@ -1,25 +1,9 @@
-//! MythicCord proxy entry point.
-//!
-//! Two operating modes:
-//!
-//! * **Default build** (`cargo run -p mythiccord`):
-//!   Standalone "registry citizen" — connects to mythic-stdb, announces
-//!   itself, heartbeats, mirrors `server_registry`, and serves the admin
-//!   HTTP surface. Does **not** accept Minecraft traffic. Useful for
-//!   smoke-testing the STDB plumbing before the Infrarust subtree lands
-//!   and for ops verification.
-//!
-//! * **Full build** (`cargo run -p mythiccord --features with-infrarust`):
-//!   Wraps the vendored Infrarust binary, installs the routing plugin,
-//!   accepts Minecraft handshakes on port 25565.
-//!
-//! Both modes share signal-handling, config loading, and the admin HTTP
-//! surface so Pterodactyl manages them identically.
-
 #![allow(clippy::doc_markdown)]
 
 mod admin;
 mod config;
+#[cfg(feature = "with-infrarust")]
+mod config_export;
 mod state;
 
 use anyhow::Context;
@@ -59,7 +43,6 @@ async fn main() -> anyhow::Result<()> {
         max_players: cfg.identity.max_players,
     };
 
-    // ── STDB driver ──────────────────────────────────────────────────
     let driver_cfg = DriverConfig {
         stdb_uri: cfg.stdb.uri.clone(),
         module_name: cfg.stdb.module.clone(),
@@ -67,7 +50,6 @@ async fn main() -> anyhow::Result<()> {
     };
     let (handle, _driver_join) = spawn_driver(driver_cfg);
 
-    // Schema version check — refuse to start on mismatch.
     if let Err(e) = assert_schema_version(&handle).await {
         anyhow::bail!("STDB schema check failed: {e}");
     }
@@ -75,11 +57,9 @@ async fn main() -> anyhow::Result<()> {
 
     let stdb = Arc::new(MythicStdbClient::new(handle.clone()));
 
-    // ── Registry mirror ──────────────────────────────────────────────
     let registry = RegistryView::new();
     mythiccord_plugin_routing::registry_view::spawn(handle.clone(), registry.clone());
 
-    // ── Shared state ─────────────────────────────────────────────────
     let status = Arc::new(RwLock::new(ServerStatus::Starting));
     let state = Arc::new(ProxyState {
         identity: identity.clone(),
@@ -88,7 +68,6 @@ async fn main() -> anyhow::Result<()> {
         status: status.clone(),
     });
 
-    // ── Heartbeat task ───────────────────────────────────────────────
     let runtime = RoutingRuntime {
         identity: identity.clone(),
         stdb: stdb.clone(),
@@ -101,7 +80,6 @@ async fn main() -> anyhow::Result<()> {
     }
     tokio::spawn(mythiccord_plugin_routing::heartbeat::run(runtime.clone()));
 
-    // ── Admin HTTP ───────────────────────────────────────────────────
     let admin_bind: std::net::SocketAddr = cfg
         .admin
         .bind
@@ -114,34 +92,15 @@ async fn main() -> anyhow::Result<()> {
         }
     });
 
-    // ── Infrarust accept loop (optional feature) ────────────────────
-    // When the feature is on, run Infrarust as a sibling task and race
-    // its termination against the OS signal. When off, the signal IS the
-    // primary loop — admin HTTP and heartbeat keep us busy in the meantime.
     #[cfg(feature = "with-infrarust")]
-    let infrarust_task = {
-        info!("starting Infrarust core with mythic-cord routing plugin");
-        let runtime_for_infrarust = runtime.clone();
-        Some(tokio::spawn(async move {
-            // `infrarust::run_with_plugin` is the real entry once the
-            // subtree is vendored; until then this branch doesn't compile.
-            infrarust::run_with_plugin(runtime_for_infrarust).await
-        }))
-    };
-    #[cfg(not(feature = "with-infrarust"))]
-    let infrarust_task: Option<tokio::task::JoinHandle<anyhow::Result<()>>> = None;
+    {
+        let exporter = config_export::ConfigExporter::from_config(registry.clone(), &cfg);
+        tokio::spawn(exporter.run());
+        info!("config exporter started; Infrarust runs as a separate sidecar process");
+    }
 
-    let shutdown_reason = tokio::select! {
-        () = wait_for_shutdown_signal() => "signal",
-        result = wait_for_optional_task(infrarust_task) => {
-            match result {
-                Ok(Ok(())) => "infrarust exited cleanly",
-                Ok(Err(e)) => { warn!(?e, "infrarust returned error"); "infrarust error" }
-                Err(e) => { warn!(?e, "infrarust task panicked"); "infrarust panic" }
-            }
-        }
-    };
-    info!(reason = shutdown_reason, "shutdown — draining");
+    wait_for_shutdown_signal().await;
+    info!("shutdown signal received — draining");
 
     {
         let mut s = status.write();
@@ -149,7 +108,6 @@ async fn main() -> anyhow::Result<()> {
     }
     mythiccord_plugin_routing::heartbeat::announce_drain(&identity, &runtime).await;
 
-    // Give STDB a beat to flush, then ack offline.
     tokio::time::sleep(Duration::from_millis(500)).await;
     {
         let mut s = status.write();
@@ -172,18 +130,6 @@ fn init_tracing(cfg: &Config) {
         registry.json().with_current_span(false).init();
     } else {
         registry.init();
-    }
-}
-
-/// Await an optional task. When `None`, awaits forever — used in the
-/// `tokio::select!` so the signal branch is the only thing that fires
-/// in standalone mode.
-async fn wait_for_optional_task(
-    task: Option<tokio::task::JoinHandle<anyhow::Result<()>>>,
-) -> Result<anyhow::Result<()>, tokio::task::JoinError> {
-    match task {
-        Some(handle) => handle.await,
-        None => std::future::pending().await,
     }
 }
 

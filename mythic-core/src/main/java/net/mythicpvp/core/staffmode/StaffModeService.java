@@ -17,20 +17,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Owns the staff-mode lifecycle: snapshot a player's normal state,
- * give them the configured tool palette, vanish/fly them, then
- * restore on disable.
- *
- * <p>Vanish is implemented by marking the player invisible to every
- * non-staff viewer via {@code player.hidePlayer/showPlayer}. The
- * "staff" predicate is the {@code mythic.core.staff.notify} permission,
- * matching {@link net.mythicpvp.core.staff.StaffPresenceListener}.
- *
- * <p>Frozen players (set via {@link #freeze}) live in their own set
- * separate from staff mode so a frozen non-staff target can be moved
- * around or unfrozen even after the staff member leaves staff mode.
- */
 public final class StaffModeService {
 
     private final Map<UUID, StaffModeSnapshot> snapshots = new ConcurrentHashMap<>();
@@ -49,11 +35,6 @@ public final class StaffModeService {
         return snapshots.containsKey(player);
     }
 
-    /**
-     * Toggle staff mode for {@code player}. Returns true if the player
-     * is now in staff mode, false if just exited. Restores the original
-     * state on exit.
-     */
     public boolean toggle(@NotNull Player player) {
         if (snapshots.containsKey(player.getUniqueId())) {
             disable(player);
@@ -79,7 +60,6 @@ public final class StaffModeService {
         restore(player, snapshot);
     }
 
-    /** Restore on quit so a logout-while-in-staff-mode doesn't strand the snapshot. */
     public void onQuit(@NotNull Player player) {
         StaffModeSnapshot snapshot = snapshots.remove(player.getUniqueId());
         if (snapshot != null) {
@@ -113,8 +93,6 @@ public final class StaffModeService {
     public boolean flyEnabled() {
         return fly;
     }
-
-    // ── Internals ────────────────────────────────────────────────────
 
     @NotNull
     private StaffModeSnapshot capture(@NotNull Player player) {
@@ -169,22 +147,17 @@ public final class StaffModeService {
     }
 
     private void applyVanish(@NotNull Player staff) {
-        // Hide from non-staff viewers. Staff still see each other so
-        // they can coordinate.
+
         for (Player viewer : staff.getServer().getOnlinePlayers()) {
             if (viewer.getUniqueId().equals(staff.getUniqueId())) {
                 continue;
             }
             if (!viewer.hasPermission(net.mythicpvp.core.staff.StaffPresenceListener.STAFF_PERMISSION)) {
-                // Pluginless deprecated API that newer Paper still
-                // supports — we don't have a stable plugin reference here;
-                // hidePlayer(plugin, ...) variant requires it. Use the
-                // legacy form for now and fix if Paper drops it.
+
                 @SuppressWarnings("deprecation")
                 boolean hidden = hidePlayerLegacy(viewer, staff);
-                // Suppress unused-warn — the boolean tells us whether
-                // the API call succeeded; we don't currently log it.
-                if (!hidden) { /* no-op */ }
+
+                if (!hidden) {  }
             }
         }
     }
@@ -196,7 +169,7 @@ public final class StaffModeService {
             }
             @SuppressWarnings("deprecation")
             boolean shown = showPlayerLegacy(viewer, staff);
-            if (!shown) { /* no-op */ }
+            if (!shown) {  }
         }
     }
 
@@ -221,9 +194,7 @@ public final class StaffModeService {
         }
         List<Map<?, ?>> raw = root.getMapList("tools");
         for (Map<?, ?> entryWildcard : raw) {
-            // Snakeyaml hands us Map<?, ?> with capture wildcards; the
-            // values are mixed (Integer, String) so cast through Object
-            // to get past the wildcard arithmetic.
+
             @SuppressWarnings("unchecked")
             Map<Object, Object> entry = (Map<Object, Object>) entryWildcard;
             Object slotObj = entry.get("slot");

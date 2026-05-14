@@ -1,0 +1,75 @@
+[package]
+name = "infrarust-core"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+description = "Core library for Infrarust, a Minecraft proxy server written in Rust. Provides shared utilities, types, and traits for the Infrarust ecosystem."
+[lints]
+workspace = true
+
+[features]
+default = []
+docker = ["dep:bollard", "dep:futures-util"]
+telemetry = [
+    "dep:opentelemetry",
+    "dep:opentelemetry_sdk",
+    "dep:opentelemetry-otlp",
+    "dep:tracing-opentelemetry",
+]
+
+[dependencies]
+infrarust-api = { workspace = true, features = ["serde"] }
+infrarust_config = { workspace = true }
+infrarust_protocol = { workspace = true }
+infrarust-transport = { workspace = true }
+infrarust_server_manager = { workspace = true }
+
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+bytes = { workspace = true }
+dashmap = { workspace = true }
+governor = { workspace = true }
+arc-swap = { workspace = true }
+notify = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
+nonzero_ext = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
+reqwest = { workspace = true }
+wildmatch = { workspace = true }
+comfy-table = { workspace = true }
+console = { workspace = true }
+minus = { workspace = true }
+humantime = { workspace = true }
+flate2 = { workspace = true }
+
+# Docker provider (optional)
+bollard = { workspace = true, optional = true }
+futures-util = { workspace = true, optional = true }
+
+# Telemetry (optional)
+opentelemetry = { workspace = true, optional = true }
+opentelemetry_sdk = { workspace = true, optional = true }
+opentelemetry-otlp = { workspace = true, optional = true }
+tracing-opentelemetry = { workspace = true, optional = true }
+
+# Auth Mojang (ClientOnly)
+rsa = { workspace = true }
+sha1 = { workspace = true }
+sha2 = { workspace = true }
+hmac = { workspace = true }
+rand = { workspace = true }
+num-bigint = { workspace = true }
+base64 = { workspace = true }
+
+[build-dependencies]
+flate2 = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full", "test-util"] }
+tempfile = { workspace = true }

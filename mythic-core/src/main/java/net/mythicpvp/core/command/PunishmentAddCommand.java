@@ -28,10 +28,7 @@ public final class PunishmentAddCommand extends MythicCommand {
             sender.sendMessage("Missing punishment title.");
             return;
         }
-        // Two accepted shapes for title + information:
-        //   1. Pipe-delimited (legacy):   /punishmentadd MUTE 1d Chat Offense | first chat offense
-        //   2. Quoted (new):              /punishmentadd MUTE 1d "Chat Offense" first chat offense
-        // Try quoted first because it's unambiguous; fall back to pipe.
+
         String title;
         String information;
         if (payload.startsWith("\"")) {

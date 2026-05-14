@@ -74,8 +74,7 @@ public final class ResourcePackManager {
         if (packUrl.isBlank()) {
             throw new IllegalStateException("Resource pack URL is not configured");
         }
-        // Per-pack UUID derived from the URL so re-sends of the same pack
-        // reuse the same id (clients dedupe on it).
+
         UUID packId = UUID.nameUUIDFromBytes(packUrl.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         ResourcePackInfo info = ResourcePackInfo.resourcePackInfo()
                 .id(packId)

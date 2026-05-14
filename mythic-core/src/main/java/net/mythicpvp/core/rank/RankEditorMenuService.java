@@ -11,21 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Click-driven editor for {@link CoreRank} fields.
- *
- * <p>The original `/rankeditor <rank>` opens a small read-only display.
- * This service adds the click flows: tapping a field button opens a chat
- * prompt (or a child menu) that mutates the rank via
- * {@link RankService#setField}, {@link RankService#addPermission}, or
- * {@link RankService#removePermission}. Each mutation runs through the
- * existing rank-update path so STDB persistence + display refresh fire
- * automatically.
- *
- * <p>Threading: every interaction starts on the Bukkit primary thread
- * (inventory click event). Chat prompts hop to the prompt service which
- * already routes back to main before invoking the callback.
- */
 public final class RankEditorMenuService {
 
     private final RankService rankService;
@@ -40,7 +25,6 @@ public final class RankEditorMenuService {
         this.text = text;
     }
 
-    /** Top-level overview — same shape as RankEditorCommand's read-only menu. */
     public void openOverview(@NotNull Player viewer, @NotNull String rankId) {
         CoreRank rank = rankService.get(rankId);
         if (rank == null) {
@@ -75,11 +59,6 @@ public final class RankEditorMenuService {
                 .open(viewer);
     }
 
-    /**
-     * Page of one-click field editors. Each button opens a chat prompt
-     * via {@link ChatPromptService}; the response is routed back to
-     * {@link RankService#setField}.
-     */
     public void openFieldEditor(@NotNull Player viewer, @NotNull String rankId) {
         CoreRank rank = rankService.get(rankId);
         if (rank == null) {
@@ -87,8 +66,7 @@ public final class RankEditorMenuService {
             return;
         }
         MythicMenu menu = MythicMenu.create(4, text.editorFieldsTitle());
-        // Field grid layout: row 1 — identity (name, color, dye, weight),
-        // row 2 — boolean toggles (staff, donator) + parent + suffix.
+
         addPromptField(menu, 10, Material.NAME_TAG, "Name", "name", rank.name(), viewer, rankId);
         addPromptField(menu, 11, Material.RED_DYE, "Color", "color", rank.color(), viewer, rankId);
         addPromptField(menu, 12, Material.LIGHT_GRAY_DYE, "Dye material", "dye", rank.dye().name(), viewer, rankId);
@@ -103,7 +81,6 @@ public final class RankEditorMenuService {
         menu.open(viewer);
     }
 
-    /** Editor for chat/tab/nametag prefix + format strings. */
     public void openFormatEditor(@NotNull Player viewer, @NotNull String rankId) {
         CoreRank rank = rankService.get(rankId);
         if (rank == null) {
@@ -122,11 +99,6 @@ public final class RankEditorMenuService {
         menu.open(viewer);
     }
 
-    /**
-     * Permission menu — pages through the rank's permissions; each entry
-     * is a click-to-remove button. A separate "add" button opens a chat
-     * prompt.
-     */
     public void openPermissionMenu(@NotNull Player viewer, @NotNull String rankId) {
         CoreRank rank = rankService.get(rankId);
         if (rank == null) {
@@ -140,7 +112,7 @@ public final class RankEditorMenuService {
                     .lore(text.editorRemovePermissionLore())
                     .build(), event -> {
                         rankService.removePermission(rankId, permission);
-                        // Re-open the menu so the now-removed permission disappears.
+
                         openPermissionMenu(viewer, rankId);
                     });
         }
@@ -157,13 +129,6 @@ public final class RankEditorMenuService {
         menu.open(viewer);
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────
-
-    /**
-     * Build a "click-to-prompt" tile. Clicking opens a chat prompt; the
-     * response is dispatched to {@link RankService#setField}. The user
-     * gets a feedback message and is returned to the field editor.
-     */
     private void addPromptField(@NotNull MythicMenu menu, int slot, @NotNull Material icon,
                                 @NotNull String label, @NotNull String fieldKey,
                                 @NotNull String currentValue, @NotNull Player viewer,
@@ -182,10 +147,6 @@ public final class RankEditorMenuService {
                 }));
     }
 
-    /**
-     * Build a click-to-toggle boolean field. No chat prompt — the click
-     * itself flips the value via {@link RankService#setField}.
-     */
     private void addToggleField(@NotNull MythicMenu menu, int slot,
                                 @NotNull Material onIcon, @NotNull Material offIcon,
                                 @NotNull String label, @NotNull String fieldKey,

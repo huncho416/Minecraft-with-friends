@@ -30,9 +30,7 @@ class QuotedArgsTest {
 
     @Test
     void quotedSegmentCanContainPunctuation() {
-        // Pipe is fine inside quotes — back-compat with the existing
-        // "title | information" syntax means callers still see the pipe
-        // for downstream splitting if they want.
+
         assertEquals(
                 List.of("Chat Offense | first offense"),
                 QuotedArgs.parse("\"Chat Offense | first offense\""));
@@ -40,8 +38,7 @@ class QuotedArgsTest {
 
     @Test
     void unmatchedQuoteSwallowsRestOfLine() {
-        // Defensive: typo-friendly. Doesn't error, just emits a single
-        // arg with everything after the open-quote.
+
         assertEquals(
                 List.of("oops no closing quote here"),
                 QuotedArgs.parse("\"oops no closing quote here"));
@@ -49,8 +46,7 @@ class QuotedArgsTest {
 
     @Test
     void arrayInputJoinsAndReparses() {
-        // Bukkit hands us already-split args; the array form just
-        // reassembles and re-tokenizes so quoted segments survive.
+
         String[] words = { "MUTE", "1d", "\"Chat", "Offense", "#1\"", "more", "info" };
         assertEquals(
                 List.of("MUTE", "1d", "Chat Offense #1", "more", "info"),
@@ -66,10 +62,7 @@ class QuotedArgsTest {
 
     @Test
     void emptyQuotedSegmentEmitsEmptyArg() {
-        // Edge case — `""` opens then immediately closes the quote
-        // with no content. Current implementation skips because the
-        // builder is empty when we hit the closing quote. That's fine
-        // — staff don't need empty args.
+
         assertEquals(List.of("a", "b"), QuotedArgs.parse("a \"\" b"));
     }
 }

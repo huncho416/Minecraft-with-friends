@@ -1,6 +1,5 @@
 package net.mythicpvp.suite.database.schema.dto;
 
-/** Mirrors the {@code transactions} table row. */
 public record TransactionRow(
         long id,
         String player_uuid,

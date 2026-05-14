@@ -4,14 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * Pure-fn tests for the conversion helpers inside
- * {@link StdbPersistenceGateway}. The full gateway exercise lives in
- * {@link PersistenceWiringTest}; this file pins the duration-mapping
- * contract that bridges mythic-core's `expiresAtMillis` (absolute epoch
- * milliseconds, 0 = permanent) with STDB's `duration_seconds` (relative
- * to now, 0 = permanent).
- */
 class StdbPersistenceGatewayTest {
 
     @Test
@@ -23,16 +15,13 @@ class StdbPersistenceGatewayTest {
     @Test
     void positiveExpiryMapsToSecondsRelativeToCreation() {
         long createdMillis = 1_000_000L;
-        long expiresMillis = createdMillis + 60_000L; // 60 seconds out
+        long expiresMillis = createdMillis + 60_000L;
         assertEquals(60L, StdbPersistenceGateway.durationSecondsFromExpiry(createdMillis, expiresMillis));
     }
 
     @Test
     void subSecondExpiryClampsToOneSecond() {
-        // 500ms duration would round to 0 seconds and STDB would treat
-        // that as permanent. The helper clamps to a minimum of 1s so a
-        // technically-temporary punishment doesn't accidentally become
-        // permanent on the persistence side.
+
         long createdMillis = 1_000L;
         long expiresMillis = 1_500L;
         assertEquals(1L, StdbPersistenceGateway.durationSecondsFromExpiry(createdMillis, expiresMillis));
@@ -40,15 +29,13 @@ class StdbPersistenceGatewayTest {
 
     @Test
     void expiryBeforeCreationClampsToZero() {
-        // Defensive: a clock skew or bad input shouldn't underflow into
-        // a negative number that STDB would reject.
+
         assertEquals(0L, StdbPersistenceGateway.durationSecondsFromExpiry(2000L, 1000L));
     }
 
     @Test
     void microsToMillisPreservesPermanentSentinel() {
-        // 0 micros = "permanent" on the wire; mythic-core also uses 0 ms
-        // for permanent. The conversion must keep that fixed point.
+
         assertEquals(0L, StdbPersistenceGateway.microsToMillis(0L));
     }
 
@@ -87,8 +74,7 @@ class StdbPersistenceGatewayTest {
                         "", "", 0, false, false, "",
                         "[]", "", "", "", "", "", "",
                         false, 0L, 0L);
-        // Unknown material name → falls back to LIGHT_GRAY_DYE rather than
-        // crashing the hydration thread.
+
         assertEquals(org.bukkit.Material.LIGHT_GRAY_DYE,
                 StdbPersistenceGateway.toCoreRank(row).dye());
     }
@@ -110,8 +96,7 @@ class StdbPersistenceGatewayTest {
 
     @Test
     void punishmentRecordMapsActiveFalseToPardonedTrue() {
-        // STDB's `active=false` (pardoned, expired, or history-cleared)
-        // is the closest match to mythic-core's `pardoned=true` flag.
+
         net.mythicpvp.suite.database.schema.dto.PunishmentRow row =
                 new net.mythicpvp.suite.database.schema.dto.PunishmentRow(
                         99L, "11111111-1111-1111-1111-111111111111", "Notch",
@@ -129,8 +114,7 @@ class StdbPersistenceGatewayTest {
 
     @Test
     void punishmentRecordHandlesUnknownKindAsBan() {
-        // Unknown wire kind shouldn't crash hydration; fall back to BAN
-        // (the closest login-blocking analogue).
+
         net.mythicpvp.suite.database.schema.dto.PunishmentRow row =
                 new net.mythicpvp.suite.database.schema.dto.PunishmentRow(
                         1L, "11111111-1111-1111-1111-111111111111", "Notch",

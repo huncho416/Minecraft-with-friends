@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.util.List;
 
 public class MythicConfig {
-    // `final` so subclasses can't escape `this` before our constructor's
-    // load() call observes initialized fields.
 
     private final JavaPlugin plugin;
     private final String fileName;

@@ -1,12 +1,5 @@
 package net.mythicpvp.suite.database.schema.dto;
 
-/**
- * Mirrors the {@code players} table row.
- *
- * <p>Field names match the Rust struct exactly — Gson's default naming
- * policy is identity, so payloads round-trip without a custom deserializer.
- * Timestamps are microseconds since Unix epoch.
- */
 public record PlayerRow(
         String uuid,
         String username,

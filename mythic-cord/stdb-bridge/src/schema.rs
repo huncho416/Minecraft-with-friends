@@ -1,11 +1,5 @@
-//! Constants and enums mirroring `mythic-stdb`'s `common.rs`.
-//!
-//! Kept in sync by hand. When you change a constant on the Rust side of
-//! the schema, change it here too in the same commit. The
-//! [`SCHEMA_VERSION`] check at boot will catch the case where you forgot
-//! and shipped anyway.
 
-/// Must equal `mythic_stdb::SCHEMA_VERSION`.
+
 pub const SCHEMA_VERSION: u32 = 2;
 
 pub mod table {
@@ -21,30 +15,26 @@ pub mod table {
 }
 
 pub mod reducer {
-    // sessions
+
     pub const SESSION_LOGIN: &str = "session_login";
     pub const SESSION_LOGOUT: &str = "session_logout";
     pub const SESSION_ROUTE: &str = "session_route";
     pub const SESSION_TOUCH: &str = "session_touch";
     pub const SESSION_REAP: &str = "session_reap";
 
-    // registry
     pub const REGISTRY_ANNOUNCE: &str = "registry_announce";
     pub const REGISTRY_HEARTBEAT: &str = "registry_heartbeat";
     pub const REGISTRY_DRAIN: &str = "registry_drain";
 
-    // punishments
     pub const PUNISH_ISSUE: &str = "punish_issue";
     pub const PUNISH_PARDON: &str = "punish_pardon";
     pub const PUNISH_CLEAR_HISTORY: &str = "punish_clear_history";
 
-    // templates / blacklist
     pub const TEMPLATE_UPSERT: &str = "template_upsert";
     pub const TEMPLATE_REMOVE: &str = "template_remove";
     pub const BLACKLIST_ADD: &str = "blacklist_add";
     pub const BLACKLIST_REVOKE: &str = "blacklist_revoke";
 
-    // ranks
     pub const RANK_DEFINE: &str = "rank_define";
     pub const RANK_REMOVE: &str = "rank_remove";
     pub const GRANT_ISSUE: &str = "grant_issue";
@@ -138,7 +128,6 @@ impl PunishmentCategory {
     }
 }
 
-/// Where a rank grant came from. Mirrors `common::grant_source`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GrantSource {
     Staff,

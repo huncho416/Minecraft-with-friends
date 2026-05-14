@@ -13,16 +13,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-/**
- * Per-channel staff-chat commands. Five subclasses register five
- * separate aliases ({@code /staffchat}, {@code /builderchat}, etc.) so
- * permission gating is explicit and `/sc <channel>` ambiguity is
- * avoided. Each subclass binds a single {@link StaffChannel}.
- *
- * <p>The base class is package-private; the registered subclasses live
- * below as nested public types so command-blocker.yml can list them
- * with their own perms.
- */
 public abstract class StaffChatCommand extends MythicCommand {
 
     private final StaffChannel channel;
@@ -49,10 +39,7 @@ public abstract class StaffChatCommand extends MythicCommand {
         }
         String message = String.join(" ", words);
         UUID uuid = sender.getUniqueId();
-        // Look up the sender's current display name + color via the
-        // hydrated rank state so cross-server messages carry the
-        // correct prefix even if the receiver has no view of the
-        // sender's local rank.
+
         String rankId = grants.activeRank(uuid);
         var rank = ranks.get(rankId);
         String rankName = rank == null ? "" : rank.name();

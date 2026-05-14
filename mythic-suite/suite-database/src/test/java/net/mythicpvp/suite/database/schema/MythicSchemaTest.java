@@ -14,15 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies the typed wrapper produces the exact on-wire shape STDB
- * expects: positional JSON-array args in the same order as the Rust
- * reducer signature.
- *
- * <p>We don't open a real WebSocket — we use {@link
- * SpacetimeConnection#reducerMessage} which performs the same Gson
- * serialization the live path uses.
- */
 class MythicSchemaTest {
 
     private static final UUID PLAYER = UUID.fromString("11111111-1111-1111-1111-111111111111");
@@ -99,8 +90,7 @@ class MythicSchemaTest {
 
     @Test
     void punishIssueArgsCarryEnumWireValue() {
-        // Schema v2: positional args are (target_uuid, target_name, staff_uuid,
-        // staff_name, kind, reason, proof, duration, silent, clear_inv, server).
+
         JsonArray args = encodeArgs(
                 ReducerNames.PUNISH_ISSUE,
                 MythicSchema.hyphenated(PLAYER),
@@ -168,7 +158,7 @@ class MythicSchemaTest {
 
     @Test
     void allEnumWireValuesMatchRustConstants() {
-        // Spot-check parity: a typo in either side breaks the round-trip.
+
         assertEquals("COINS", StdbCurrency.COINS.wireValue());
         assertEquals("BAN", PunishmentKind.BAN.wireValue());
         assertEquals("TEMP_MUTE", PunishmentKind.TEMP_MUTE.wireValue());
@@ -206,14 +196,10 @@ class MythicSchemaTest {
 
     @Test
     void schemaVersionConstantMatchesCurrentWireExpectation() {
-        // Bump in lockstep with mythic-cord/stdb/src/lib.rs::SCHEMA_VERSION.
+
         assertEquals(2, SchemaVersion.CURRENT);
     }
 
-    /**
-     * Extract the {@code args} array from the wire envelope. The connection
-     * always wraps reducer calls in {@code {type, requestId, reducer, args}}.
-     */
     private JsonArray encodeArgs(String reducer, Object... args) {
         String wire = conn.reducerMessage(reducer, args, "test-req");
         JsonObject envelope = GSON.fromJson(wire, JsonObject.class);

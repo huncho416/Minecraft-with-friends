@@ -23,6 +23,10 @@ Thumbs.db
 # Logs
 *.log
 
+# Local toolchain artefacts
+.tools/
+.vendor-log.txt
+
 # Rust
 **/Cargo.lock.bak
 

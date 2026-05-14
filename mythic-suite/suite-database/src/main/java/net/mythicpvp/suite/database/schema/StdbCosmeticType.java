@@ -3,12 +3,6 @@ package net.mythicpvp.suite.database.schema;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Mirrors {@code common::cosmetic_type}. Suffixed {@code Stdb} to avoid
- * clashing with {@code suite-cosmetic}'s in-memory {@code CosmeticType} enum;
- * the cosmetic module owns the gameplay enum and converts via {@link #wireValue}
- * when reading or writing STDB.
- */
 public enum StdbCosmeticType {
     HAT("HAT"),
     TITLE("TITLE"),

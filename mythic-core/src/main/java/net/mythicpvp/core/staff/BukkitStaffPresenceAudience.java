@@ -10,20 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * Renders {@link StaffPresenceEvent}s to permitted players + console.
- *
- * <p>Three templates pulled from {@code messages.staff.{join,quit,switch}}:
- * <ul>
- *   <li>JOIN  — {@code "&#888888[%server%] %rank_color%%sender% &#FFFFFFjoined."}
- *   <li>QUIT  — {@code "&#888888[%server%] %rank_color%%sender% &#FFFFFFdisconnected."}
- *   <li>SWITCH— {@code "&#888888[%from% -> %to%] %rank_color%%sender% &#FFFFFFswitched servers."}
- * </ul>
- *
- * <p>Visibility gated by {@link StaffPresenceListener#STAFF_PERMISSION}
- * — only staff see staff comings and goings, both for security and to
- * avoid spamming regular players.
- */
 public final class BukkitStaffPresenceAudience implements Consumer<StaffPresenceEvent> {
 
     private final ConfigText messages;

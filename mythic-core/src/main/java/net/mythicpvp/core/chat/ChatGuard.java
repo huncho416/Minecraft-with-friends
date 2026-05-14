@@ -14,31 +14,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-/**
- * Enforces network-replicated chat-control state:
- *
- * <ul>
- *   <li>{@code mute} — cancels {@link AsyncPlayerChatEvent} unless the
- *       sender holds the bypass permission.
- *   <li>{@code slow <seconds>} — per-player cool-down recorded in
- *       {@link ChatControlService#registerMessage}.
- *   <li>{@code clear} — when {@link ChatControlService} fires its
- *       clear pulse, this listener flushes 100 blank lines into every
- *       online player's chat. Bypass permission opts a player out so
- *       staff don't lose their own context.
- * </ul>
- *
- * <p>Bypass permission: {@value #BYPASS_PERMISSION}.
- *
- * <p>The listener fires at {@link EventPriority#HIGH} so other plugins
- * (filters, tags, etc.) can still see the message at NORMAL — but we
- * cancel before MONITOR observers process it. {@code ignoreCancelled}
- * is true so we don't fight other plugins that already cancelled.
- */
 public final class ChatGuard implements Listener {
 
     public static final String BYPASS_PERMISSION = "mythic.core.chat.bypass";
-    /** 100 blank lines is the conventional "wipe" depth — fills any client window. */
+
     private static final int CLEAR_BLANK_LINES = 100;
 
     private final JavaPlugin plugin;
@@ -51,8 +30,7 @@ public final class ChatGuard implements Listener {
         this.plugin = plugin;
         this.chatControl = chatControl;
         this.messages = messages;
-        // Subscribe to "clear chat" pulses. Pulses arrive on the protocol
-        // thread; reschedule onto main before sending blank lines.
+
         chatControl.onClear(this::scheduleClear);
     }
 
@@ -85,15 +63,8 @@ public final class ChatGuard implements Listener {
         chatControl.forget(event.getPlayer().getUniqueId());
     }
 
-    /**
-     * Schedule the blank-line flood onto the main thread. Sending
-     * messages to many players involves Adventure component encoding,
-     * which is fine off-main, but iterating online players can race the
-     * tick thread; main keeps it simple and consistent.
-     */
     private void scheduleClear() {
-        // Folia-safe: routes to globalRegionScheduler on Folia, falls
-        // back to legacy BukkitScheduler on Paper/Spigot.
+
         MythicScheduler.runSync(plugin, this::clearNow);
     }
 

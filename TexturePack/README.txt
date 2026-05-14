@@ -1,18 +1,8 @@
-------------------{ SMP Deluxe PVP resourcepack by Cowsmirror }------------------
+MythicPvP Resource Pack
 
-YOU ARE NOT ALLOWED TO PORT SMP DELUXE TO BEDROCK/MCPE  
-
-This texture pack is protected and licensed under international copyright law.
-
-
- Installation Instructions:
-
-	1. Start Minecraft and select "Options" from the main menu.
-	2. In the options menu, choose the subcategory "Resource Packs".
-	3. Click on "Open pack folder" in the bottom left corner - Minecraft will then open the corresponding folder.
-	4. Here, you can copy and paste resource packs that you have downloaded - and you will have added the resource pack to your game.
-
-
-
-
- Enjoy :)  
+Installation:
+1. Open Minecraft and select Options.
+2. Choose Resource Packs.
+3. Click Open Pack Folder.
+4. Drop this pack into the folder.
+5. Move the pack from Available to Selected.

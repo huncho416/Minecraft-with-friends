@@ -6,17 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * Operator-overridable strings for the rank editor + /grant flow menus.
- *
- * <p>Loaded from {@code menus.yml} (the {@code rank.*} subtree). Mirrors
- * {@link net.mythicpvp.core.punishment.PunishmentMenuText}: every getter
- * has a hard-coded default that matches the historical UI, so missing
- * keys (or the whole file) keep the menus rendering.
- */
 public final class RankMenuText {
 
-    /** Singleton "use defaults everywhere" instance for tests / no-config callers. */
     public static final RankMenuText DEFAULTS = new RankMenuText(null);
 
     @Nullable
@@ -146,10 +137,6 @@ public final class RankMenuText {
         return get("rank.editor.field-back", "&#FF00F8Back");
     }
 
-    /**
-     * Duration presets shown in the /grant duration menu. Empty list →
-     * built-in defaults so the menu always has something to render.
-     */
     @NotNull
     public List<String> durationPresets() {
         if (config == null) {
@@ -159,7 +146,6 @@ public final class RankMenuText {
         return raw.isEmpty() ? List.of("1d", "7d", "30d", "90d", "365d", "permanent") : raw;
     }
 
-    /** Reason presets shown in the /grant reason menu. Empty → built-in defaults. */
     @NotNull
     public List<String> reasonPresets() {
         if (config == null) {

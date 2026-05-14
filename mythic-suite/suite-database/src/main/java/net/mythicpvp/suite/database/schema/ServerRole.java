@@ -3,7 +3,6 @@ package net.mythicpvp.suite.database.schema;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/** Mirrors {@code common::server_role}. */
 public enum ServerRole {
     HUB("HUB"),
     SKYBLOCK("SKYBLOCK"),

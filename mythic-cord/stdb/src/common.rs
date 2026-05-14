@@ -1,17 +1,9 @@
-//! Shared types and helpers used across schema modules.
-//!
-//! SpacetimeDB tables can only hold supported primitive types, so anything
-//! that looks like a "domain enum" is represented here as a small wrapper
-//! around a `String` or `u8` with constants. This keeps the wire schema
-//! flat and forward-compatible.
+
 
 use spacetimedb::ReducerContext;
 
-/// Result alias for reducers. Errors bubble up to the calling client as a
-/// rejected reducer with the message attached.
 pub type ReducerResult<T = ()> = Result<T, String>;
 
-/// Helper: reject a reducer with a formatted message.
 #[macro_export]
 macro_rules! reject {
     ($($arg:tt)*) => {
@@ -19,15 +11,10 @@ macro_rules! reject {
     };
 }
 
-/// Player UUID newtype-ish wrapper used in signatures for clarity.
-/// Stored as `String` (canonical 36-char hyphenated form).
 pub type PlayerUuid = String;
 
-/// Shard identifier (e.g. `hub-1`, `sb-3`). Free-form to allow region tags.
 pub type ShardId = String;
 
-/// Currencies tracked by [`crate::economy`]. Keep in lockstep with the Java
-/// `Currency` enum in `suite-api`.
 pub mod currency {
     pub const COINS: &str = "COINS";
     pub const POINTS: &str = "POINTS";
@@ -40,8 +27,6 @@ pub mod currency {
     }
 }
 
-/// Punishment kinds. Mirrors mythic-core's `PunishmentType` enum.
-/// String-typed for forward-compat with new categories.
 pub mod punishment_kind {
     pub const WARN: &str = "WARN";
     pub const MUTE: &str = "MUTE";
@@ -58,7 +43,6 @@ pub mod punishment_kind {
     }
 }
 
-/// Punishment template categories. Mirrors mythic-core's `PunishmentCategory`.
 pub mod punishment_category {
     pub const WARN: &str = "WARN";
     pub const MUTE: &str = "MUTE";
@@ -72,7 +56,6 @@ pub mod punishment_category {
     }
 }
 
-/// Rank-grant source tags — where the grant came from.
 pub mod grant_source {
     pub const STAFF: &str = "STAFF";
     pub const PURCHASE: &str = "PURCHASE";
@@ -80,7 +63,6 @@ pub mod grant_source {
     pub const SYSTEM: &str = "SYSTEM";
 }
 
-/// Server-role tags for [`crate::registry`].
 pub mod server_role {
     pub const HUB: &str = "HUB";
     pub const SKYBLOCK: &str = "SKYBLOCK";
@@ -88,7 +70,6 @@ pub mod server_role {
     pub const EVENT: &str = "EVENT";
 }
 
-/// Server health status.
 pub mod server_status {
     pub const STARTING: &str = "STARTING";
     pub const HEALTHY: &str = "HEALTHY";
@@ -97,7 +78,6 @@ pub mod server_status {
     pub const OFFLINE: &str = "OFFLINE";
 }
 
-/// Cosmetic categories. Mirrors the Java `CosmeticType` enum.
 pub mod cosmetic_type {
     pub const HAT: &str = "HAT";
     pub const TITLE: &str = "TITLE";
@@ -107,8 +87,6 @@ pub mod cosmetic_type {
     pub const CHAT_TAG: &str = "CHAT_TAG";
 }
 
-/// Reject the call if `uuid` isn't a 36-char hyphenated UUID.
-/// We don't do strict hex validation here — Mojang already does that.
 pub fn require_uuid(uuid: &str) -> ReducerResult {
     if uuid.len() != 36 || uuid.as_bytes().iter().filter(|&&b| b == b'-').count() != 4 {
         return Err(format!("invalid uuid: {uuid:?}"));
@@ -116,17 +94,8 @@ pub fn require_uuid(uuid: &str) -> ReducerResult {
     Ok(())
 }
 
-/// Reject the call when the message isn't from a trusted backend.
-///
-/// In production, only the proxy and game servers should be able to call
-/// state-mutating reducers; player clients subscribe but never write. We
-/// gate this by checking the caller's `Identity` against a small admin set
-/// stored in `module_meta` once the proxy provisions its credentials.
-///
-/// For now this is a no-op so the suite test harness can run unauthed; it
-/// becomes strict once the proxy ships.
 #[allow(unused_variables)]
 pub fn require_backend(ctx: &ReducerContext) -> ReducerResult {
-    // TODO(phase-2): check against an `admins` table once proxy creds exist.
+
     Ok(())
 }

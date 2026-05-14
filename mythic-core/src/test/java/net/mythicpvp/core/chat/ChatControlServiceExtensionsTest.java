@@ -11,20 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Covers the Phase 3 additions to {@link ChatControlService}:
- *
- * <ul>
- *   <li>scope-based filtering — LOCAL state from another shard is dropped
- *   <li>{@code clear()} fires registered {@link ChatControlService.ClearListener}
- *       callbacks exactly once per pulse
- *   <li>{@code registerMessage} enforces the slow-mode cool-down
- * </ul>
- *
- * <p>Friend's original {@code ChatControlServiceTest} still passes —
- * those tests exercise the legacy single-arg constructor (empty
- * {@code shardId}, match-all) which we preserved on purpose.
- */
 class ChatControlServiceExtensionsTest {
 
     private final ProtocolManager protocolManager = ProtocolManager.getInstance();
@@ -39,8 +25,6 @@ class ChatControlServiceExtensionsTest {
         ChatControlService hub = new ChatControlService(protocolManager, "hub-1");
         ChatControlService skyblock = new ChatControlService(protocolManager, "sb-1");
 
-        // Hub mutes locally. Skyblock should NOT see this — LOCAL means
-        // "originating shard only". Hub itself does see and apply.
         hub.mute(ChatScope.LOCAL);
 
         assertTrue(hub.muted(), "originating shard applies its own LOCAL change");
@@ -106,7 +90,6 @@ class ChatControlServiceExtensionsTest {
         UUID player = UUID.randomUUID();
         long now = 1_000_000L;
 
-        // No slow mode set — should always allow.
         assertEquals(0L, service.registerMessage(player, now));
         assertEquals(0L, service.registerMessage(player, now + 50));
         assertEquals(0L, service.registerMessage(player, now + 51));
@@ -119,21 +102,16 @@ class ChatControlServiceExtensionsTest {
         UUID player = UUID.randomUUID();
         long now = 1_000_000L;
 
-        // First message always allowed, sets the cool-down anchor.
         assertEquals(0L, service.registerMessage(player, now));
 
-        // 1 second later — must wait 4 more seconds.
         long wait = service.registerMessage(player, now + 1_000L);
         assertEquals(4_000L, wait);
 
-        // Right at the cool-down boundary, still 1 ms short.
         wait = service.registerMessage(player, now + 4_999L);
         assertEquals(1L, wait);
 
-        // Past the boundary, allowed and resets the anchor.
         assertEquals(0L, service.registerMessage(player, now + 5_001L));
 
-        // The fresh anchor means the next attempt must wait 5s again.
         long wait2 = service.registerMessage(player, now + 5_002L);
         assertTrue(wait2 > 0, "anchor reset means the next message starts a new cool-down");
     }
@@ -151,7 +129,6 @@ class ChatControlServiceExtensionsTest {
 
         service.forget(player);
 
-        // After forget, the player has no anchor — first message free again.
         assertEquals(0L, service.registerMessage(player, now + 200L));
     }
 

@@ -21,15 +21,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies the grant observer wiring: when {@code GrantService.grant}
- * succeeds, the registered {@link RankBundleGrantHook} fires once per
- * bundled cosmetic.
- *
- * <p>Asserts via {@link CosmeticManager#ownsCosmetic} since that's the
- * end state the hook is responsible for. The audit-log side-effect is
- * not asserted here — verified by inspection.
- */
 class RankBundleGrantHookTest {
 
     private MockPlugin plugin;
@@ -47,21 +38,14 @@ class RankBundleGrantHookTest {
 
     @Test
     void grantingARankWithBundlesGrantsTheCosmetics() {
-        // Set up: one VIP rank with two bundled cosmetics.
+
         RankService ranks = new RankService();
         ranks.register(rank("default", 1000));
         ranks.register(rank("vip", 100));
         GrantService grants = new GrantService(ranks, Clock.fixed(
                 Instant.parse("2026-05-14T12:00:00Z"), ZoneOffset.UTC));
         RankCosmeticBundles bundles = new RankCosmeticBundles();
-        // No YAML — set bundle directly via a small reflection-free
-        // path: load from a constructed config. Simplest is to just
-        // bypass bundles.load and exercise the hook directly with a
-        // bundle the hook can see.
-        // For this test we'll wire the bundle by stuffing entries via
-        // a config helper.
-        // Actually — RankCosmeticBundles only loads from MythicConfig.
-        // Build a tiny inline config.
+
         java.io.File data = plugin.getDataFolder();
         data.mkdirs();
         java.io.File file = new java.io.File(data, "ranks.yml");
@@ -92,14 +76,14 @@ class RankBundleGrantHookTest {
 
     @Test
     void grantingARankWithNoBundlesIsANoOp() {
-        // Sanity check: no bundle → no exception, no spurious grants.
+
         RankService ranks = new RankService();
         ranks.register(rank("default", 1000));
         ranks.register(rank("admin", 10));
         GrantService grants = new GrantService(ranks, Clock.fixed(
                 Instant.parse("2026-05-14T12:00:00Z"), ZoneOffset.UTC));
         RankCosmeticBundles bundles = new RankCosmeticBundles();
-        // No bundle for admin loaded.
+
         CoreAuditLog audit = new CoreAuditLog(plugin);
         grants.setGrantObserver(new RankBundleGrantHook(bundles, audit, plugin.getLogger()));
 
@@ -107,8 +91,6 @@ class RankBundleGrantHookTest {
         grants.grant(target, "Steve", "admin", GrantDuration.parse("30d"),
                 UUID.randomUUID(), "Console", "promotion");
 
-        // Nothing to assert except that we got here without exception
-        // and no spurious cosmetics are owned.
         assertTrue(CosmeticManager.getInstance().getOwned(target).isEmpty());
     }
 

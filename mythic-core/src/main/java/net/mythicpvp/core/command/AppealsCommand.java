@@ -17,23 +17,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * {@code /appeals} — staff-side appeal review.
- *
- * <ul>
- *   <li>{@code /appeals review approve <appealId> [notes…]}
- *   <li>{@code /appeals review deny    <appealId> [notes…]}
- * </ul>
- *
- * <p>Approval auto-pardons the linked punishment server-side via the
- * {@code appeal_review} STDB reducer. Notes are optional; if omitted,
- * an empty string is sent.
- *
- * <p>Permission: {@code mythic.core.punish.appeal}.
- *
- * <p>Console-friendly so appeals can be processed via web admin tools
- * that shell out to rcon.
- */
 @CommandAlias("appeals")
 @CommandPermission("mythic.core.punish.appeal")
 public final class AppealsCommand extends MythicCommand {
@@ -79,8 +62,7 @@ public final class AppealsCommand extends MythicCommand {
             reviewerUuid = p.getUniqueId();
             reviewerName = p.getName();
         } else {
-            // Console reviews — use a stable sentinel UUID. Same shape as
-            // PunishmentService.SYSTEM_STAFF.
+
             reviewerUuid = net.mythicpvp.core.punishment.PunishmentService.SYSTEM_STAFF;
             reviewerName = "Console";
         }

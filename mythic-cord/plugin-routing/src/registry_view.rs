@@ -1,8 +1,4 @@
-//! Local mirror of the `server_registry` table.
-//!
-//! Subscribes once at boot, applies row events as they stream in, and
-//! exposes a cheap-to-clone snapshot the router can read without any
-//! network round-trip.
+
 
 use mythiccord_stdb_bridge::handle::{TableEvent, TableOp};
 use mythiccord_stdb_bridge::schema::table;
@@ -13,8 +9,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, warn};
 
-/// Mirror of `mythic_stdb::registry::ServerEntry`. Field names match the
-/// Rust struct exactly so serde_json deserializes without a custom impl.
 #[derive(Debug, Clone, Deserialize)]
 pub struct ServerEntry {
     pub shard_id: String,
@@ -41,8 +35,6 @@ impl RegistryView {
         Self::default()
     }
 
-    /// Snapshot — cheap clone of the current map. Use this as the input
-    /// to [`crate::router::pick_shard`].
     pub fn snapshot(&self) -> Vec<ServerEntry> {
         self.inner.read().values().cloned().collect()
     }
@@ -59,6 +51,14 @@ impl RegistryView {
         self.inner.read().is_empty()
     }
 
+    pub fn insert_entry(&self, entry: ServerEntry) {
+        self.inner.write().insert(entry.shard_id.clone(), entry);
+    }
+
+    pub fn remove_entry(&self, shard_id: &str) {
+        self.inner.write().remove(shard_id);
+    }
+
     fn apply(&self, event: &TableEvent) {
         match event.op {
             TableOp::Insert | TableOp::Update => {
@@ -70,7 +70,7 @@ impl RegistryView {
                 }
             }
             TableOp::Delete => {
-                // Delete payloads carry only the PK fields in STDB.
+
                 if let Ok(stub) = serde_json::from_str::<serde_json::Value>(&event.payload)
                     && let Some(id) = stub.get("shard_id").and_then(|v| v.as_str())
                 {
@@ -81,8 +81,6 @@ impl RegistryView {
     }
 }
 
-/// Spawn the subscription task. Drops the subscription if the bridge
-/// disconnects — the bridge's own reconnect loop re-subscribes for us.
 pub fn spawn(handle: StdbHandle, view: RegistryView) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
         let mut events = match handle.subscribe(table::SERVER_REGISTRY).await {

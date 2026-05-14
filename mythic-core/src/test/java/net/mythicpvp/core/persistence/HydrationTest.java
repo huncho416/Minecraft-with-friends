@@ -26,15 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Verifies the hydration path — apply* methods on the services + the
- * CoreHydrationSink that drives them — repopulates state correctly when
- * STDB delivers row events.
- *
- * <p>No real STDB connection is involved; tests call the sink directly
- * to simulate row delivery and assert the service caches reflect it.
- * Parallel to the outbound path covered by PersistenceWiringTest.
- */
 class HydrationTest {
 
     private static final UUID PLAYER = UUID.fromString("11111111-1111-1111-1111-111111111111");
@@ -66,18 +57,15 @@ class HydrationTest {
         PunishmentService punishments = new PunishmentService(ProtocolManager.getInstance(), FIXED_CLOCK);
         CoreHydrationSink sink = new CoreHydrationSink(Logger.getLogger("test"), ranks, grants, punishments);
 
-        // STDB-assigned id is what hydration must preserve.
         RankGrant fromStdb = new RankGrant(
                 42L, PLAYER, "Notch", "admin", STAFF, "Console", "from another server",
                 FIXED_CLOCK.millis(), 0L, true);
         sink.applyGrant(fromStdb);
 
-        // History reflects the hydrated grant.
         assertEquals(1, grants.history(PLAYER).size());
         assertEquals(42L, grants.history(PLAYER).get(0).id());
         assertEquals("admin", grants.activeRank(PLAYER));
 
-        // Subsequent local grants must produce ids > 42 to avoid collision.
         RankGrant local = grants.grant(
                 UUID.randomUUID(), "Other", "admin",
                 net.mythicpvp.core.rank.GrantDuration.parse("permanent"),
@@ -85,7 +73,6 @@ class HydrationTest {
         assertTrue(local.id() > 42L,
                 "local grants after hydration must skip ahead of STDB-assigned ids; got " + local.id());
 
-        // Removing the hydrated grant works by id.
         sink.removeGrant(42L);
         assertEquals(0, grants.history(PLAYER).size());
     }
@@ -126,7 +113,6 @@ class HydrationTest {
         assertNotNull(punishments.template("Cheating #1"));
         assertEquals("30d", punishments.template("Cheating #1").duration());
 
-        // Idempotent re-apply with updated content overwrites in place.
         PunishmentTemplate updated = new PunishmentTemplate(
                 PunishmentCategory.BAN, "60d", "Cheating #1", "Updated description.");
         sink.applyTemplate(updated);
@@ -149,7 +135,6 @@ class HydrationTest {
         assertTrue(sink.isBlacklisted(PLAYER));
         assertEquals(1, sink.blacklistedUuids().size());
 
-        // Revocation arrives as active=false; the sink drops the entry.
         sink.applyBlacklist(PLAYER, "Notch", false);
         assertFalse(sink.isBlacklisted(PLAYER));
         assertEquals(0, sink.blacklistedUuids().size());
@@ -157,9 +142,7 @@ class HydrationTest {
 
     @Test
     void hydratedRanksDoNotEchoBackToGateway() {
-        // The whole point of applyRank vs register: hydration must NOT
-        // call the persistence gateway, otherwise every row STDB sends
-        // gets immediately rewritten and the system flaps.
+
         CapturingPersistenceGateway gateway = new CapturingPersistenceGateway();
         RankService ranks = new RankService();
         ranks.setPersistence(gateway);
@@ -180,7 +163,6 @@ class HydrationTest {
         GrantService grants = new GrantService(ranks, FIXED_CLOCK);
         grants.setPersistence(gateway);
 
-        // Reset to drop the ranks.register() calls from the count.
         gateway.calls.clear();
 
         grants.applyGrant(new RankGrant(7L, PLAYER, "Notch", "admin",

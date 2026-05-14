@@ -20,21 +20,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.IntSupplier;
 
-/**
- * Pushes per-player display state (tablist entry, nametag, scoreboard)
- * through the suite managers, sourcing values from {@link RankService}
- * and {@link GrantService} and resolving template placeholders against
- * {@link PlaceholderResolver}.
- *
- * <p>Threading: every public method must be called from the Bukkit
- * primary thread. The underlying NametagManager mutates per-viewer
- * scoreboard teams, which isn't safe off-main.
- *
- * <p>Failure mode: a player without an explicit grant falls back to the
- * {@code default} rank (matching {@link GrantService#activeRank}). A
- * server with no ranks at all falls back to a hard-coded grey
- * {@code Default} placeholder so we never NPE on join.
- */
 public final class DisplayService {
 
     private static final String FALLBACK_RANK_ID = "default";
@@ -44,7 +29,6 @@ public final class DisplayService {
     private final GrantService grantService;
     private final String serverId;
 
-    // Tab + scoreboard templates loaded from tablist.yml + scoreboard.yml.
     private List<String> tabHeader = List.of();
     private List<String> tabFooter = List.of();
     private String scoreboardTitle = "";
@@ -61,16 +45,10 @@ public final class DisplayService {
         this.serverId = serverId;
     }
 
-    /**
-     * Read tablist + scoreboard templates from the supplied configs.
-     * Called once at boot, again on {@code /reload}.
-     */
     public void loadTemplates(@NotNull MythicConfig tablist, @NotNull MythicConfig scoreboard) {
         this.tabHeader = tablist.getStringList("tablist.header");
         this.tabFooter = tablist.getStringList("tablist.footer");
-        // Pick the per-gamemode override whose key is a case-insensitive
-        // prefix of the server id (e.g. "hub-1" matches the "hub" key).
-        // Falls back to the top-level `scoreboard:` block.
+
         String overrideTitle = "";
         List<String> overrideLines = List.of();
         if (scoreboard.contains("gamemodes")) {
@@ -95,15 +73,8 @@ public final class DisplayService {
                 : overrideLines;
     }
 
-    /**
-     * Push the full display state for one player. Called on join and
-     * whenever their rank changes.
-     */
     public void apply(@NotNull Player player) {
-        // Disguise rank override wins over the player's real grant — the
-        // tab/scoreboard/nametag must look like the disguise, not like
-        // the staff member behind it. Falls through to the real rank
-        // when no override is set.
+
         String rankOverride = DisguiseManager.getInstance().getRankOverride(player.getUniqueId());
         CoreRank rank = rankOverride != null
                 ? rankOrFallback(rankOverride)
@@ -115,7 +86,6 @@ public final class DisplayService {
         applyScoreboard(player, ctx);
     }
 
-    /** Refresh display state for a player by uuid (post-grant, post-edit). */
     public void refresh(@NotNull UUID playerUuid) {
         Player player = Bukkit.getPlayer(playerUuid);
         if (player != null && player.isOnline()) {
@@ -123,25 +93,17 @@ public final class DisplayService {
         }
     }
 
-    /**
-     * Refresh every online player. Use after a global change such as a
-     * rank-edit that affects whoever holds it, or after the server's
-     * online-player count changes (so {@code %online%} updates).
-     */
     public void applyAll() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             apply(player);
         }
     }
 
-    /** Drop tab entry / nametag / scoreboard state for a leaving player. */
     public void clear(@NotNull Player player) {
         TabManager.getInstance().remove(player);
         NametagManager.getInstance().remove(player);
         BoardManager.getInstance().remove(player);
     }
-
-    // ── Internals ────────────────────────────────────────────────────
 
     @NotNull
     private CoreRank activeRankOrFallback(@NotNull UUID playerUuid) {
@@ -161,11 +123,7 @@ public final class DisplayService {
 
     @NotNull
     private PlaceholderResolver contextFor(@NotNull Player player, @NotNull CoreRank rank) {
-        // Disguise wins for the visible name. We deliberately do NOT
-        // reveal the real name in the suite-side placeholder set —
-        // staff who can see through disguises get the "(realName)"
-        // suffix from DisguiseManager.getVisibleName, which the server
-        // applies at packet time, not here.
+
         String displayName = DisguiseManager.getInstance().getDisplayName(
                 player.getUniqueId(), player.getName());
         return new PlaceholderResolver()
@@ -180,19 +138,11 @@ public final class DisplayService {
                 .set("nametag_prefix", rank.nametagPrefix())
                 .set("prefix", rank.prefix())
                 .set("suffix", rank.suffix())
-                // Cosmetic-driven placeholders. Resolve the equipped chat
-                // tag + title via CosmeticManager. Empty when nothing is
-                // equipped or the catalog hasn't hydrated, so existing
-                // templates that don't use these tokens stay untouched.
+
                 .set("cosmetic_chat_tag", cosmeticDisplay(player.getUniqueId(), CosmeticType.CHAT_TAG))
                 .set("cosmetic_title", cosmeticDisplay(player.getUniqueId(), CosmeticType.TITLE));
     }
 
-    /**
-     * Resolve the equipped cosmetic of {@code type} for {@code playerUuid}
-     * to its display name. Returns {@code ""} when nothing is equipped or
-     * the cosmetic id is no longer in the catalog.
-     */
     @NotNull
     private static String cosmeticDisplay(@NotNull UUID playerUuid, @NotNull CosmeticType type) {
         String equipped = CosmeticManager.getInstance().getEquipped(playerUuid, type);
@@ -205,10 +155,7 @@ public final class DisplayService {
 
     private void applyTab(@NotNull Player player, @NotNull CoreRank rank, @NotNull PlaceholderResolver ctx) {
         TabManager tab = TabManager.getInstance();
-        // Header / footer are joined per the YAML "list of lines" convention
-        // — TabManager itself takes a single string per side, so we collapse
-        // resolved lines with newlines. PAPI gets a second pass over the
-        // joined string so its tokens (e.g. %vault_eco_balance%) resolve.
+
         String header = PapiBridge.apply(player, String.join("\n", ctx.resolveAll(tabHeader)));
         String footer = PapiBridge.apply(player, String.join("\n", ctx.resolveAll(tabFooter)));
         tab.setLayout(player, header, footer);
@@ -230,8 +177,7 @@ public final class DisplayService {
 
     private void applyScoreboard(@NotNull Player player, @NotNull PlaceholderResolver ctx) {
         if (scoreboardTitle.isEmpty() && scoreboardLines.isEmpty()) {
-            // No board configured — don't create one. Callers that want
-            // a per-gamemode board can build it directly via BoardManager.
+
             return;
         }
         MythicBoard board = BoardManager.getInstance().get(player);
@@ -249,10 +195,6 @@ public final class DisplayService {
         board.setLines(withPapi);
     }
 
-    /**
-     * Online-player count, computed at apply time so {@code %online%}
-     * stays current. Pulled out as a seam for tests.
-     */
     @NotNull
     IntSupplier onlineCounter() {
         return () -> Bukkit.getOnlinePlayers().size();
@@ -278,19 +220,15 @@ public final class DisplayService {
                 "&7", "%nametag_prefix%%player%");
     }
 
-    /** For tests — direct access to the loaded tab header. */
     @NotNull
     List<String> tabHeader() { return tabHeader; }
 
-    /** For tests — direct access to the loaded scoreboard lines. */
     @NotNull
     List<String> scoreboardLines() { return scoreboardLines; }
 
-    /** For tests — direct access to the loaded scoreboard title. */
     @NotNull
     String scoreboardTitle() { return scoreboardTitle; }
 
-    /** Plugin reference — used by the session listener for scheduled refreshes. */
     @NotNull
     public JavaPlugin plugin() { return plugin; }
 }

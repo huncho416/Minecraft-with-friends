@@ -22,16 +22,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-/**
- * Verifies prompt consumption + cancel behaviour against the modern
- * Paper {@link AsyncChatEvent}.
- *
- * <p>The event is mocked rather than constructed because the real
- * constructor takes Component / ChatRenderer / viewers which are
- * heavy to wire and immaterial to the test. We only care about
- * {@code message()}, {@code getPlayer()}, {@code isAsynchronous()},
- * and {@code setCancelled}.
- */
 class ChatPromptServiceTest {
 
     private ServerMock server;
@@ -57,7 +47,6 @@ class ChatPromptServiceTest {
         AsyncChatEvent event = mockChat(player, "7d");
         service.onChat(event);
 
-        // The mock cancellation flag was toggled.
         assertTrue(cancelledFlagOf(event).get());
         assertEquals("7d", value.get());
         assertFalse(service.waiting(player.getUniqueId()));
@@ -82,14 +71,14 @@ class ChatPromptServiceTest {
         when(event.getPlayer()).thenReturn(player);
         when(event.message()).thenReturn(Component.text(text));
         when(event.isAsynchronous()).thenReturn(false);
-        // Wire setCancelled to flip a side-channel flag we can read back.
+
         AtomicBoolean cancelled = new AtomicBoolean();
         doAnswer(invocation -> {
             cancelled.set(invocation.getArgument(0));
             return null;
         }).when(event).setCancelled(anyBoolean());
         when(event.isCancelled()).thenAnswer(inv -> cancelled.get());
-        // Stash the flag on the event mock so the helper above can read it.
+
         cancelledFlags.put(System.identityHashCode(event), cancelled);
         return event;
     }

@@ -1,17 +1,8 @@
-//! Pure shard-selection logic. Mirror of `mythic_stdb::sessions::pick_shard`.
-//!
-//! Kept here (not in the bridge) because the bridge has no opinions about
-//! routing — only this crate consumes [`registry_view::ServerEntry`].
+
 
 use crate::registry_view::ServerEntry;
 use mythiccord_stdb_bridge::ServerStatus;
 
-/// Routing-friendly load score. Lower is better. Identical formula to
-/// `mythic_stdb::registry::load_score` so client-side routing matches
-/// what STDB-side reducers would compute.
-///
-/// `u32 → f32` is intentional: routing only needs the relative ordering,
-/// and our `max_players` caps are <100k where f32 is exact.
 #[allow(clippy::cast_precision_loss)]
 pub fn load_score(e: &ServerEntry) -> f32 {
     let cap = e.max_players.max(1) as f32;
@@ -21,8 +12,6 @@ pub fn load_score(e: &ServerEntry) -> f32 {
     saturation + 0.5 * tps_penalty + 0.3 * heap_penalty
 }
 
-/// Pick the best target shard. Lowest [`load_score`] wins; ties broken
-/// by region match, then by shard id for stability.
 pub fn pick_shard<'a>(
     entries: &'a [ServerEntry],
     desired_role: &str,
@@ -48,8 +37,6 @@ pub fn pick_shard<'a>(
 mod tests {
     use super::*;
 
-    // Test fixture builder — taking every field is clearer than a builder
-    // here. Suppress the lint locally.
     #[allow(clippy::too_many_arguments)]
     fn entry(
         shard: &str,
@@ -95,8 +82,7 @@ mod tests {
             entry("b", "SKYBLOCK", "eu-west", ServerStatus::Healthy, 20, 100, 20.0, 0.5),
             entry("c", "SKYBLOCK", "us-east", ServerStatus::Healthy, 30, 100, 20.0, 0.5),
         ];
-        // b has lowest load, but c matches region with similar load.
-        // Load wins first: b is picked.
+
         assert_eq!(pick_shard(&entries, "SKYBLOCK", "us-east").unwrap().shard_id, "b");
     }
 
@@ -107,9 +93,9 @@ mod tests {
             entry("a", "SKYBLOCK", "eu-west", ServerStatus::Healthy, 50, 100, 20.0, 0.5),
             entry("m", "SKYBLOCK", "us-east", ServerStatus::Healthy, 50, 100, 20.0, 0.5),
         ];
-        // Same load score; region match wins → "m".
+
         assert_eq!(pick_shard(&entries, "SKYBLOCK", "us-east").unwrap().shard_id, "m");
-        // Without region match, smallest id wins → "a".
+
         assert_eq!(pick_shard(&entries, "SKYBLOCK", "ap-south").unwrap().shard_id, "a");
     }
 }

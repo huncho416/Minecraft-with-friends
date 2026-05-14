@@ -1,6 +1,5 @@
 package net.mythicpvp.suite.database.schema.dto;
 
-/** Mirrors the {@code skills} table row. */
 public record SkillRow(
         long id,
         String player_uuid,

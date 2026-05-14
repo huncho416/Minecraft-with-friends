@@ -50,9 +50,7 @@ public final class RankEditorCommand extends MythicCommand {
             player.sendMessage("Unknown rank.");
             return;
         }
-        // When wired with the click-driven editor (production), delegate so
-        // every field becomes click-editable. Falls back to the static
-        // read-only menu when no editor is provided (test fixtures).
+
         if (editorMenu != null) {
             editorMenu.openOverview(player, rank.id());
             return;

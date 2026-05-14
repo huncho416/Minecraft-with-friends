@@ -8,11 +8,7 @@ members = [
     # "infrarust/crates/*",   # added by tools/vendor-infrarust.sh after `init`
 ]
 exclude = [
-    # Avoid pulling Infrarust's own examples into our workspace until we
-    # explicitly opt in.
-    "infrarust/plugins",
-    "infrarust/tools",
-    "infrarust/examples",
+    "infrarust",
 ]
 
 [workspace.package]
