@@ -1,7 +1,9 @@
 package net.mythicpvp.core;
 
 import net.mythicpvp.core.chat.ChatControlService;
+import net.mythicpvp.core.chat.ChatGuard;
 import net.mythicpvp.core.command.CGrantCommand;
+import net.mythicpvp.core.command.ChatCommand;
 import net.mythicpvp.core.command.ClearGrantsCommand;
 import net.mythicpvp.core.command.CoreCompletions;
 import net.mythicpvp.core.command.DiscordCommand;
@@ -157,7 +159,12 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new DiscordCommand(essentialsService));
         staffChannelService = new StaffChannelService(protocolManager, serverIdentity.id());
         staffPresenceService = new StaffPresenceService(protocolManager, serverIdentity.id());
-        chatControlService = new ChatControlService(protocolManager);
+        // Pass shardId so LOCAL-scope chat-control changes from other
+        // servers are dropped — see ChatControlService.apply.
+        chatControlService = new ChatControlService(protocolManager, serverIdentity.id());
+        ChatGuard chatGuard = new ChatGuard(this, chatControlService, messages);
+        getServer().getPluginManager().registerEvents(chatGuard, this);
+        commandManager.register(new ChatCommand(chatControlService, messages));
     }
 
     @Override

@@ -27,5 +27,7 @@ public final class CoreCompletions {
         commandManager.registerCompletion("gamemodes", context -> CoreCompletionValues.gamemodes());
         commandManager.registerCompletion("essentials-targets", context -> CoreCompletionValues.gamemodeTargets(context.sender()));
         commandManager.registerCompletion("teleport-others", context -> CoreCompletionValues.teleportOthers(context.sender()));
+        commandManager.registerCompletion("chat-scopes", context -> List.of("local", "network"));
+        commandManager.registerCompletion("chat-slow-presets", context -> List.of("0", "3", "5", "10", "30"));
     }
 }
