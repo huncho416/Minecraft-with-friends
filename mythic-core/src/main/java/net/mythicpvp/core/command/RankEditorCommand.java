@@ -6,6 +6,7 @@ import net.mythicpvp.suite.command.CommandPermission;
 import net.mythicpvp.suite.command.Complete;
 import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
+import net.mythicpvp.suite.command.Subcommand;
 import net.mythicpvp.suite.item.MythicItem;
 import net.mythicpvp.suite.menu.MythicMenu;
 import org.bukkit.Material;
@@ -38,5 +39,28 @@ public final class RankEditorCommand extends MythicCommand {
                 .slot(14, MythicItem.create(Material.BOOK).name("&#FF00F8Permissions").lore(rank.permissions()).build())
                 .slot(16, MythicItem.create(Material.BARRIER).name("&#FF00F8Close").build(), event -> player.closeInventory())
                 .open(player);
+    }
+
+    @Subcommand("set")
+    @Complete({"ranks", "rank-fields"})
+    public void set(@NotNull Player player, @NotNull String rankId, @NotNull String field, @NotNull String[] valueParts) {
+        if (valueParts.length == 0) {
+            player.sendMessage("Missing value.");
+            return;
+        }
+        boolean updated = rankService.setField(rankId, field, String.join(" ", valueParts));
+        player.sendMessage(updated ? "Updated " + rankId + "." : "Unable to update rank.");
+    }
+
+    @Subcommand("addperm")
+    @Complete({"ranks"})
+    public void addPermission(@NotNull Player player, @NotNull String rankId, @NotNull String permission) {
+        player.sendMessage(rankService.addPermission(rankId, permission) ? "Permission added." : "Unable to add permission.");
+    }
+
+    @Subcommand("removeperm")
+    @Complete({"ranks"})
+    public void removePermission(@NotNull Player player, @NotNull String rankId, @NotNull String permission) {
+        player.sendMessage(rankService.removePermission(rankId, permission) ? "Permission removed." : "Unable to remove permission.");
     }
 }

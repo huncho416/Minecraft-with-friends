@@ -648,7 +648,10 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 - ✅ Dynamic completion provider foundation exists in `suite-command` and is wired into initial `mythic-core` rank/grant commands.
 - ✅ Initial rank/grant service foundation exists with rank ids, color, dye, prefix, suffix, weight, parent, permissions, staff/donator flags, and independent chat/tab/nametag display formats.
 - ✅ Initial grant commands exist for `/grant`, `/grants`, `/cgrant`, `/cleargrants`, and `/rankeditor`, with permission-aware completions for players, ranks, durations, reasons, booleans, and rank fields.
-- 🚧 Rank/grant database persistence, complete multi-step grant menus, full rank editor mutations, and SpacetimeDB schema/reducer additions remain pending.
+- ✅ `/grant <username>` now opens the core grant menu flow with rank selection, duration presets, custom duration chat input, reason presets, custom reason chat input, and final confirmation.
+- ✅ Runtime rank editor command mutations now exist for setting rank fields and adding or removing permissions, including independent chat, tab, and nametag formatting fields.
+- ✅ Chat prompt handling exists for menu-backed custom values and is covered by MockBukkit tests.
+- 🚧 Rank/grant database persistence, YAML-backed menu text, complete rank editor menus, and SpacetimeDB schema/reducer additions remain pending.
 - 🚧 Punishment menu/handbook implementation remains pending beyond the existing punishment service and silent flag foundation.
 
 #### Command Completion Requirements

@@ -9,6 +9,8 @@ import net.mythicpvp.core.command.GrantsCommand;
 import net.mythicpvp.core.command.RankEditorCommand;
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.punishment.PunishmentService;
+import net.mythicpvp.core.prompt.ChatPromptService;
+import net.mythicpvp.core.rank.GrantFlowService;
 import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.core.staff.StaffChannelService;
@@ -35,6 +37,8 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private ChatControlService chatControlService;
     private RankService rankService;
     private GrantService grantService;
+    private GrantFlowService grantFlowService;
+    private ChatPromptService chatPromptService;
     private CoreMessages messages;
 
     @Override
@@ -62,10 +66,13 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager = new CommandManager(this);
         rankService = new RankService();
         rankService.load(configManager.getOrCreate("ranks"));
+        chatPromptService = new ChatPromptService(this);
         grantService = new GrantService(rankService, Clock.systemUTC());
+        grantFlowService = new GrantFlowService(rankService, grantService, chatPromptService);
         CoreCompletions.register(commandManager, rankService);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
-        commandManager.register(new GrantCommand(grantService, rankService));
+        getServer().getPluginManager().registerEvents(chatPromptService, this);
+        commandManager.register(new GrantCommand(grantFlowService));
         commandManager.register(new GrantsCommand(grantService, rankService));
         commandManager.register(new CGrantCommand(grantService));
         commandManager.register(new ClearGrantsCommand(grantService));
@@ -128,6 +135,16 @@ public final class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     @NotNull
     public GrantService grantService() {
         return grantService;
+    }
+
+    @NotNull
+    public GrantFlowService grantFlowService() {
+        return grantFlowService;
+    }
+
+    @NotNull
+    public ChatPromptService chatPromptService() {
+        return chatPromptService;
     }
 
     @NotNull

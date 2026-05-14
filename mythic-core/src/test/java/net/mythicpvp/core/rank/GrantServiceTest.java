@@ -58,6 +58,34 @@ class GrantServiceTest {
         assertEquals("name", display.nametagPrefix());
     }
 
+    @Test
+    void rankEditorFieldsMutateRuntimeRank() {
+        RankService rankService = new RankService();
+        rankService.register(rank("admin", 10));
+
+        assertTrue(rankService.setField("admin", "chat-prefix", "&#FF00F8ADMIN"));
+        assertTrue(rankService.setField("admin", "staff", "true"));
+        assertTrue(rankService.setField("admin", "dye", "RED_DYE"));
+        assertTrue(rankService.addPermission("admin", "mythic.core.test"));
+        assertTrue(rankService.removePermission("admin", "mythic.core.test"));
+
+        CoreRank rank = rankService.get("admin");
+        assertNotNull(rank);
+        assertEquals("&#FF00F8ADMIN", rank.chatPrefix());
+        assertTrue(rank.staff());
+        assertEquals(Material.RED_DYE, rank.dye());
+        assertFalse(rank.permissions().contains("mythic.core.test"));
+    }
+
+    @Test
+    void invalidRankEditorWeightDoesNotMutateRank() {
+        RankService rankService = new RankService();
+        rankService.register(rank("admin", 10));
+
+        assertFalse(rankService.setField("admin", "weight", "highest"));
+        assertEquals(10, rankService.get("admin").weight());
+    }
+
     private static CoreRank rank(String id, int weight) {
         return new CoreRank(id, id, "#808080", Material.LIGHT_GRAY_DYE, "&7", "", weight, false, false, "", List.of(), "&7", "%chat_prefix%%player%: %message%", "&7", "%tab_prefix%%player%", "&7", "%nametag_prefix%%player%");
     }

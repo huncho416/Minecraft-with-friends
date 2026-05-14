@@ -60,6 +60,63 @@ public final class RankService {
         PermissionManager.getInstance().registerRank(new Rank(rank.id(), rank.prefix(), rank.color(), rank.weight(), SetCopy.copy(rank.permissions()), rank.parent().isBlank() ? null : rank.parent()));
     }
 
+    public boolean setField(@NotNull String id, @NotNull String field, @NotNull String value) {
+        CoreRank rank = get(id);
+        if (rank == null) {
+            return false;
+        }
+        String normalized = normalize(field);
+        Integer parsedWeight = normalized.equals("weight") ? weight(value) : null;
+        if (normalized.equals("weight") && parsedWeight == null) {
+            return false;
+        }
+        CoreRank updated = switch (normalized) {
+            case "name" -> new CoreRank(rank.id(), value, rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "color" -> new CoreRank(rank.id(), rank.name(), value, rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "dye" -> new CoreRank(rank.id(), rank.name(), rank.color(), material(value), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "prefix" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), value, rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "suffix" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), value, rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "weight" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), parsedWeight, rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "staff" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), Boolean.parseBoolean(value), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "donator", "purchasable", "purchaseable" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), Boolean.parseBoolean(value), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "parent" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), normalize(value), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "chat-prefix" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), value, rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "chat-format" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), value, rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "tab-prefix" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), value, rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat());
+            case "tab-format" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), value, rank.nametagPrefix(), rank.nametagFormat());
+            case "nametag-prefix" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), value, rank.nametagFormat());
+            case "nametag-format" -> new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), rank.permissions(), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), value);
+            default -> null;
+        };
+        if (updated == null) {
+            return false;
+        }
+        register(updated);
+        return true;
+    }
+
+    public boolean addPermission(@NotNull String id, @NotNull String permission) {
+        CoreRank rank = get(id);
+        if (rank == null || rank.permissions().contains(permission)) {
+            return false;
+        }
+        List<String> permissions = new ArrayList<>(rank.permissions());
+        permissions.add(permission);
+        register(new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), List.copyOf(permissions), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat()));
+        return true;
+    }
+
+    public boolean removePermission(@NotNull String id, @NotNull String permission) {
+        CoreRank rank = get(id);
+        if (rank == null || !rank.permissions().contains(permission)) {
+            return false;
+        }
+        List<String> permissions = new ArrayList<>(rank.permissions());
+        permissions.remove(permission);
+        register(new CoreRank(rank.id(), rank.name(), rank.color(), rank.dye(), rank.prefix(), rank.suffix(), rank.weight(), rank.staff(), rank.donator(), rank.parent(), List.copyOf(permissions), rank.chatPrefix(), rank.chatFormat(), rank.tabPrefix(), rank.tabFormat(), rank.nametagPrefix(), rank.nametagFormat()));
+        return true;
+    }
+
     @Nullable
     public CoreRank get(@NotNull String id) {
         return ranks.get(normalize(id));
@@ -98,6 +155,15 @@ public final class RankService {
     private static Material material(@NotNull String name) {
         Material material = Material.matchMaterial(name);
         return material == null ? Material.LIGHT_GRAY_DYE : material;
+    }
+
+    @Nullable
+    private static Integer weight(@NotNull String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException exception) {
+            return null;
+        }
     }
 
     @NotNull
