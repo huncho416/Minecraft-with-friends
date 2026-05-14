@@ -1,9 +1,13 @@
 package net.mythicpvp.suite.resourcepack;
 
+import net.kyori.adventure.resource.ResourcePackInfo;
+import net.kyori.adventure.resource.ResourcePackRequest;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.net.URI;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,7 +74,20 @@ public final class ResourcePackManager {
         if (packUrl.isBlank()) {
             throw new IllegalStateException("Resource pack URL is not configured");
         }
-        player.setResourcePack(packUrl);
+        // Per-pack UUID derived from the URL so re-sends of the same pack
+        // reuse the same id (clients dedupe on it).
+        UUID packId = UUID.nameUUIDFromBytes(packUrl.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        ResourcePackInfo info = ResourcePackInfo.resourcePackInfo()
+                .id(packId)
+                .uri(URI.create(packUrl))
+                .hash(packHash == null ? "" : packHash)
+                .build();
+        ResourcePackRequest request = ResourcePackRequest.resourcePackRequest()
+                .packs(info)
+                .required(forceUpdate)
+                .replace(true)
+                .build();
+        player.sendResourcePacks(request);
         deliveries.put(player.getUniqueId(), new PackDelivery(packUrl, packHash, System.currentTimeMillis(), forceUpdate));
     }
 

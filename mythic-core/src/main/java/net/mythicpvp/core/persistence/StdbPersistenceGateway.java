@@ -219,6 +219,26 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         observe("appealReview " + appealId, schema.appealReview(appealId, reviewer, dec, notes));
     }
 
+    // ── Cosmetics ────────────────────────────────────────────────────
+
+    @Override
+    public void cosmeticGrant(@NotNull UUID player, @NotNull String cosmeticId,
+                              @NotNull String cosmeticType, @NotNull String source,
+                              @NotNull String reference) {
+        net.mythicpvp.suite.database.schema.StdbCosmeticType type =
+                net.mythicpvp.suite.database.schema.StdbCosmeticType.fromWire(cosmeticType);
+        if (type == null) {
+            // Unknown type — log + drop rather than throwing. Caller is
+            // fire-and-forget; we don't want one bad lookup to break the
+            // surrounding rank grant.
+            logger.warning("[stdb] cosmeticGrant skipped: unknown type " + cosmeticType
+                    + " for cosmetic " + cosmeticId);
+            return;
+        }
+        observe("cosmeticGrant " + cosmeticId + " -> " + player,
+                schema.cosmeticGrant(player, cosmeticId, type, source, reference));
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────
 
     /** Map mythic-core's {@link PunishmentType} to the schema's wire enum. */

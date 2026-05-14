@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.List;
 
 public class MythicConfig {
+    // `final` so subclasses can't escape `this` before our constructor's
+    // load() call observes initialized fields.
 
     private final JavaPlugin plugin;
     private final String fileName;
@@ -24,7 +26,7 @@ public class MythicConfig {
         load();
     }
 
-    public void load() {
+    public final void load() {
         if (!file.exists()) {
             file.getParentFile().mkdirs();
             if (plugin.getResource(fileName) != null) {

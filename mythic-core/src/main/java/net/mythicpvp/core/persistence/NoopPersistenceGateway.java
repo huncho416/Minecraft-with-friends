@@ -38,5 +38,8 @@ public final class NoopPersistenceGateway implements PersistenceGateway {
     @Override public void blacklistRevoke(long entryId, @NotNull UUID staff, @NotNull String reason) {}
     @Override public void appealOpen(long punishmentId, @NotNull UUID target, @NotNull String message) {}
     @Override public void appealReview(long appealId, @NotNull UUID reviewer, @NotNull String decision, @NotNull String notes) {}
+    @Override public void cosmeticGrant(@NotNull UUID player, @NotNull String cosmeticId,
+                                        @NotNull String cosmeticType, @NotNull String source,
+                                        @NotNull String reference) {}
     @Override public void hydrate(@NotNull HydrationSink sink) {}
 }

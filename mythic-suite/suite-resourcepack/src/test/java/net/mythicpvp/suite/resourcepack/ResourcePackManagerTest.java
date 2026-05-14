@@ -1,5 +1,6 @@
 package net.mythicpvp.suite.resourcepack;
 
+import net.kyori.adventure.resource.ResourcePackRequest;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
@@ -11,6 +12,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,7 +45,7 @@ class ResourcePackManagerTest {
         manager.setPackInfo("pack-url", "hash");
         manager.setForceUpdate(true);
         manager.sendTo(player);
-        verify(player).setResourcePack("pack-url");
+        verify(player).sendResourcePacks(any(ResourcePackRequest.class));
         assertTrue(manager.getDelivery(uuid).orElseThrow().forced());
     }
 }

@@ -4,3 +4,29 @@ scoreboard:
     - "&#FFFFFFRank: %rank%"
     - "&#FFFFFFServer: %server%"
     - "&#FFFFFFOnline: %online%"
+
+# Per-gamemode overrides. The key is matched as a case-insensitive prefix
+# against the server identity id (server-identity.yml). First match wins,
+# falling back to the top-level `scoreboard:` block above. Add new entries
+# for new server families without touching code.
+gamemodes:
+  hub:
+    title: "&#FF00F8MythicHub"
+    lines:
+      - "&#FFFFFFWelcome, %player%"
+      - "&#FFFFFFRank: %rank%"
+      - "&#FFFFFFOnline: %online%"
+      - ""
+      - "&#A0A0A0play.mythicpvp.net"
+  skyblock:
+    title: "&#FF00F8Skyblock"
+    lines:
+      - "&#FFFFFFRank: %rank%"
+      - "&#FFFFFFIsland: %server%"
+      - "&#FFFFFFOnline: %online%"
+  practice:
+    title: "&#FF00F8Practice"
+    lines:
+      - "&#FFFFFFRank: %rank%"
+      - "&#FFFFFFArena: %server%"
+      - "&#FFFFFFOnline: %online%"

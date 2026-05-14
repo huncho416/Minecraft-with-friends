@@ -1,0 +1,34 @@
+# Operator-facing text for the staff menus.
+#
+# Tokens supported:
+#   %target%   — name of the player being acted on (when applicable)
+#   %category% — punishment category name
+#
+# Colours use the suite-hex convention: &#RRGGBB for hex, &7/&f/etc for legacy.
+punishment:
+  punish-title: "&#FF00F8Punish: %target%"
+  handbook-title: "&#FF00F8Punishments"
+  templates-title: "&#FF00F8%category%"
+  proof-title: "&#FF00F8Punishment Proof"
+  confirm-title: "&#FF00F8Confirm Punishment"
+  history-title: "&#FF00F8History: %target%"
+  category-button:
+    name: "&#FF00F8%category%"
+    lore-templates: "&7View templates"
+    lore-handbook: "&7Open handbook category"
+  template-click:
+    executable: "&#FF00F8Click to select"
+    handbook: "&#FF00F8Read-only handbook entry"
+  buttons:
+    enter-proof: "&#FF00F8Enter Proof"
+    enter-proof-lore: "&7Click to enter proof in chat"
+    proof-summary: "&#FF00F8Proof"
+    no-proof-yet: "&7No proof entered"
+    no-proof-button: "&#FF0000No proof entered"
+    confirm-proof: "&#00FF00Confirm Proof"
+    clear-inventory: "&#FF00F8Clear Inventory"
+    silent: "&#FF00F8Silent"
+    summary: "&#FF00F8Punishment Summary"
+    execute: "&#00FF00Execute Punishment"
+    state-prefix: "&7State: &f"
+    toggle-hint: "&#FF00F8Click to toggle"

@@ -65,8 +65,31 @@ public final class DisplayService {
     public void loadTemplates(@NotNull MythicConfig tablist, @NotNull MythicConfig scoreboard) {
         this.tabHeader = tablist.getStringList("tablist.header");
         this.tabFooter = tablist.getStringList("tablist.footer");
-        this.scoreboardTitle = scoreboard.getString("scoreboard.title", "");
-        this.scoreboardLines = scoreboard.getStringList("scoreboard.lines");
+        // Pick the per-gamemode override whose key is a case-insensitive
+        // prefix of the server id (e.g. "hub-1" matches the "hub" key).
+        // Falls back to the top-level `scoreboard:` block.
+        String overrideTitle = "";
+        List<String> overrideLines = List.of();
+        if (scoreboard.contains("gamemodes")) {
+            org.bukkit.configuration.ConfigurationSection gm =
+                    scoreboard.getConfig().getConfigurationSection("gamemodes");
+            if (gm != null) {
+                String lowerId = serverId.toLowerCase(java.util.Locale.ROOT);
+                for (String key : gm.getKeys(false)) {
+                    if (lowerId.startsWith(key.toLowerCase(java.util.Locale.ROOT))) {
+                        overrideTitle = gm.getString(key + ".title", "");
+                        overrideLines = gm.getStringList(key + ".lines");
+                        break;
+                    }
+                }
+            }
+        }
+        this.scoreboardTitle = overrideTitle.isEmpty()
+                ? scoreboard.getString("scoreboard.title", "")
+                : overrideTitle;
+        this.scoreboardLines = overrideLines.isEmpty()
+                ? scoreboard.getStringList("scoreboard.lines")
+                : overrideLines;
     }
 
     /**
@@ -141,13 +164,14 @@ public final class DisplayService {
         TabManager tab = TabManager.getInstance();
         // Header / footer are joined per the YAML "list of lines" convention
         // — TabManager itself takes a single string per side, so we collapse
-        // resolved lines with newlines.
-        String header = String.join("\n", ctx.resolveAll(tabHeader));
-        String footer = String.join("\n", ctx.resolveAll(tabFooter));
+        // resolved lines with newlines. PAPI gets a second pass over the
+        // joined string so its tokens (e.g. %vault_eco_balance%) resolve.
+        String header = PapiBridge.apply(player, String.join("\n", ctx.resolveAll(tabHeader)));
+        String footer = PapiBridge.apply(player, String.join("\n", ctx.resolveAll(tabFooter)));
         tab.setLayout(player, header, footer);
         tab.setEntry(player.getUniqueId(),
-                ctx.resolve(rank.tabPrefix()),
-                ctx.resolve(rank.suffix()),
+                PapiBridge.apply(player, ctx.resolve(rank.tabPrefix())),
+                PapiBridge.apply(player, ctx.resolve(rank.suffix())),
                 rank.weight());
         tab.apply(player);
     }
@@ -168,13 +192,18 @@ public final class DisplayService {
             return;
         }
         MythicBoard board = BoardManager.getInstance().get(player);
-        String title = ctx.resolve(scoreboardTitle);
+        String title = PapiBridge.apply(player, ctx.resolve(scoreboardTitle));
         if (board == null) {
             board = BoardManager.getInstance().create(player, title);
         } else {
             board.setTitle(title);
         }
-        board.setLines(ctx.resolveAll(scoreboardLines));
+        java.util.List<String> resolved = ctx.resolveAll(scoreboardLines);
+        java.util.List<String> withPapi = new java.util.ArrayList<>(resolved.size());
+        for (String line : resolved) {
+            withPapi.add(PapiBridge.apply(player, line));
+        }
+        board.setLines(withPapi);
     }
 
     /**

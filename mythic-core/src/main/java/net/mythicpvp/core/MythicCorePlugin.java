@@ -136,7 +136,12 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         ProtocolManager protocolManager = ProtocolManager.getInstance();
         punishmentService = new PunishmentService(protocolManager, Clock.systemUTC());
         punishmentService.setPersistence(persistenceGateway);
-        punishmentMenuService = new PunishmentMenuService(punishmentService, chatPromptService, Clock.systemUTC(), serverIdentity.id());
+        // Operator-overridable menu strings (menus.yml). Falls back to
+        // built-in defaults when the file is absent or partial.
+        net.mythicpvp.core.punishment.PunishmentMenuText menuText =
+                new net.mythicpvp.core.punishment.PunishmentMenuText(configManager.getOrCreate("menus"));
+        punishmentMenuService = new PunishmentMenuService(
+                punishmentService, chatPromptService, Clock.systemUTC(), serverIdentity.id(), menuText);
         seedPunishments(configManager.getOrCreate("punishments"));
         // Open subscriptions to every Phase 3 table. Snapshot rows arrive
         // asynchronously and fold into the in-memory services via the
@@ -225,7 +230,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         // cosmetics on every successful /grant. Audit logged.
         RankCosmeticBundles cosmeticBundles = new RankCosmeticBundles();
         cosmeticBundles.load(configManager.getOrCreate("ranks"));
-        grantService.setGrantObserver(new RankBundleGrantHook(cosmeticBundles, auditLog, getLogger()));
+        grantService.setGrantObserver(new RankBundleGrantHook(
+                cosmeticBundles, auditLog, getLogger(), persistenceGateway));
         // Pass shardId so LOCAL-scope chat-control changes from other
         // servers are dropped — see ChatControlService.apply.
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());

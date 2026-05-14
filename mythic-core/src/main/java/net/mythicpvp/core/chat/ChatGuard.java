@@ -1,5 +1,6 @@
 package net.mythicpvp.core.chat;
 
+import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.suite.scheduler.MythicScheduler;
@@ -7,7 +8,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -57,7 +57,7 @@ public final class ChatGuard implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onChat(@NotNull AsyncPlayerChatEvent event) {
+    public void onChat(@NotNull AsyncChatEvent event) {
         Player player = event.getPlayer();
         if (player.hasPermission(BYPASS_PERMISSION)) {
             return;

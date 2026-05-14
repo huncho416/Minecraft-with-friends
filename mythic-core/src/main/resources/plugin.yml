@@ -3,5 +3,7 @@ version: ${project.version}
 main: net.mythicpvp.core.MythicCorePlugin
 api-version: '1.21'
 folia-supported: true
+softdepend:
+  - PlaceholderAPI
 authors:
   - MythicPvP

@@ -95,6 +95,7 @@ public final class SchemaVersion {
 
     /** Thrown when STDB schema version disagrees with {@link #CURRENT}. */
     public static final class SchemaVersionMismatchException extends Exception {
+        private static final long serialVersionUID = 1L;
         private final int expected;
         private final int actual;
 

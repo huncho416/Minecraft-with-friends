@@ -84,6 +84,22 @@ public interface PersistenceGateway {
      */
     void appealReview(long appealId, @NotNull UUID reviewer, @NotNull String decision, @NotNull String notes);
 
+    // ── Cosmetics ────────────────────────────────────────────────────
+
+    /**
+     * Persist a cosmetic grant. {@code cosmeticType} must be one of the
+     * STDB wire values (HAT, TITLE, PARTICLE, KILL_EFFECT, WIN_EFFECT,
+     * CHAT_TAG). {@code source} typically identifies the system that
+     * issued the grant (e.g. {@code "RANK_BUNDLE"}, {@code "STAFF"});
+     * {@code reference} carries a system-specific id (e.g. the rank id
+     * for bundle grants, or the grant-id string).
+     */
+    void cosmeticGrant(@NotNull UUID player,
+                       @NotNull String cosmeticId,
+                       @NotNull String cosmeticType,
+                       @NotNull String source,
+                       @NotNull String reference);
+
     // ── Hydration ────────────────────────────────────────────────────
 
     /**

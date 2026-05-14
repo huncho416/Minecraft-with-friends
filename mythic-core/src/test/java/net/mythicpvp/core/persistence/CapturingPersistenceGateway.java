@@ -62,6 +62,12 @@ public final class CapturingPersistenceGateway implements PersistenceGateway {
     @Override public void appealReview(long appealId, @NotNull UUID reviewer, @NotNull String decision, @NotNull String notes) {
         calls.add(new AppealReview(appealId, reviewer, decision, notes));
     }
+    public record CosmeticGrant(UUID player, String cosmeticId, String cosmeticType, String source, String reference) {}
+    @Override public void cosmeticGrant(@NotNull UUID player, @NotNull String cosmeticId,
+                                        @NotNull String cosmeticType, @NotNull String source,
+                                        @NotNull String reference) {
+        calls.add(new CosmeticGrant(player, cosmeticId, cosmeticType, source, reference));
+    }
     /** Records the hydrate invocation and the sink so tests can confirm wiring. */
     public record HydrateCall(HydrationSink sink) {}
     @Override public void hydrate(@NotNull HydrationSink sink) {

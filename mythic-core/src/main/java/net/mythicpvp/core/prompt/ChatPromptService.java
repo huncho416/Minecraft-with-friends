@@ -1,10 +1,12 @@
 package net.mythicpvp.core.prompt;
 
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,13 +39,21 @@ public final class ChatPromptService implements Listener {
     }
 
     @EventHandler
-    public void onChat(@NotNull AsyncPlayerChatEvent event) {
+    public void onQuit(@NotNull PlayerQuitEvent event) {
+        // Drop dangling prompts so disconnected players don't accumulate.
+        prompts.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onChat(@NotNull AsyncChatEvent event) {
         BiConsumer<Player, String> handler = prompts.remove(event.getPlayer().getUniqueId());
         if (handler == null) {
             return;
         }
         event.setCancelled(true);
-        String message = event.getMessage();
+        // Modern Paper hands us a Component; flatten to plain text for
+        // the prompt handler (callers expect a String).
+        String message = PlainTextComponentSerializer.plainText().serialize(event.message());
         if (!message.equalsIgnoreCase("cancel")) {
             if (event.isAsynchronous()) {
                 // Folia-safe via MythicScheduler so prompt callbacks
