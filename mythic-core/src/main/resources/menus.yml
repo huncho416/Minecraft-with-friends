@@ -75,3 +75,22 @@ rank:
     - "Staff Rank"
     - "Rank Upgrade"
     - "Purchased Rank"
+
+# Cosmetic menus (/cosmetics).
+cosmetics:
+  main-title: "&#F529BECosmetics"
+  browse-title: "&#F529BE%type%"
+  detail-title: "&#F529BE%cosmetic%"
+  crates-title: "&#F529BECrates"
+  crate-confirm-title: "&#F529BEOpen %crate%?"
+  click-to-view: "&#D2D8E0Click to view"
+  click-to-equip: "&#9CFF9CClick to equip"
+  click-to-unequip: "&#FF8A8AClick to unequip"
+  withdraw: "&#F529BEWithdraw as Item"
+  equipped: "&#9CFF9CEquipped"
+  owned: "&#9CFF9COwned"
+  not-owned: "&#FF8A8ANot Owned"
+  confirm: "&#9CFF9CConfirm"
+  cancel: "&#FF8A8ACancel"
+  open-crates: "&#F529BECrates"
+  back: "&#F529BEBack"

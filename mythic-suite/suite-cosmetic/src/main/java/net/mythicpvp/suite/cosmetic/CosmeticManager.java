@@ -66,5 +66,7 @@ public final class CosmeticManager {
         return equipped.get(player.toString() + ":" + type.name());
     }
 
-    public record Cosmetic(@NotNull String id, @NotNull String displayName, @NotNull CosmeticType type, @NotNull String description, @Nullable org.bukkit.NamespacedKey itemModel) {}
+    public record Cosmetic(@NotNull String id, @NotNull String displayName, @NotNull CosmeticType type,
+                           @NotNull String description, @Nullable org.bukkit.NamespacedKey itemModel,
+                           @NotNull String rarity, boolean tradable, boolean limited) {}
 }

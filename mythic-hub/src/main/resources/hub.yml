@@ -1,0 +1,34 @@
+# Hub configuration — operator-facing settings for spawn, selector, and activities.
+spawn:
+  world: "world"
+  x: 0.5
+  y: 100.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+  void-teleport-y: -10.0
+
+# Server selector groups displayed in /servers menu.
+selector:
+  groups:
+    - role: "survival"
+      display-name: "&#F529BESurvival"
+      material: "GRASS_BLOCK"
+    - role: "practice"
+      display-name: "&#F529BEPractice"
+      material: "DIAMOND_SWORD"
+    - role: "creative"
+      display-name: "&#F529BECreative"
+      material: "PAINTING"
+
+# Hub activities.
+activities:
+  double-jump:
+    enabled: true
+    velocity: 1.5
+    upward: 0.8
+  launch-pads:
+    enabled: true
+    velocity: 2.5
+    upward: 1.0
+    material: "SLIME_BLOCK"

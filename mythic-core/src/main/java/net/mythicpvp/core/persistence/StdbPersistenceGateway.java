@@ -205,6 +205,19 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     }
 
     @Override
+    public void cosmeticEquip(@NotNull UUID player, @NotNull String cosmeticType, @NotNull String cosmeticId) {
+        net.mythicpvp.suite.database.schema.StdbCosmeticType type =
+                net.mythicpvp.suite.database.schema.StdbCosmeticType.fromWire(cosmeticType);
+        if (type == null) {
+            logger.warning("[stdb] cosmeticEquip skipped: unknown type " + cosmeticType
+                    + " for cosmetic " + cosmeticId);
+            return;
+        }
+        observe("cosmeticEquip " + cosmeticId + " -> " + player,
+                schema.cosmeticEquip(player, type, cosmeticId));
+    }
+
+    @Override
     public void friendRequest(@NotNull UUID from, @NotNull UUID to) {
         observe("friendRequest " + from + " -> " + to, schema.friendRequest(from, to));
     }
@@ -345,7 +358,13 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
         subscribe(TableNames.LOGIN_STREAKS, LoginStreakRow.class,
                 row -> sink.applyLoginStreak(toLoginStreak(row)),
                 row -> {});
-        logger.info("[stdb] hydration subscriptions registered for 11 tables");
+        subscribe(TableNames.COSMETIC_GRANTS, net.mythicpvp.suite.database.schema.dto.CosmeticGrantRow.class,
+                row -> sink.applyCosmeticGrant(UUID.fromString(row.player_uuid()), row.cosmetic_id(), row.cosmetic_type()),
+                row -> {});
+        subscribe(TableNames.COSMETIC_EQUIPPED, net.mythicpvp.suite.database.schema.dto.EquippedSlotRow.class,
+                row -> sink.applyCosmeticEquip(UUID.fromString(row.player_uuid()), row.cosmetic_type(), row.cosmetic_id()),
+                row -> {});
+        logger.info("[stdb] hydration subscriptions registered for 13 tables");
     }
 
     private <D> void subscribe(

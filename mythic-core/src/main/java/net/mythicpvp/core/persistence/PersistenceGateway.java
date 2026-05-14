@@ -48,6 +48,8 @@ public interface PersistenceGateway {
                        @NotNull String source,
                        @NotNull String reference);
 
+    void cosmeticEquip(@NotNull UUID player, @NotNull String cosmeticType, @NotNull String cosmeticId);
+
     void friendRequest(@NotNull UUID from, @NotNull UUID to);
 
     void friendAccept(long requestId);

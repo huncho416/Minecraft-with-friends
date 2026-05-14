@@ -15,6 +15,7 @@
     <modules>
         <module>mythic-suite</module>
         <module>mythic-core</module>
+        <module>mythic-hub</module>
     </modules>
 
     <properties>

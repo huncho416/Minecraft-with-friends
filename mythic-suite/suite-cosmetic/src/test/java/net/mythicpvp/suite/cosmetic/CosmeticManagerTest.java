@@ -14,7 +14,7 @@ class CosmeticManagerTest {
     void registersGrantsAndEquipsCosmetics() {
         CosmeticManager manager = CosmeticManager.getInstance();
         UUID player = UUID.randomUUID();
-        manager.register(new CosmeticManager.Cosmetic("hat_crown", "Crown", CosmeticType.HAT, "Gold crown", NamespacedKey.fromString("mythic:hat_crown")));
+        manager.register(new CosmeticManager.Cosmetic("hat_crown", "Crown", CosmeticType.HAT, "Gold crown", NamespacedKey.fromString("mythic:hat_crown"), "COMMON", true, false));
         manager.grantCosmetic(player, "hat_crown");
         manager.equip(player, CosmeticType.HAT, "hat_crown");
         assertTrue(manager.ownsCosmetic(player, "HAT_CROWN"));

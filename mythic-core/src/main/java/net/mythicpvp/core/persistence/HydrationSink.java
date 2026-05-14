@@ -55,4 +55,8 @@ public interface HydrationSink {
     void removeMail(long mailId);
 
     void applyLoginStreak(@NotNull LoginStreak streak);
+
+    void applyCosmeticGrant(@NotNull UUID player, @NotNull String cosmeticId, @NotNull String cosmeticType);
+
+    void applyCosmeticEquip(@NotNull UUID player, @NotNull String cosmeticType, @NotNull String cosmeticId);
 }
