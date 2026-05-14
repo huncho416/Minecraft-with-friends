@@ -638,7 +638,7 @@ Toolchain: Maven 3.9.9 + Microsoft OpenJDK 21.0.11 for Java; Rust 1.94.1 (`x86_6
 | `mythic-core`: punishments for bans, tempbans, mutes, tempmutes, warns, pardons, history, appeals, audit log | Dev A | 🚧 |
 | `mythic-core`: silent punishment flag `-s` for all punishment commands, including `/ban -s <player>` | Dev A | ✅ |
 | `mythic-core`: chat management `/chat mute`, `/chat slow <seconds>`, `/chat clear`, local and network scopes via `ChatGuard` listener + `ChatControlService` shard-aware scope filtering | Dev A | ✅ |
-| `mythic-core`: broadcasts, announcements, Discord/help links, and scheduled announcement rotation | Dev A | 🚧 |
+| `mythic-core`: `/broadcast <message…>` cross-server via `core:broadcast` channel + rotating announcements driven by `MythicScheduler.runTimer` (interval, format, message list in `announcements.yml`); origin-shard skip prevents echo loops | Dev A | ✅ |
 | `mythic-core`: tablist, scoreboard, nametag formatting bound to YAML + ranks via `DisplayService` + `PlayerSessionListener` (cosmetics/disguises pending) | Dev A | ✅ |
 | `mythic-core`: friends, party, mail, offline rewards | Dev B | |
 | `mythic-hub`: spawn, server selector, cosmetic preview, hub activities using `mythic-core` services | Dev B | |

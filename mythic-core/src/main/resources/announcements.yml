@@ -1,0 +1,22 @@
+# Scheduled announcements + broadcast settings.
+#
+# Announcements rotate through `messages` in order at `interval-seconds`
+# cadence, broadcasting a single line each tick. Cross-server delivery
+# is via the `core:broadcast` protocol channel (see BroadcastService).
+
+announcements:
+  enabled: true
+  # How long to wait between announcements, in seconds.
+  interval-seconds: 300
+  # Multi-line entries are joined with newlines so the prefix can render
+  # once at the top of the block. Keep entries short — players read the
+  # first line and ignore the rest.
+  messages:
+    - "&#FF00F8MythicPvP &8» &#FFFFFFJoin our Discord at &ndiscord.gg/mythicpvp"
+    - "&#FF00F8MythicPvP &8» &#FFFFFFVote daily at &nmythicpvp.net/vote &#FFFFFFfor rewards."
+    - "&#FF00F8MythicPvP &8» &#FFFFFFNeed help? Type &n/help &#FFFFFFor ask in chat."
+
+broadcast:
+  # Format applied to /broadcast <message>. %message% is replaced with
+  # the staff-supplied text after Mythic hex parsing.
+  format: "&#FF00F8Broadcast &8» &#FFFFFF%message%"

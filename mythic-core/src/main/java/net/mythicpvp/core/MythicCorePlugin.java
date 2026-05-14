@@ -1,7 +1,9 @@
 package net.mythicpvp.core;
 
+import net.mythicpvp.core.announce.BroadcastService;
 import net.mythicpvp.core.chat.ChatControlService;
 import net.mythicpvp.core.chat.ChatGuard;
+import net.mythicpvp.core.command.BroadcastCommand;
 import net.mythicpvp.core.command.CGrantCommand;
 import net.mythicpvp.core.command.ChatCommand;
 import net.mythicpvp.core.command.ClearGrantsCommand;
@@ -77,6 +79,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private PersistenceGateway persistenceGateway;
     private DisplayService displayService;
     private CoreHydrationSink hydrationSink;
+    private BroadcastService broadcastService;
 
     @Override
     public void onEnable() {
@@ -99,6 +102,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         saveResourceIfMissing("nametag.yml");
         saveResourceIfMissing("ranks.yml");
         saveResourceIfMissing("command-blocker.yml");
+        saveResourceIfMissing("announcements.yml");
         serverIdentity = ServerIdentity.fromEnvironment();
         configManager = new ConfigManager(this);
         messages = new CoreMessages(new ConfigText(configManager.getOrCreate("messages"), "messages"));
@@ -173,6 +177,31 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         ChatGuard chatGuard = new ChatGuard(this, chatControlService, messages);
         getServer().getPluginManager().registerEvents(chatGuard, this);
         commandManager.register(new ChatCommand(chatControlService, messages));
+        // Broadcasts + rotating announcements. Loads YAML, registers
+        // /broadcast, schedules the rotation tick. Tick runs async via
+        // MythicScheduler — broadcast() itself reschedules its render
+        // calls onto the main thread (Bukkit#broadcast is main-only).
+        broadcastService = new BroadcastService(protocolManager, serverIdentity.id());
+        broadcastService.load(configManager.getOrCreate("announcements"));
+        commandManager.register(new BroadcastCommand(broadcastService));
+        if (broadcastService.enabled() && broadcastService.announcementCount() > 0) {
+            long periodTicks = broadcastService.intervalSeconds() * 20L;
+            // Async timer: BroadcastService.broadcast() publishes to the
+            // protocol channel (no Bukkit calls); the receive path
+            // schedules rendering onto main via the chat broadcast,
+            // which Bukkit handles internally.
+            net.mythicpvp.suite.scheduler.MythicScheduler.runTimer(
+                    this,
+                    () -> {
+                        try {
+                            broadcastService.tickAnnouncement();
+                        } catch (RuntimeException e) {
+                            getLogger().warning("announcement tick failed: " + e.getMessage());
+                        }
+                    },
+                    periodTicks,
+                    periodTicks);
+        }
     }
 
     @Override
