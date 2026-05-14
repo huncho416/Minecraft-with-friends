@@ -38,3 +38,9 @@ messages:
     blocked-slow: "&#FF00F8✘ &#FFFFFFSlow mode active. Wait %seconds%s before sending again."
     status: "&#FF00F8Chat &8» &#FFFFFFmuted=%muted% slow=%seconds%s scope=%scope%"
     usage: "&#FF00F8✘ &#FFFFFFUsage: /chat <mute|unmute|slow|clear|status> [seconds] [local|network]"
+  staff-mode:
+    enabled: "&#FF00F8Staff &8» &#FFFFFFStaff mode enabled."
+    disabled: "&#FF00F8Staff &8» &#FFFFFFStaff mode disabled."
+    inspect: "&#FF00F8Inspect &8» &#FFFFFF%target%: rank=%rank% gamemode=%gamemode%"
+    frozen: "&#FF00F8Freeze &8» &#FFFFFFFroze %target%."
+    unfrozen: "&#FF00F8Freeze &8» &#FFFFFFUnfroze %target%."

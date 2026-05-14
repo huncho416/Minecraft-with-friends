@@ -1,0 +1,27 @@
+# Staff-mode configuration. Toggled via /staffmode (alias /sm).
+#
+# When a staff member enables staff mode, their current inventory and
+# state (gamemode, fly, allow-fly) are snapshotted to memory and the
+# tool palette below is given to them. /staffmode again restores
+# everything. The snapshot is also persisted-in-memory across plugin
+# reloads via SafeRestoreListener so a crash mid-staff-mode doesn't
+# eat anyone's hotbar.
+staff-mode:
+  vanish: true
+  fly: true
+  # Bukkit Material name for each tool. Slot is the hotbar position
+  # 0..8. Type is one of INSPECT, FREEZE, RANDOM_TELEPORT — recognized
+  # by StaffModeTools.
+  tools:
+    - { slot: 0, material: "BOOK",        name: "&#FF00F8Inspect",       type: "INSPECT" }
+    - { slot: 1, material: "ICE",         name: "&#FF00F8Freeze",        type: "FREEZE" }
+    - { slot: 2, material: "COMPASS",     name: "&#FF00F8Random TP",     type: "RANDOM_TELEPORT" }
+    - { slot: 8, material: "BARRIER",     name: "&#FF00F8Disable Mode",  type: "DISABLE" }
+
+messages:
+  enabled: "&#FF00F8Staff &8» &#FFFFFFStaff mode enabled."
+  disabled: "&#FF00F8Staff &8» &#FFFFFFStaff mode disabled."
+  not-online: "&#FF00F8✘ &#FFFFFFThat player is not online."
+  inspect: "&#FF00F8Inspect &8» &#FFFFFF%target%: rank=%rank% gamemode=%gamemode%"
+  frozen: "&#FF00F8Freeze &8» &#FFFFFFFroze %target%."
+  unfrozen: "&#FF00F8Freeze &8» &#FFFFFFUnfroze %target%."

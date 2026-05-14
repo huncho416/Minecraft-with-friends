@@ -80,3 +80,4 @@ required-permissions:
   managementchat: "mythic.core.managementchat"
   adminchat: "mythic.core.adminchat"
   ownerchat: "mythic.core.ownerchat"
+  staffmode: "mythic.core.staffmode"

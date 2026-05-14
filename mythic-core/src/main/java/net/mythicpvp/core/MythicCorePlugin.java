@@ -24,6 +24,7 @@ import net.mythicpvp.core.command.PunishmentsCommand;
 import net.mythicpvp.core.command.RankEditorCommand;
 import net.mythicpvp.core.command.ClearPunishmentsCommand;
 import net.mythicpvp.core.command.StaffChatCommand;
+import net.mythicpvp.core.command.StaffModeCommand;
 import net.mythicpvp.core.command.TeleportCommand;
 import net.mythicpvp.core.command.TpHereCommand;
 import net.mythicpvp.core.config.CoreMessages;
@@ -48,6 +49,8 @@ import net.mythicpvp.core.staff.BukkitStaffPresenceAudience;
 import net.mythicpvp.core.staff.StaffChannelService;
 import net.mythicpvp.core.staff.StaffPresenceListener;
 import net.mythicpvp.core.staff.StaffPresenceService;
+import net.mythicpvp.core.staffmode.StaffModeService;
+import net.mythicpvp.core.staffmode.StaffModeToolListener;
 import net.mythicpvp.suite.api.MythicPlugin;
 import net.mythicpvp.suite.command.CommandManager;
 import net.mythicpvp.suite.config.ConfigManager;
@@ -84,6 +87,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private DisplayService displayService;
     private CoreHydrationSink hydrationSink;
     private BroadcastService broadcastService;
+    private StaffModeService staffModeService;
 
     @Override
     public void onEnable() {
@@ -107,6 +111,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         saveResourceIfMissing("ranks.yml");
         saveResourceIfMissing("command-blocker.yml");
         saveResourceIfMissing("announcements.yml");
+        saveResourceIfMissing("staff-mode.yml");
         serverIdentity = ServerIdentity.fromEnvironment();
         configManager = new ConfigManager(this);
         messages = new CoreMessages(new ConfigText(configManager.getOrCreate("messages"), "messages"));
@@ -196,6 +201,12 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                         configManager.getOrCreate("messages"), "messages")));
         getServer().getPluginManager().registerEvents(
                 new StaffPresenceListener(staffPresenceService, rankService, grantService), this);
+        // Staff mode — inventory snapshot/restore + vanish + fly + tools.
+        staffModeService = new StaffModeService();
+        staffModeService.load(configManager.getOrCreate("staff-mode"));
+        commandManager.register(new StaffModeCommand(staffModeService, messages));
+        getServer().getPluginManager().registerEvents(
+                new StaffModeToolListener(staffModeService, messages, grantService, rankService), this);
         // Pass shardId so LOCAL-scope chat-control changes from other
         // servers are dropped — see ChatControlService.apply.
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());
