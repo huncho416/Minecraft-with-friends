@@ -56,7 +56,7 @@ COPY --from=build /tmp/infrarust /usr/local/bin/infrarust
 
 EXPOSE 25565 8080
 
-WORKDIR /mnt/server
+WORKDIR /home/container
 
 ENV STDB_URI=http://spacetimedb:3000 \
     STDB_MODULE=mythicpvp \
