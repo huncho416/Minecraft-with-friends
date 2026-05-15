@@ -120,7 +120,7 @@ async fn connect(config: &DriverConfig) -> Result<WsStream, String> {
 }
 
 async fn run_session(
-    _config: &DriverConfig,
+    config: &DriverConfig,
     ws: WsStream,
     rx: &mut mpsc::Receiver<Command>,
     state: &mut InFlight,
@@ -151,7 +151,7 @@ async fn run_session(
                     debug!("command channel closed");
                     return Ok(());
                 };
-                handle_command(cmd, &mut sink, state).await?;
+                handle_command(cmd, &mut sink, state, config).await?;
             }
 
             msg = stream.next() => {
@@ -184,21 +184,41 @@ async fn handle_command(
     cmd: Command,
     sink: &mut futures_util::stream::SplitSink<WsStream, Message>,
     state: &mut InFlight,
+    config: &DriverConfig,
 ) -> Result<(), String> {
     match cmd {
         Command::CallReducer { request_id, reducer, args, reply } => {
-            let envelope = json!({
-                "CallReducer": {
-                    "call_id": request_id.into_bytes(),
-                    "reducer": reducer,
-                    "args": args
+            let url = format!("{}/v1/database/{}/call/{}", config.stdb_uri, config.module_name, reducer);
+            tokio::spawn(async move {
+                let client = reqwest::Client::new();
+                let res = client.post(&url)
+                    .header("Content-Type", "application/json")
+                    .json(&args)
+                    .send()
+                    .await;
+                match res {
+                    Ok(resp) => {
+                        if resp.status().is_success() {
+                            let text = resp.text().await.unwrap_or_default();
+                            let payload = serde_json::from_str(&text).unwrap_or(Value::String(text));
+                            let _ = reply.send(Ok(payload));
+                        } else {
+                            let status = resp.status();
+                            let text = resp.text().await.unwrap_or_default();
+                            let _ = reply.send(Err(StdbError::ReducerRejected {
+                                reducer: reducer.into(),
+                                message: format!("HTTP {status}: {text}"),
+                            }));
+                        }
+                    }
+                    Err(e) => {
+                        let _ = reply.send(Err(StdbError::ReducerRejected {
+                            reducer: reducer.into(),
+                            message: format!("HTTP error: {e}"),
+                        }));
+                    }
                 }
             });
-            if let Err(e) = sink.send(Message::Text(envelope.to_string())).await {
-                let _ = reply.send(Err(StdbError::ResponseDropped));
-                return Err(format!("send reducer: {e}"));
-            }
-            state.pending_calls.insert(request_id, reply);
             Ok(())
         }
         Command::Subscribe { table, events, reply } => {
