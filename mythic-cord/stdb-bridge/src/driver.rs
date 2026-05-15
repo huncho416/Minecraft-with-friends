@@ -107,7 +107,7 @@ async fn connect(config: &DriverConfig) -> Result<WsStream, String> {
         .replacen("https://", "wss://", 1);
     let url = format!("{url}/v1/database/{}/subscribe", config.module_name);
     
-    let mut req = url.into_client_request().map_err(|e| format!("bad url: {e}"))?;
+    let mut req = url.clone().into_client_request().map_err(|e| format!("bad url: {e}"))?;
     req.headers_mut().insert(
         "Sec-WebSocket-Protocol",
         "v1.json.spacetimedb".parse().unwrap()
