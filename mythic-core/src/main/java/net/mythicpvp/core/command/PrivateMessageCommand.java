@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+@net.mythicpvp.suite.command.Usage("&#FF8A8AUsage: &#FFFFFF/msg <player> <message>&#888888 - send a private message.")
 @CommandAlias("msg|message|tell|w")
 public final class PrivateMessageCommand extends MythicCommand {
 

@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+@net.mythicpvp.suite.command.Usage("&#FF8A8AUsage: &#FFFFFF/cgrant <player> <rank> <duration> <reason>&#888888 - silent grant from console.")
 @CommandAlias("cgrant")
 @CommandPermission("mythic.core.grant.command")
 public final class CGrantCommand extends MythicCommand {

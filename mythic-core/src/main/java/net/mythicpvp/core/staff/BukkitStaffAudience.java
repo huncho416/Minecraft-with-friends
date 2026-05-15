@@ -19,23 +19,38 @@ public final class BukkitStaffAudience implements StaffAudience {
 
     @Override
     public void accept(@NotNull StaffMessage message) {
+        StaffChannel channel = message.channel();
+        String channelTag = channel.tagColor() + "[" + channel.tag() + "]";
         String rendered = interpolate(formatTemplate, Map.of(
                 "server", message.server(),
                 "sender", message.senderName(),
                 "rank", message.rank(),
-                "rank_color", message.rankColor(),
+                "rank_color", coerceColor(message.rankColor()),
+                "chat_prefix", message.chatPrefix(),
+                "channel_tag", channelTag,
                 "message", message.message(),
-                "channel", message.channel().id()));
+                "channel", channel.id()));
         Component component = MythicHex.colorize(rendered);
 
         for (Player viewer : Bukkit.getOnlinePlayers()) {
-            if (viewer.hasPermission(message.channel().permission())) {
+            if (viewer.hasPermission(channel.permission())) {
                 viewer.sendMessage(component);
             }
         }
 
         CommandSender console = Bukkit.getConsoleSender();
         console.sendMessage(component);
+    }
+
+    @NotNull
+    private static String coerceColor(@NotNull String raw) {
+        if (raw.isBlank()) {
+            return "&7";
+        }
+        if (raw.startsWith("#") && !raw.startsWith("&#")) {
+            return "&" + raw;
+        }
+        return raw;
     }
 
     @NotNull

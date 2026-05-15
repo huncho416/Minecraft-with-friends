@@ -7,6 +7,7 @@ import net.mythicpvp.suite.command.CommandPermission;
 import net.mythicpvp.suite.command.Complete;
 import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
+import net.mythicpvp.suite.command.Usage;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -14,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 @CommandAlias("grant")
 @CommandPermission("mythic.core.grant.menu")
+@Usage("&#FF8A8AUsage: &#FFFFFF/grant <player>&#888888 - opens the rank/duration/reason flow.")
 public final class GrantCommand extends MythicCommand {
 
     private final GrantFlowService grantFlowService;

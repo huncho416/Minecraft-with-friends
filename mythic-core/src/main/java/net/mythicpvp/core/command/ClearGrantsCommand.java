@@ -11,6 +11,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
+@net.mythicpvp.suite.command.Usage("&#FF8A8AUsage: &#FFFFFF/cleargrants <player>&#888888 - removes ALL rank grants for a player.")
 @CommandAlias("cleargrants")
 @CommandPermission("mythic.core.grant.clear")
 public final class ClearGrantsCommand extends MythicCommand {

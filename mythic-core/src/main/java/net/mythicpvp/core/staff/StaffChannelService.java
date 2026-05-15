@@ -28,8 +28,11 @@ public final class StaffChannelService {
         audiences.add(audience);
     }
 
-    public void send(@NotNull StaffChannel channel, @NotNull UUID senderUuid, @NotNull String senderName, @NotNull String rank, @NotNull String rankColor, @NotNull String message) {
-        StaffMessage staffMessage = new StaffMessage(channel, serverId, senderUuid, senderName, rank, rankColor, message, System.currentTimeMillis());
+    public void send(@NotNull StaffChannel channel, @NotNull UUID senderUuid, @NotNull String senderName,
+                     @NotNull String rank, @NotNull String rankColor, @NotNull String chatPrefix,
+                     @NotNull String message) {
+        StaffMessage staffMessage = new StaffMessage(channel, serverId, senderUuid, senderName,
+                rank, rankColor, chatPrefix, message, System.currentTimeMillis());
         protocolManager.publish(CHANNEL, staffMessage);
     }
 

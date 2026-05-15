@@ -11,6 +11,7 @@ public record StaffMessage(
         @NotNull String senderName,
         @NotNull String rank,
         @NotNull String rankColor,
+        @NotNull String chatPrefix,
         @NotNull String message,
         long createdAtMillis
 ) {}

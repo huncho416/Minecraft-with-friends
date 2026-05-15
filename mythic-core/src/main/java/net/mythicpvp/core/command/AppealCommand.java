@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
+@net.mythicpvp.suite.command.Usage("&#FF8A8AUsage: &#FFFFFF/appeal <message>&#888888 - file an appeal against your active punishment.")
 @CommandAlias("appeal")
 public final class AppealCommand extends MythicCommand {
 
