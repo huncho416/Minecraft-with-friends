@@ -66,3 +66,6 @@ ENV STDB_URI=http://spacetimedb:3000 \
     MYTHIC_ADMIN_BIND=0.0.0.0:8080 \
     MYTHIC_LOG_FORMAT=json \
     RUST_LOG=info,mythiccord=debug
+
+RUN echo '#!/bin/sh\neval "$*"' > /entrypoint.sh && chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
