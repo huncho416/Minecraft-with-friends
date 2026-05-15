@@ -44,10 +44,12 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     cp target/x86_64-unknown-linux-musl/release/mythiccord /tmp/mythiccord; \
     cp infrarust/target/x86_64-unknown-linux-musl/release/infrarust /tmp/infrarust
 
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM debian:bookworm-slim
 LABEL org.opencontainers.image.title="MythicCord"
 LABEL org.opencontainers.image.source="https://github.com/mythicpvp/mythic-cord"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
+
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /tmp/mythiccord /usr/local/bin/mythiccord
 COPY --from=build /tmp/infrarust /usr/local/bin/infrarust
@@ -64,6 +66,3 @@ ENV STDB_URI=http://spacetimedb:3000 \
     MYTHIC_ADMIN_BIND=0.0.0.0:8080 \
     MYTHIC_LOG_FORMAT=json \
     RUST_LOG=info,mythiccord=debug
-
-USER nonroot
-ENTRYPOINT ["/usr/local/bin/mythiccord"]
