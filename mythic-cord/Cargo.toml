@@ -5,7 +5,6 @@ members = [
     "stdb-bridge",
     "plugin-routing",
     "proxy",
-    "infrarust/crates/*",
 ]
 
 
