@@ -2,7 +2,6 @@ package net.mythicpvp.core.credit;
 
 import net.mythicpvp.core.cosmetic.CosmeticService;
 import net.mythicpvp.core.cosmetic.CrateDefinition;
-import net.mythicpvp.core.cosmetic.CrateRoll;
 import net.mythicpvp.core.cosmetic.CrateService;
 import net.mythicpvp.core.rank.GrantDuration;
 import net.mythicpvp.core.rank.GrantService;
