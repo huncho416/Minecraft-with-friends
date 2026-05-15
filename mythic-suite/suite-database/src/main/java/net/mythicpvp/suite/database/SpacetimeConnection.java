@@ -8,8 +8,12 @@ import com.google.gson.JsonSyntaxException;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.net.http.WebSocket;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 public final class SpacetimeConnection implements WebSocket.Listener {
@@ -33,6 +38,7 @@ public final class SpacetimeConnection implements WebSocket.Listener {
     private final Map<String, CompletableFuture<ReducerResult>> reducerCalls = new ConcurrentHashMap<>();
     private final List<Consumer<Boolean>> stateListeners = new CopyOnWriteArrayList<>();
     private final ScheduledExecutorService reconnectExecutor = Executors.newSingleThreadScheduledExecutor();
+    private final AtomicLong requestIds = new AtomicLong();
     private final StringBuilder messageBuffer = new StringBuilder();
     private volatile WebSocket webSocket;
     private volatile boolean connected;
@@ -48,9 +54,10 @@ public final class SpacetimeConnection implements WebSocket.Listener {
 
     @NotNull
     public CompletableFuture<Void> connect() {
-        URI websocketUri = URI.create(uri.replace("http://", "ws://").replace("https://", "wss://") + "/database/subscribe/" + moduleName);
+        URI websocketUri = URI.create(websocketBaseUri() + "/v1/database/" + path(moduleName) + "/subscribe");
         return httpClient.newWebSocketBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
+                .subprotocols("v1.json.spacetimedb")
                 .buildAsync(websocketUri, this)
                 .thenAccept(ws -> {
                     this.webSocket = ws;
@@ -80,17 +87,25 @@ public final class SpacetimeConnection implements WebSocket.Listener {
     public CompletableFuture<ReducerResult> callReducer(@NotNull String reducerName, @NotNull Object args) {
         ensureIdentifier(reducerName, "Reducer name");
         String requestId = UUID.randomUUID().toString();
-        CompletableFuture<ReducerResult> future = new CompletableFuture<>();
         if (!isConnected()) {
+            CompletableFuture<ReducerResult> future = new CompletableFuture<>();
             future.completeExceptionally(new IllegalStateException("SpacetimeDB connection is not connected"));
             return future;
         }
-        reducerCalls.put(requestId, future);
-        if (!send(new ReducerCall("call", requestId, reducerName, args))) {
-            reducerCalls.remove(requestId);
-            future.completeExceptionally(new IllegalStateException("SpacetimeDB connection is not connected"));
-        }
-        return future;
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(httpBaseUri() + "/v1/database/" + path(moduleName) + "/call/" + path(reducerName)))
+                .timeout(Duration.ofSeconds(10))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(args)))
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    boolean success = response.statusCode() >= 200 && response.statusCode() < 300;
+                    String error = success ? null : "HTTP " + response.statusCode() + ": " + response.body();
+                    return new ReducerResult(requestId, success, response.body(), error);
+                });
     }
 
     @NotNull
@@ -105,26 +120,32 @@ public final class SpacetimeConnection implements WebSocket.Listener {
     public void subscribeTable(@NotNull String tableName, @NotNull Consumer<TableEvent> handler) {
         ensureIdentifier(tableName, "Table name");
         subscriptions.computeIfAbsent(tableName, key -> new CopyOnWriteArrayList<>()).add(handler);
-        send(new SubscriptionRequest("subscribe", List.of("SELECT * FROM " + tableName)));
+        send(subscription(tableName, requestIds.incrementAndGet()));
     }
 
     @NotNull
     public String reducerMessage(@NotNull String reducerName, @NotNull Object args, @NotNull String requestId) {
         ensureIdentifier(reducerName, "Reducer name");
-        return GSON.toJson(new ReducerCall("call", requestId, reducerName, args));
+        return GSON.toJson(Map.of("CallReducer", Map.of(
+                "reducer", reducerName,
+                "args", GSON.toJson(args),
+                "request_id", requestId,
+                "flags", 0)));
     }
 
     @NotNull
     public String subscriptionMessage(@NotNull String tableName) {
         ensureIdentifier(tableName, "Table name");
-        return GSON.toJson(new SubscriptionRequest("subscribe", List.of("SELECT * FROM " + tableName)));
+        return GSON.toJson(subscription(tableName, 1));
     }
 
     @Override
     public void onOpen(WebSocket ws) {
         this.webSocket = ws;
         setConnected(true);
-        subscriptions.keySet().forEach(table -> ws.sendText(subscriptionMessage(table), true));
+        subscriptions.keySet().forEach(table -> ws.sendText(
+                GSON.toJson(subscription(table, requestIds.incrementAndGet())),
+                true));
         ws.request(1);
     }
 
@@ -186,6 +207,28 @@ public final class SpacetimeConnection implements WebSocket.Listener {
         return true;
     }
 
+    @NotNull
+    private Map<String, Object> subscription(@NotNull String tableName, long requestId) {
+        return Map.of("Subscribe", Map.of(
+                "query_strings", List.of("SELECT * FROM " + tableName),
+                "request_id", requestId));
+    }
+
+    @NotNull
+    private String httpBaseUri() {
+        return uri.endsWith("/") ? uri.substring(0, uri.length() - 1) : uri;
+    }
+
+    @NotNull
+    private String websocketBaseUri() {
+        return httpBaseUri().replace("http://", "ws://").replace("https://", "wss://");
+    }
+
+    @NotNull
+    private static String path(@NotNull String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
     private void handleMessage(@NotNull String message) {
         JsonObject root;
         try {
@@ -223,7 +266,4 @@ public final class SpacetimeConnection implements WebSocket.Listener {
         }
     }
 
-    private record ReducerCall(@NotNull String type, @NotNull String requestId, @NotNull String reducer, @NotNull Object args) {}
-
-    private record SubscriptionRequest(@NotNull String type, @NotNull List<String> queryStrings) {}
 }

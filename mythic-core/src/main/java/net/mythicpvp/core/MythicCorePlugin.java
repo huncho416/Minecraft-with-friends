@@ -78,6 +78,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Clock;
+import java.util.concurrent.TimeUnit;
 
 public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
@@ -421,7 +422,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
             SpacetimeConnection connection = DatabaseManager.getInstance()
                     .createConnection("mythic-core", uri, module);
 
-            connection.connect();
+            connection.connect().get(10, TimeUnit.SECONDS);
             MythicSchema schema = new MythicSchema(connection);
             getLogger().info("STDB persistence active: uri=" + uri + " module=" + module);
             return new StdbPersistenceGateway(getLogger(), schema, connection);

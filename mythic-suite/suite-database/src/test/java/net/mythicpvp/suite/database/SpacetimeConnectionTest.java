@@ -18,8 +18,11 @@ class SpacetimeConnectionTest {
         SpacetimeConnection connection = new SpacetimeConnection("http://localhost:3000", "mythic");
         String reducer = connection.reducerMessage("award_points", Map.of("amount", 10), "abc");
         String subscription = connection.subscriptionMessage("players");
-        assertEquals("{\"type\":\"call\",\"requestId\":\"abc\",\"reducer\":\"award_points\",\"args\":{\"amount\":10}}", reducer);
-        assertEquals("{\"type\":\"subscribe\",\"queryStrings\":[\"SELECT * FROM players\"]}", subscription);
+        assertTrue(reducer.contains("\"CallReducer\""));
+        assertTrue(reducer.contains("\"reducer\":\"award_points\""));
+        assertTrue(reducer.contains("\"args\":\"{\\\"amount\\\":10}\""));
+        assertTrue(subscription.contains("\"Subscribe\""));
+        assertTrue(subscription.contains("\"query_strings\":[\"SELECT * FROM players\"]"));
         assertThrows(IllegalArgumentException.class, () -> connection.subscriptionMessage("players;drop"));
     }
 

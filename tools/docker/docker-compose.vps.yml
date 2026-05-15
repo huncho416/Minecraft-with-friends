@@ -17,6 +17,8 @@ services:
   spacetimedb:
     image: clockworklabs/spacetime:latest
     container_name: mythic-vps-stdb
+    user: "0:0"
+    command: ["--root-dir", "/stdb", "start", "--listen-addr", "0.0.0.0:3000"]
     restart: unless-stopped
     ports:
       - "${ADMIN_BIND:-127.0.0.1}:${STDB_HTTP_PORT:-3000}:3000"
@@ -25,7 +27,7 @@ services:
     environment:
       SPACETIMEDB_LOG_LEVEL: ${SPACETIMEDB_LOG_LEVEL:-info}
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      test: ["CMD-SHELL", "wget -S -O- http://localhost:3000 2>&1 | grep -Eq 'HTTP/[0-9.]+ (200|400|404)'"]
       interval: 10s
       timeout: 5s
       retries: 10

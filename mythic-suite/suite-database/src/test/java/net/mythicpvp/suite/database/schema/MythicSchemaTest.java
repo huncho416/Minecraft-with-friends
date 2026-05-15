@@ -204,9 +204,10 @@ class MythicSchemaTest {
         String wire = conn.reducerMessage(reducer, args, "test-req");
         JsonObject envelope = GSON.fromJson(wire, JsonObject.class);
         assertNotNull(envelope);
-        assertEquals("call", envelope.get("type").getAsString());
-        assertEquals(reducer, envelope.get("reducer").getAsString());
-        JsonElement argsElement = envelope.get("args");
+        JsonObject callReducer = envelope.getAsJsonObject("CallReducer");
+        assertNotNull(callReducer);
+        assertEquals(reducer, callReducer.get("reducer").getAsString());
+        JsonElement argsElement = GSON.fromJson(callReducer.get("args").getAsString(), JsonElement.class);
         assertTrue(argsElement.isJsonArray(),
                 "expected positional args array, got: " + argsElement);
         return argsElement.getAsJsonArray();
