@@ -128,7 +128,7 @@ public final class SpacetimeConnection implements WebSocket.Listener {
         ensureIdentifier(reducerName, "Reducer name");
         return GSON.toJson(Map.of("CallReducer", Map.of(
                 "reducer", reducerName,
-                "args", GSON.toJson(args),
+                "args", args,
                 "request_id", requestId,
                 "flags", 0)));
     }
@@ -246,12 +246,38 @@ public final class SpacetimeConnection implements WebSocket.Listener {
                 future.complete(new ReducerResult(requestId, success, payload, error));
             }
         }
-        if (root.has("table")) {
-            String table = root.get("table").getAsString();
-            String payload = root.has("payload") ? root.get("payload").toString() : message;
-            String operation = root.has("operation") ? root.get("operation").getAsString() : "update";
-            TableEvent event = new TableEvent(table, payload, operation);
-            subscriptions.getOrDefault(table, List.of()).forEach(handler -> handler.accept(event));
+        JsonObject dbUpdate = null;
+        if (root.has("InitialSubscription")) {
+            dbUpdate = root.getAsJsonObject("InitialSubscription").getAsJsonObject("database_update");
+        } else if (root.has("SubscriptionUpdate")) {
+            dbUpdate = root.getAsJsonObject("SubscriptionUpdate").getAsJsonObject("database_update");
+        }
+
+        if (dbUpdate != null && dbUpdate.has("tables")) {
+            dbUpdate.getAsJsonArray("tables").forEach(tableElement -> {
+                JsonObject tableObj = tableElement.getAsJsonObject();
+                String table = tableObj.get("table_name").getAsString();
+                
+                if (tableObj.has("updates")) {
+                    tableObj.getAsJsonArray("updates").forEach(updateElement -> {
+                        JsonObject update = updateElement.getAsJsonObject();
+                        
+                        if (update.has("inserts")) {
+                            update.getAsJsonArray("inserts").forEach(insertElement -> {
+                                TableEvent event = new TableEvent(table, insertElement.getAsString(), "insert");
+                                subscriptions.getOrDefault(table, List.of()).forEach(handler -> handler.accept(event));
+                            });
+                        }
+                        
+                        if (update.has("deletes")) {
+                            update.getAsJsonArray("deletes").forEach(deleteElement -> {
+                                TableEvent event = new TableEvent(table, deleteElement.getAsString(), "delete");
+                                subscriptions.getOrDefault(table, List.of()).forEach(handler -> handler.accept(event));
+                            });
+                        }
+                    });
+                }
+            });
         }
     }
 

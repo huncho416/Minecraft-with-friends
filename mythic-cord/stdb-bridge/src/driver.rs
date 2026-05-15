@@ -190,7 +190,7 @@ async fn handle_command(
             let envelope = json!({
                 "CallReducer": {
                     "reducer": reducer,
-                    "args": args.to_string(),
+                    "args": args,
                     "request_id": request_id.to_string(),
                     "flags": 0
                 }
