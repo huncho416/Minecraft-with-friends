@@ -23,6 +23,9 @@ Thumbs.db
 # Logs
 *.log
 
+# Docker VPS runtime server roots
+tools/docker/servers/
+
 # Local toolchain artefacts
 .tools/
 .vendor-log.txt
