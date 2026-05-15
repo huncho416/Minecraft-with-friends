@@ -3,6 +3,8 @@ package net.mythicpvp.core.essentials;
 import net.mythicpvp.core.audit.CoreAuditLog;
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.suite.scheduler.MythicScheduler;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -115,7 +117,7 @@ public final class CoreEssentialsService {
 
     private void scheduleTeleport(@NotNull Player target, @NotNull Location location) {
         if (plugin != null && MythicScheduler.isFolia()) {
-            MythicScheduler.runOnEntity(plugin, target, () -> target.teleport(location));
+            MythicScheduler.runOnEntity(plugin, target, () -> target.teleportAsync(location));
         } else {
             target.teleport(location);
         }
@@ -134,11 +136,13 @@ public final class CoreEssentialsService {
     }
 
     public void sendHelp(@NotNull CommandSender sender) {
-        messages.list("links.help", List.of("&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFHelp", "&#FFFFFFUse /discord for community support.")).forEach(sender::sendMessage);
+        messages.list("links.help", List.of("&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â» &#FFFFFFHelp", "&#FFFFFFUse /discord for community support.")).forEach(sender::sendMessage);
     }
 
     public void sendDiscord(@NotNull CommandSender sender) {
-        sender.sendMessage(messages.component("links.discord", "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFdiscord.gg/mythicpvp"));
+        sender.sendMessage(messages.component("links.discord", "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â» &#FFFFFFdiscord.gg/mythicpvp")
+                .clickEvent(ClickEvent.openUrl("https://discord.gg/mythicpvp"))
+                .hoverEvent(HoverEvent.showText(messages.component("links.discord-hover", "&#D2D8E0Click to open Discord."))));
     }
 
     @Nullable

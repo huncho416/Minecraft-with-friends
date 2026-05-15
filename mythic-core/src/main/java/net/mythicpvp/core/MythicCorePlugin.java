@@ -24,8 +24,10 @@ import net.mythicpvp.core.command.HistoryCommand;
 import net.mythicpvp.core.command.FriendCommand;
 import net.mythicpvp.core.command.MailCommand;
 import net.mythicpvp.core.command.PartyCommand;
+import net.mythicpvp.core.command.PrivateMessageCommand;
 import net.mythicpvp.core.command.PunishCommand;
 import net.mythicpvp.core.command.PunishmentAddCommand;
+import net.mythicpvp.core.command.PunishmentDirectCommand;
 import net.mythicpvp.core.command.PunishmentEditCommand;
 import net.mythicpvp.core.command.PunishmentRemoveCommand;
 import net.mythicpvp.core.command.PunishmentsCommand;
@@ -35,6 +37,7 @@ import net.mythicpvp.core.command.StaffChatCommand;
 import net.mythicpvp.core.command.StaffModeCommand;
 import net.mythicpvp.core.command.TeleportCommand;
 import net.mythicpvp.core.command.TpHereCommand;
+import net.mythicpvp.core.command.VanishCommand;
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.display.DisplayService;
 import net.mythicpvp.core.display.PlayerSessionListener;
@@ -55,6 +58,7 @@ import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.core.staff.BukkitStaffAudience;
 import net.mythicpvp.core.staff.BukkitStaffPresenceAudience;
 import net.mythicpvp.core.staff.StaffChannelService;
+import net.mythicpvp.core.staff.StaffChatToggleListener;
 import net.mythicpvp.core.staff.StaffPresenceListener;
 import net.mythicpvp.core.staff.StaffPresenceService;
 import net.mythicpvp.core.staffmode.StaffModeService;
@@ -120,6 +124,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
     @Override
     public void enable() {
+        net.mythicpvp.suite.packet.PacketSession.getInstance()
+                .setRenderer(new net.mythicpvp.suite.packet.BukkitPacketRenderer());
         saveResourceIfMissing("messages.yml");
         saveResourceIfMissing("core.yml");
         saveResourceIfMissing("staff-channels.yml");
@@ -188,6 +194,13 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new PunishmentsCommand(punishmentMenuService));
         commandManager.register(new HistoryCommand(punishmentService, punishmentMenuService));
         commandManager.register(new ClearPunishmentsCommand(punishmentService));
+        commandManager.register(new PunishmentDirectCommand.Ban(punishmentService, serverIdentity.id(), Clock.systemUTC()));
+        commandManager.register(new PunishmentDirectCommand.TempBan(punishmentService, serverIdentity.id(), Clock.systemUTC()));
+        commandManager.register(new PunishmentDirectCommand.Mute(punishmentService, serverIdentity.id(), Clock.systemUTC()));
+        commandManager.register(new PunishmentDirectCommand.TempMute(punishmentService, serverIdentity.id(), Clock.systemUTC()));
+        commandManager.register(new PunishmentDirectCommand.Blacklist(punishmentService, serverIdentity.id(), Clock.systemUTC()));
+        commandManager.register(new PunishmentDirectCommand.Warn(punishmentService, serverIdentity.id(), Clock.systemUTC()));
+        commandManager.register(new PunishmentDirectCommand.Unban(punishmentService));
         commandManager.register(new PunishmentAddCommand(punishmentService));
         commandManager.register(new PunishmentRemoveCommand(punishmentService));
         commandManager.register(new PunishmentEditCommand(punishmentService, chatPromptService));
@@ -201,6 +214,9 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new FriendCommand(socialService, messages));
         commandManager.register(new PartyCommand(socialService, messages));
         commandManager.register(new MailCommand(socialService, messages));
+        PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
+        commandManager.register(privateMessages);
+        commandManager.register(new PrivateMessageCommand.Reply(privateMessages));
         getServer().getPluginManager().registerEvents(new MailLoginListener(socialService, messages), this);
         getServer().getPluginManager().registerEvents(new FriendLoginListener(socialService, messages), this);
         getServer().getPluginManager().registerEvents(new OfflineRewardService(socialService, messages), this);
@@ -208,7 +224,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
         String staffFormat = messages.raw(
                 "messages.staff.format",
-                "&#888888[%server%] %rank_color%%rank%%sender% &8�\u00BB &#FFFFFF%message%",
+                "&#888888[%server%] %rank_color%%rank%%sender% &8ï¿½\u00BB &#FFFFFF%message%",
                 java.util.Map.of());
         staffChannelService.addAudience(new BukkitStaffAudience(staffFormat));
 
@@ -217,6 +233,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new StaffChatCommand.Management(staffChannelService, rankService, grantService));
         commandManager.register(new StaffChatCommand.Admin(staffChannelService, rankService, grantService));
         commandManager.register(new StaffChatCommand.Owner(staffChannelService, rankService, grantService));
+        getServer().getPluginManager().registerEvents(
+                new StaffChatToggleListener(staffChannelService, rankService, grantService), this);
         staffPresenceService = new StaffPresenceService(protocolManager, serverIdentity.id());
 
         staffPresenceService.addAudience(new BukkitStaffPresenceAudience(
@@ -227,7 +245,10 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
         staffModeService = new StaffModeService();
         staffModeService.load(configManager.getOrCreate("staff-mode"));
+        staffModeService.configureVisibility(this, rankService, grantService, displayService::applyAll);
+        displayService.setStaffModeService(staffModeService);
         commandManager.register(new StaffModeCommand(staffModeService, messages));
+        commandManager.register(new VanishCommand(staffModeService));
         getServer().getPluginManager().registerEvents(
                 new StaffModeToolListener(staffModeService, messages, grantService, rankService), this);
 
@@ -269,7 +290,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new net.mythicpvp.core.command.CreditShopCommand(creditShopService));
 
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());
-        ChatGuard chatGuard = new ChatGuard(this, chatControlService, messages);
+        ChatGuard chatGuard = new ChatGuard(this, chatControlService, punishmentService, messages);
         getServer().getPluginManager().registerEvents(chatGuard, this);
         commandManager.register(new ChatCommand(chatControlService, messages));
 
@@ -308,6 +329,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
             net.mythicpvp.suite.tab.TabManager.getInstance().clear();
             net.mythicpvp.suite.nametag.NametagManager.getInstance().clear();
             net.mythicpvp.suite.scoreboard.BoardManager.getInstance().removeAll();
+            net.mythicpvp.suite.packet.PacketSession.getInstance().clear();
         } catch (RuntimeException e) {
             getLogger().warning("UI manager teardown failed: " + e.getMessage());
         }
@@ -420,7 +442,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         String uri = System.getenv("STDB_URI");
         String module = System.getenv().getOrDefault("STDB_MODULE", "mythicpvp");
         if (uri == null || uri.isBlank()) {
-            getLogger().info("STDB_URI not set — mythic-core running in single-server / no-op persistence mode");
+            getLogger().info("STDB_URI not set â€” mythic-core running in single-server / no-op persistence mode");
             return NoopPersistenceGateway.INSTANCE;
         }
         try {

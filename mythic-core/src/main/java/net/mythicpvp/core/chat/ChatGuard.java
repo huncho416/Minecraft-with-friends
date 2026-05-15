@@ -3,6 +3,8 @@ package net.mythicpvp.core.chat;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
+import net.mythicpvp.core.punishment.PunishmentService;
+import net.mythicpvp.core.punishment.PunishmentType;
 import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,13 +24,16 @@ public final class ChatGuard implements Listener {
 
     private final JavaPlugin plugin;
     private final ChatControlService chatControl;
+    private final PunishmentService punishments;
     private final CoreMessages messages;
 
     public ChatGuard(@NotNull JavaPlugin plugin,
                      @NotNull ChatControlService chatControl,
+                     @NotNull PunishmentService punishments,
                      @NotNull CoreMessages messages) {
         this.plugin = plugin;
         this.chatControl = chatControl;
+        this.punishments = punishments;
         this.messages = messages;
 
         chatControl.onClear(this::scheduleClear);
@@ -37,6 +42,15 @@ public final class ChatGuard implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onChat(@NotNull AsyncChatEvent event) {
         Player player = event.getPlayer();
+        boolean punishedMuted = punishments.active(player.getUniqueId()).stream()
+                .anyMatch(record -> record.type() == PunishmentType.MUTE || record.type() == PunishmentType.TEMP_MUTE);
+        if (punishedMuted) {
+            event.setCancelled(true);
+            player.sendMessage(messages.component(
+                    "messages.punishments.muted",
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â» &#FF8A8AYou are muted."));
+            return;
+        }
         if (player.hasPermission(BYPASS_PERMISSION)) {
             return;
         }
@@ -44,7 +58,7 @@ public final class ChatGuard implements Listener {
             event.setCancelled(true);
             player.sendMessage(messages.component(
                     "messages.chat-control.blocked-muted",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â\u00BB &#FF8A8AChat is currently muted."));
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Ã‚\u00BB &#FF8A8AChat is currently muted."));
             return;
         }
         long waitMillis = chatControl.registerMessage(player.getUniqueId(), System.currentTimeMillis());
@@ -53,7 +67,7 @@ public final class ChatGuard implements Listener {
             long secondsRemaining = Math.max(1, (waitMillis + 999) / 1000);
             player.sendMessage(messages.component(
                     "messages.chat-control.blocked-slow",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â\u00BB &#FF8A8ASlow mode active. Wait &#FFFFFF%seconds%s &#FF8A8Abefore sending again.",
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Ã‚\u00BB &#FF8A8ASlow mode active. Wait &#FFFFFF%seconds%s &#FF8A8Abefore sending again.",
                     Map.of("seconds", Long.toString(secondsRemaining))));
         }
     }
@@ -79,7 +93,7 @@ public final class ChatGuard implements Listener {
             }
             player.sendMessage(messages.component(
                     "messages.chat-control.cleared",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â\u00BB &#9CFF9CChat has been cleared."));
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Ã‚\u00BB &#9CFF9CChat has been cleared."));
         }
     }
 }

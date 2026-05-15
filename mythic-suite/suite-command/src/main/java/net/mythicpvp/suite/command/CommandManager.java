@@ -84,14 +84,14 @@ public final class CommandManager {
         Command bukkitCommand = new Command(primaryAlias, "", "", Arrays.asList(aliases)) {
             @Override
             public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {
-                CommandManager.this.handleCommand(sender, primaryAlias, args);
+                CommandManager.this.handleCommand(sender, label.toLowerCase(Locale.ROOT), args);
                 return true;
             }
 
             @Override
             @NotNull
             public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
-                return CommandManager.this.tabComplete(sender, primaryAlias, args);
+                return CommandManager.this.tabComplete(sender, alias.toLowerCase(Locale.ROOT), args);
             }
         };
 

@@ -36,7 +36,7 @@ public final class BroadcastService {
         this.intervalSeconds = Math.max(5, config.getInt("announcements.interval-seconds", 300));
         this.announcementMessages = List.copyOf(config.getStringList("announcements.messages"));
         this.broadcastFormat = config.getString(
-                "broadcast.format", "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â\u00BB &#FFFFFF%message%");
+                "broadcast.format", "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Ã‚\u00BB &#FFFFFF%message%");
 
         nextIndex.set(0);
     }

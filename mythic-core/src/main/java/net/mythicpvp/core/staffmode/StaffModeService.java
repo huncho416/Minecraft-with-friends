@@ -1,5 +1,8 @@
 package net.mythicpvp.core.staffmode;
 
+import net.mythicpvp.core.rank.CoreRank;
+import net.mythicpvp.core.rank.GrantService;
+import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.GameMode;
@@ -9,7 +12,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +25,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class StaffModeService {
 
     private final Map<UUID, StaffModeSnapshot> snapshots = new ConcurrentHashMap<>();
+    private final java.util.Set<UUID> vanished = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final java.util.Set<UUID> frozen = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private volatile @Nullable JavaPlugin plugin;
+    private volatile @Nullable RankService ranks;
+    private volatile @Nullable GrantService grants;
+    private volatile Runnable displayRefresher = () -> {};
     private volatile boolean vanish = true;
     private volatile boolean fly = true;
     private volatile List<StaffModeTool> tools = List.of();
@@ -29,6 +39,17 @@ public final class StaffModeService {
         this.vanish = config.getBoolean("staff-mode.vanish", true);
         this.fly = config.getBoolean("staff-mode.fly", true);
         this.tools = parseTools(config);
+    }
+
+    public void configureVisibility(
+            @NotNull JavaPlugin plugin,
+            @NotNull RankService ranks,
+            @NotNull GrantService grants,
+            @NotNull Runnable displayRefresher) {
+        this.plugin = plugin;
+        this.ranks = ranks;
+        this.grants = grants;
+        this.displayRefresher = displayRefresher;
     }
 
     public boolean inStaffMode(@NotNull UUID player) {
@@ -94,6 +115,19 @@ public final class StaffModeService {
         return fly;
     }
 
+    public boolean isVanished(@NotNull UUID player) {
+        return vanished.contains(player);
+    }
+
+    public boolean toggleVanish(@NotNull Player player) {
+        if (vanished.contains(player.getUniqueId())) {
+            unapplyVanish(player);
+            return false;
+        }
+        applyVanish(player);
+        return true;
+    }
+
     @NotNull
     private StaffModeSnapshot capture(@NotNull Player player) {
         PlayerInventory inv = player.getInventory();
@@ -109,6 +143,8 @@ public final class StaffModeService {
     private void applyStaffState(@NotNull Player player) {
         PlayerInventory inv = player.getInventory();
         inv.clear();
+        inv.setArmorContents(new ItemStack[4]);
+        inv.setItemInOffHand(null);
         for (StaffModeTool tool : tools) {
             if (tool.slot() < 0 || tool.slot() > 8) {
                 continue;
@@ -125,9 +161,7 @@ public final class StaffModeService {
             player.setAllowFlight(true);
             player.setFlying(true);
         }
-        if (vanish) {
-            applyVanish(player);
-        }
+        applyVanish(player);
         player.setGameMode(GameMode.CREATIVE);
     }
 
@@ -141,46 +175,77 @@ public final class StaffModeService {
         player.setGameMode(snapshot.gameMode());
         player.setAllowFlight(snapshot.allowFlight());
         player.setFlying(snapshot.flying());
-        if (vanish) {
+        if (vanished.contains(player.getUniqueId())) {
             unapplyVanish(player);
         }
     }
 
     private void applyVanish(@NotNull Player staff) {
-
-        for (Player viewer : staff.getServer().getOnlinePlayers()) {
-            if (viewer.getUniqueId().equals(staff.getUniqueId())) {
-                continue;
-            }
-            if (!viewer.hasPermission(net.mythicpvp.core.staff.StaffPresenceListener.STAFF_PERMISSION)) {
-
-                boolean hidden = hidePlayerLegacy(viewer, staff);
-
-                if (!hidden) {  }
-            }
-        }
+        vanished.add(staff.getUniqueId());
+        refreshVisibility();
     }
 
     private void unapplyVanish(@NotNull Player staff) {
-        for (Player viewer : staff.getServer().getOnlinePlayers()) {
-            if (viewer.getUniqueId().equals(staff.getUniqueId())) {
-                continue;
+        vanished.remove(staff.getUniqueId());
+        refreshVisibility();
+    }
+
+    public void refreshVisibility() {
+        JavaPlugin currentPlugin = plugin;
+        for (Player viewer : org.bukkit.Bukkit.getOnlinePlayers()) {
+            for (Player target : org.bukkit.Bukkit.getOnlinePlayers()) {
+                if (viewer.getUniqueId().equals(target.getUniqueId())) {
+                    continue;
+                }
+                if (canSee(viewer, target)) {
+                    showPlayer(viewer, target, currentPlugin);
+                } else {
+                    hidePlayer(viewer, target, currentPlugin);
+                }
             }
-            boolean shown = showPlayerLegacy(viewer, staff);
-            if (!shown) {  }
+        }
+        displayRefresher.run();
+    }
+
+    public boolean canSee(@NotNull Player viewer, @NotNull Player target) {
+        if (!vanished.contains(target.getUniqueId())) {
+            return true;
+        }
+        if (viewer.getUniqueId().equals(target.getUniqueId())) {
+            return true;
+        }
+        return rankWeight(viewer.getUniqueId()) > rankWeight(target.getUniqueId());
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void hidePlayer(@NotNull Player viewer, @NotNull Player target, @Nullable JavaPlugin plugin) {
+        if (plugin != null) {
+            viewer.hidePlayer(plugin, target);
+        } else {
+            viewer.hidePlayer(target);
         }
     }
 
     @SuppressWarnings("deprecation")
-    private static boolean hidePlayerLegacy(@NotNull Player viewer, @NotNull Player target) {
-        viewer.hidePlayer(target);
-        return true;
+    private static void showPlayer(@NotNull Player viewer, @NotNull Player target, @Nullable JavaPlugin plugin) {
+        if (plugin != null) {
+            viewer.showPlayer(plugin, target);
+        } else {
+            viewer.showPlayer(target);
+        }
     }
 
-    @SuppressWarnings("deprecation")
-    private static boolean showPlayerLegacy(@NotNull Player viewer, @NotNull Player target) {
-        viewer.showPlayer(target);
-        return true;
+    private int rankWeight(@NotNull UUID player) {
+        RankService rankService = ranks;
+        GrantService grantService = grants;
+        if (rankService == null || grantService == null) {
+            return 0;
+        }
+        CoreRank rank = rankService.get(grantService.activeRank(player));
+        if (rank == null || !rank.staff()) {
+            return 0;
+        }
+        return rank.weight();
     }
 
     @NotNull

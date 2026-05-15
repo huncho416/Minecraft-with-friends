@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiPredicate;
 
 public final class TabManager {
 
@@ -23,6 +24,7 @@ public final class TabManager {
     private volatile String defaultHeader = "";
     private volatile String defaultFooter = "";
     private volatile String fontKey = "";
+    private volatile BiPredicate<Player, Player> visibilityPredicate = (viewer, target) -> true;
 
     private TabManager() {}
 
@@ -54,6 +56,10 @@ public final class TabManager {
         entries.put(player, new TabEntry(prefix, suffix, sortWeight));
     }
 
+    public void setVisibilityPredicate(@NotNull BiPredicate<Player, Player> visibilityPredicate) {
+        this.visibilityPredicate = visibilityPredicate;
+    }
+
     public void apply(@NotNull Player player) {
         TabLayout layout = layouts.getOrDefault(player.getUniqueId(), new TabLayout(defaultHeader, defaultFooter));
         Component header = MythicHex.font(fontKey, layout.header());
@@ -66,6 +72,7 @@ public final class TabManager {
     public Map<UUID, Component> visibleEntries(@NotNull Player viewer) {
         Map<UUID, Component> sorted = new LinkedHashMap<>();
         Bukkit.getOnlinePlayers().stream()
+                .filter(target -> visibilityPredicate.test(viewer, target))
                 .sorted(Comparator.comparingInt(player -> entries.getOrDefault(player.getUniqueId(), TabEntry.EMPTY).sortWeight()))
                 .forEach(target -> {
                     TabEntry entry = entries.getOrDefault(target.getUniqueId(), TabEntry.EMPTY);
@@ -107,6 +114,7 @@ public final class TabManager {
         defaultHeader = "";
         defaultFooter = "";
         fontKey = "";
+        visibilityPredicate = (viewer, target) -> true;
     }
 
     public record TabLayout(@NotNull String header, @NotNull String footer) {}

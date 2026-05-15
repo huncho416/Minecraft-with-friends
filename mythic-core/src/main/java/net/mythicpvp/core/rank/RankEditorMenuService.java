@@ -25,6 +25,21 @@ public final class RankEditorMenuService {
         this.text = text;
     }
 
+    public void openRankList(@NotNull Player viewer) {
+        PaginatedMenu menu = PaginatedMenu.create(6, "&#F529BERank Editor");
+        for (CoreRank rank : rankService.all()) {
+            menu.addItem(MythicItem.create(rank.dye())
+                    .name(rank.color() + rank.name())
+                    .lore(List.of(
+                            "&7Id: &f" + rank.id(),
+                            "&7Weight: &f" + rank.weight(),
+                            "&7Staff: &f" + (rank.staff() ? "Yes" : "No"),
+                            "&#F529BEClick to edit"))
+                    .build(), event -> openOverview(viewer, rank.id()));
+        }
+        menu.open(viewer);
+    }
+
     public void openOverview(@NotNull Player viewer, @NotNull String rankId) {
         CoreRank rank = rankService.get(rankId);
         if (rank == null) {

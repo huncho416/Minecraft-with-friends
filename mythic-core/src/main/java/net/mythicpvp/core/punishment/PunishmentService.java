@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -64,6 +65,23 @@ public final class PunishmentService {
             }
         }
         return false;
+    }
+
+    public int pardonActive(@NotNull UUID targetUuid,
+                            @NotNull Set<PunishmentType> types,
+                            @NotNull UUID staff,
+                            @NotNull String reason) {
+        int pardoned = 0;
+        long nowMillis = clock.instant().toEpochMilli();
+        for (PunishmentRecord record : List.copyOf(records)) {
+            if (record.targetUuid().equals(targetUuid)
+                    && types.contains(record.type())
+                    && record.active(nowMillis)
+                    && pardon(record.id(), staff, reason)) {
+                pardoned++;
+            }
+        }
+        return pardoned;
     }
 
     public int clearHistory(@NotNull UUID targetUuid) {

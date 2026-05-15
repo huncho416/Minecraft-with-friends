@@ -104,10 +104,10 @@ public class PaginatedMenu implements InventoryHolder {
         }
 
         if (currentPage > 0) {
-            inventory.setItem(rows * 9 - 9, MythicItem.create(Material.ARROW).name("&#FF00F8← Previous Page").build());
+            inventory.setItem(rows * 9 - 9, MythicItem.create(Material.ARROW).name("&#FF00F8<- Previous Page").build());
         }
         if (currentPage < getMaxPages() - 1) {
-            inventory.setItem(rows * 9 - 1, MythicItem.create(Material.ARROW).name("&#FF00F8Next Page →").build());
+            inventory.setItem(rows * 9 - 1, MythicItem.create(Material.ARROW).name("&#FF00F8Next Page ->").build());
         }
 
         staticItems.forEach((slot, item) -> inventory.setItem(slot, item));

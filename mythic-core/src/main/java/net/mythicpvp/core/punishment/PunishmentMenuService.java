@@ -1,6 +1,7 @@
 package net.mythicpvp.core.punishment;
 
 import net.mythicpvp.core.prompt.ChatPromptService;
+import net.mythicpvp.suite.hex.MythicHex;
 import net.mythicpvp.suite.item.MythicItem;
 import net.mythicpvp.suite.menu.MythicMenu;
 import net.mythicpvp.suite.menu.PaginatedMenu;
@@ -65,6 +66,11 @@ public final class PunishmentMenuService {
 
     public void openTemplates(@NotNull Player staff, PunishmentFlow flow, @NotNull PunishmentCategory category, boolean executable) {
         PaginatedMenu menu = PaginatedMenu.create(6, text.templatesTitle(category.name()));
+        if (!executable) {
+            menu.staticSlot(49, MythicItem.create(Material.ARROW)
+                    .name("&#F529BEBack")
+                    .build(), event -> openHandbook(staff));
+        }
         for (PunishmentTemplate template : punishmentService.templates(category)) {
             menu.addItem(MythicItem.create(category.material())
                     .name("&#F529BE" + template.title())
@@ -115,7 +121,7 @@ public final class PunishmentMenuService {
         PunishmentTemplate template = flow.template();
         PunishmentRecord record = punishmentService.punish(new PunishmentRequest(flow.targetUuid(), flow.targetName(), staff.getUniqueId(), staff.getName(), template.type(), template.title(), flow.proof(), template.expiresAt(clock.instant()), flow.silent(), flow.clearInventory(), serverId));
         staff.closeInventory();
-        staff.sendMessage("Punishment executed: " + record.type().name() + " " + record.targetName() + ".");
+        staff.sendMessage(MythicHex.colorize("&#9CFF9CPunishment executed: &f" + record.type().name() + " " + record.targetName() + "&#9CFF9C."));
     }
 
     @NotNull

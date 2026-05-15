@@ -3,10 +3,12 @@ package net.mythicpvp.core.display;
 import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.core.rank.RankService;
+import net.mythicpvp.core.staffmode.StaffModeService;
 import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.cosmetic.CosmeticManager;
 import net.mythicpvp.suite.cosmetic.CosmeticType;
 import net.mythicpvp.suite.disguise.DisguiseManager;
+import net.mythicpvp.suite.hex.MythicHex;
 import net.mythicpvp.suite.nametag.NametagManager;
 import net.mythicpvp.suite.scoreboard.BoardManager;
 import net.mythicpvp.suite.scoreboard.MythicBoard;
@@ -33,6 +35,7 @@ public final class DisplayService {
     private List<String> tabFooter = List.of();
     private String scoreboardTitle = "";
     private List<String> scoreboardLines = List.of();
+    private StaffModeService staffModeService;
 
     public DisplayService(
             @NotNull JavaPlugin plugin,
@@ -43,6 +46,12 @@ public final class DisplayService {
         this.rankService = rankService;
         this.grantService = grantService;
         this.serverId = serverId;
+    }
+
+    public void setStaffModeService(@NotNull StaffModeService staffModeService) {
+        this.staffModeService = staffModeService;
+        TabManager.getInstance().setVisibilityPredicate(staffModeService::canSee);
+        NametagManager.getInstance().setVisibilityPredicate(staffModeService::canSee);
     }
 
     public void loadTemplates(@NotNull MythicConfig tablist, @NotNull MythicConfig scoreboard) {
@@ -158,21 +167,31 @@ public final class DisplayService {
 
         String header = PapiBridge.apply(player, String.join("\n", ctx.resolveAll(tabHeader)));
         String footer = PapiBridge.apply(player, String.join("\n", ctx.resolveAll(tabFooter)));
+        String vanishPrefix = isVanished(player) ? "&7(V) " : "";
+        String prefix = PapiBridge.apply(player, vanishPrefix + ctx.resolve(rank.tabPrefix()));
+        String suffix = PapiBridge.apply(player, ctx.resolve(rank.suffix()));
         tab.setLayout(player, header, footer);
         tab.setEntry(player.getUniqueId(),
-                PapiBridge.apply(player, ctx.resolve(rank.tabPrefix())),
-                PapiBridge.apply(player, ctx.resolve(rank.suffix())),
+                prefix,
+                suffix,
                 rank.weight());
+        String visibleName = DisguiseManager.getInstance().getDisplayName(player.getUniqueId(), player.getName());
+        player.playerListName(MythicHex.colorize(prefix + visibleName + suffix));
         tab.apply(player);
     }
 
     private void applyNametag(@NotNull Player player, @NotNull CoreRank rank, @NotNull PlaceholderResolver ctx) {
         NametagManager.getInstance().setNametag(
                 player,
-                ctx.resolve(rank.nametagPrefix()),
+                (isVanished(player) ? "&7(V) " : "") + ctx.resolve(rank.nametagPrefix()),
                 ctx.resolve(rank.suffix()),
                 rank.weight(),
                 null);
+    }
+
+    private boolean isVanished(@NotNull Player player) {
+        StaffModeService staff = staffModeService;
+        return staff != null && staff.isVanished(player.getUniqueId());
     }
 
     private void applyScoreboard(@NotNull Player player, @NotNull PlaceholderResolver ctx) {
