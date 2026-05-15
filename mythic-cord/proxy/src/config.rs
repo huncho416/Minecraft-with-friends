@@ -80,7 +80,7 @@ impl Default for Config {
                 filter: "info,mythiccord=debug".into(),
             },
             config_export: ConfigExportConfig {
-                servers_dir: "/etc/infrarust/servers".into(),
+                servers_dir: "servers".into(),
                 domain_suffix: "mythicpvp.local".into(),
                 debounce_ms: 1000,
                 proxy_mode: "passthrough".into(),
