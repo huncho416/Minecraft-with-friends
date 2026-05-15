@@ -26,7 +26,7 @@ RUN set -eux; \
         fi; \
     fi; \
     DOWNLOAD_URL=$(printf '%s' "$BUILDS_JSON" \
-        | jq -r --arg build "$FOLIA_BUILD" 'map(select((.id | tostring) == $build)) | .[0].downloads.application.url'); \
+        | jq -r --arg build "$FOLIA_BUILD" 'map(select((.id | tostring) == $build)) | .[0].downloads["server:default"].url'); \
     test -n "$DOWNLOAD_URL"; \
     test "$DOWNLOAD_URL" != "null"; \
     curl -fsSL -o folia.jar "$DOWNLOAD_URL"
