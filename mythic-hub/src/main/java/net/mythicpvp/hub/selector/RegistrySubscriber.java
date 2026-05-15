@@ -11,6 +11,7 @@ import net.mythicpvp.suite.database.SpacetimeConnection;
 import net.mythicpvp.suite.database.TableEvent;
 import net.mythicpvp.suite.database.schema.TableNames;
 import net.mythicpvp.suite.database.schema.dto.ServerEntryRow;
+import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -50,12 +51,12 @@ public final class RegistrySubscriber {
                 return;
             }
             if ("delete".equalsIgnoreCase(event.operation())) {
-                plugin.getServer().getScheduler().runTask(plugin,
+                MythicScheduler.runSync(plugin,
                         () -> selectorService.removeServer(row.shard_id()));
                 return;
             }
             boolean healthy = "HEALTHY".equalsIgnoreCase(row.status());
-            plugin.getServer().getScheduler().runTask(plugin, () ->
+            MythicScheduler.runSync(plugin, () ->
                     selectorService.updateServer(row.shard_id(), row.role(), row.player_count(), row.tps(), healthy));
         } catch (RuntimeException e) {
             logger.log(Level.WARNING, "[selector] bad registry row " + event.payload(), e);
