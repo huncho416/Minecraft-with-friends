@@ -29,7 +29,7 @@ public final class RankEditorMenuService {
         PaginatedMenu menu = PaginatedMenu.create(6, "&#F529BERank Editor");
         for (CoreRank rank : rankService.all()) {
             menu.addItem(MythicItem.create(rank.dye())
-                    .name(rank.color() + rank.name())
+                    .name(asAmpHex(rank.color()) + rank.name())
                     .lore(List.of(
                             "&7Id: &f" + rank.id(),
                             "&7Weight: &f" + rank.weight(),
@@ -48,7 +48,7 @@ public final class RankEditorMenuService {
         }
         MythicMenu.create(3, text.editorTitle(rank.id()))
                 .slot(10, MythicItem.create(rank.dye())
-                        .name(rank.color() + rank.name())
+                        .name(asAmpHex(rank.color()) + rank.name())
                         .lore(List.of(
                                 "&7Weight: &f" + rank.weight(),
                                 "&7Staff: &f" + rank.staff(),
@@ -59,9 +59,9 @@ public final class RankEditorMenuService {
                 .slot(12, MythicItem.create(Material.NAME_TAG)
                         .name(text.editorDisplayFormats())
                         .lore(List.of(
-                                "&7Chat: &f" + rank.chatPrefix(),
-                                "&7Tab: &f" + rank.tabPrefix(),
-                                "&7Nametag: &f" + rank.nametagPrefix(),
+                                "&7Chat: &f" + sanitizeColors(rank.chatPrefix()),
+                                "&7Tab: &f" + sanitizeColors(rank.tabPrefix()),
+                                "&7Nametag: &f" + sanitizeColors(rank.nametagPrefix()),
                                 "&#F529BEClick to edit"))
                         .build(), event -> openFormatEditor(viewer, rankId))
                 .slot(14, MythicItem.create(Material.BOOK)
@@ -103,12 +103,19 @@ public final class RankEditorMenuService {
             return;
         }
         MythicMenu menu = MythicMenu.create(4, text.editorFormatsTitle());
-        addPromptField(menu, 10, Material.WRITABLE_BOOK, "Chat prefix", "chat-prefix", rank.chatPrefix(), viewer, rankId);
-        addPromptField(menu, 11, Material.BOOK, "Chat format", "chat-format", rank.chatFormat(), viewer, rankId);
-        addPromptField(menu, 13, Material.WRITABLE_BOOK, "Tab prefix", "tab-prefix", rank.tabPrefix(), viewer, rankId);
-        addPromptField(menu, 14, Material.BOOK, "Tab format", "tab-format", rank.tabFormat(), viewer, rankId);
-        addPromptField(menu, 16, Material.WRITABLE_BOOK, "Nametag prefix", "nametag-prefix", rank.nametagPrefix(), viewer, rankId);
-        addPromptField(menu, 17, Material.BOOK, "Nametag format", "nametag-format", rank.nametagFormat(), viewer, rankId);
+        java.util.Map<String, String> placeholders = formatPreviewPlaceholders(viewer, rank);
+        addPromptField(menu, 10, Material.WRITABLE_BOOK, "Chat prefix", "chat-prefix",
+                resolveAndSanitize(rank.chatPrefix(), placeholders), viewer, rankId);
+        addPromptField(menu, 11, Material.BOOK, "Chat format", "chat-format",
+                resolveAndSanitize(rank.chatFormat(), placeholders), viewer, rankId);
+        addPromptField(menu, 13, Material.WRITABLE_BOOK, "Tab prefix", "tab-prefix",
+                resolveAndSanitize(rank.tabPrefix(), placeholders), viewer, rankId);
+        addPromptField(menu, 14, Material.BOOK, "Tab format", "tab-format",
+                resolveAndSanitize(rank.tabFormat(), placeholders), viewer, rankId);
+        addPromptField(menu, 16, Material.WRITABLE_BOOK, "Nametag prefix", "nametag-prefix",
+                resolveAndSanitize(rank.nametagPrefix(), placeholders), viewer, rankId);
+        addPromptField(menu, 17, Material.BOOK, "Nametag format", "nametag-format",
+                resolveAndSanitize(rank.nametagFormat(), placeholders), viewer, rankId);
         menu.slot(31, MythicItem.create(Material.ARROW).name(text.editorBack()).build(),
                 event -> openOverview(viewer, rankId));
         menu.open(viewer);
@@ -141,6 +148,10 @@ public final class RankEditorMenuService {
                     }
                     openPermissionMenu(player, rankId);
                 }));
+        int backSlot = 6 * 9 - 5;
+        menu.staticSlot(backSlot,
+                MythicItem.create(Material.ARROW).name(text.editorBack()).build(),
+                event -> openOverview(viewer, rankId));
         menu.open(viewer);
     }
 
@@ -151,7 +162,7 @@ public final class RankEditorMenuService {
         menu.slot(slot, MythicItem.create(icon)
                 .name("&#F529BE" + label)
                 .lore(List.of(
-                        "&7Current: &f" + currentValue,
+                        "&7Current: &f" + sanitizeColors(currentValue),
                         text.editorFieldPrompt()))
                 .build(), event -> prompts.await(viewer, (player, input) -> {
                     boolean ok = rankService.setField(rankId, fieldKey, input);
@@ -160,6 +171,45 @@ public final class RankEditorMenuService {
                             : text.editorFieldFailed(label));
                     openFieldEditor(player, rankId);
                 }));
+    }
+
+    @NotNull
+    private static String resolveAndSanitize(@NotNull String template,
+                                             @NotNull java.util.Map<String, String> placeholders) {
+        String result = template;
+        for (java.util.Map.Entry<String, String> entry : placeholders.entrySet()) {
+            result = result.replace("%" + entry.getKey() + "%", entry.getValue());
+        }
+        return sanitizeColors(result);
+    }
+
+    @NotNull
+    private static java.util.Map<String, String> formatPreviewPlaceholders(@NotNull Player viewer,
+                                                                          @NotNull CoreRank rank) {
+        return java.util.Map.of(
+                "player", viewer.getName(),
+                "message", "<message>",
+                "chat_prefix", rank.chatPrefix(),
+                "tab_prefix", rank.tabPrefix(),
+                "nametag_prefix", rank.nametagPrefix(),
+                "prefix", rank.prefix(),
+                "suffix", rank.suffix(),
+                "rank", rank.name(),
+                "rank_id", rank.id(),
+                "rank_color", rank.color());
+    }
+
+    @NotNull
+    static String asAmpHex(@NotNull String input) {
+        if (input.startsWith("#") && !input.startsWith("&#")) {
+            return "&" + input;
+        }
+        return input;
+    }
+
+    @NotNull
+    static String sanitizeColors(@NotNull String input) {
+        return input.replaceAll("(?<!&)#([A-Fa-f0-9]{6})", "&#$1");
     }
 
     private void addToggleField(@NotNull MythicMenu menu, int slot,

@@ -168,8 +168,8 @@ public final class DisplayService {
         String header = PapiBridge.apply(player, String.join("\n", ctx.resolveAll(tabHeader)));
         String footer = PapiBridge.apply(player, String.join("\n", ctx.resolveAll(tabFooter)));
         String vanishPrefix = isVanished(player) ? "&7(V) " : "";
-        String prefix = PapiBridge.apply(player, vanishPrefix + ctx.resolve(rank.tabPrefix()));
-        String suffix = PapiBridge.apply(player, ctx.resolve(rank.suffix()));
+        String prefix = sanitizeColors(PapiBridge.apply(player, vanishPrefix + ctx.resolve(rank.tabPrefix())));
+        String suffix = sanitizeColors(PapiBridge.apply(player, ctx.resolve(rank.suffix())));
         tab.setLayout(player, header, footer);
         tab.setEntry(player.getUniqueId(),
                 prefix,
@@ -183,10 +183,15 @@ public final class DisplayService {
     private void applyNametag(@NotNull Player player, @NotNull CoreRank rank, @NotNull PlaceholderResolver ctx) {
         NametagManager.getInstance().setNametag(
                 player,
-                (isVanished(player) ? "&7(V) " : "") + ctx.resolve(rank.nametagPrefix()),
-                ctx.resolve(rank.suffix()),
+                sanitizeColors((isVanished(player) ? "&7(V) " : "") + ctx.resolve(rank.nametagPrefix())),
+                sanitizeColors(ctx.resolve(rank.suffix())),
                 rank.weight(),
                 null);
+    }
+
+    @NotNull
+    private static String sanitizeColors(@NotNull String input) {
+        return input.replaceAll("(?<!&)#([A-Fa-f0-9]{6})", "&#$1");
     }
 
     private boolean isVanished(@NotNull Player player) {

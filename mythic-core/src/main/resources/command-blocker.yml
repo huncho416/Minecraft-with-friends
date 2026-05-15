@@ -84,6 +84,7 @@ required-permissions:
   punishmentedit: "mythic.core.punish.template"
   punishmentremove: "mythic.core.punish.template"
   chat: "mythic.core.chat"
+  unmute: "mythic.core.chat.mute"
   broadcast: "mythic.core.broadcast"
   staffchat: "mythic.core.staffchat"
   builderchat: "mythic.core.builderchat"

@@ -12,9 +12,9 @@ announcements:
   # once at the top of the block. Keep entries short - players read the
   # first line and ignore the rest.
   messages:
-    - "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFJoin our Discord at &ndiscord.gg/mythicpvp"
-    - "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFVote daily at &nmythicpvp.net/vote &#FFFFFFfor rewards."
-    - "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFNeed help? Type &n/help &#FFFFFFor ask in chat."
+    - "Join our Discord at &ndiscord.gg/mythicpvp"
+    - "Vote daily at &nmythicpvp.net/vote &#FFFFFFfor rewards."
+    - "Need help? Type &n/help &#FFFFFFor ask in chat."
 
 broadcast:
   # Format applied to /broadcast <message>. %message% is replaced with

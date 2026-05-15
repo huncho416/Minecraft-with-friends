@@ -67,14 +67,20 @@ public final class CommandManager {
 
         RegisteredCommand registered = new RegisteredCommand(command, permAnnotation != null ? permAnnotation.value() : null);
 
-        for (Method method : command.getClass().getDeclaredMethods()) {
-            method.setAccessible(true);
-            if (method.isAnnotationPresent(Default.class)) {
-                registered.setDefaultHandler(method);
-            } else if (method.isAnnotationPresent(Subcommand.class)) {
-                String sub = method.getAnnotation(Subcommand.class).value().toLowerCase();
-                registered.addSubcommand(sub, method);
+        Class<?> scan = command.getClass();
+        while (scan != null && scan != Object.class) {
+            for (Method method : scan.getDeclaredMethods()) {
+                method.setAccessible(true);
+                if (method.isAnnotationPresent(Default.class) && registered.getDefaultHandler() == null) {
+                    registered.setDefaultHandler(method);
+                } else if (method.isAnnotationPresent(Subcommand.class)) {
+                    String sub = method.getAnnotation(Subcommand.class).value().toLowerCase();
+                    if (registered.getSubcommand(sub) == null) {
+                        registered.addSubcommand(sub, method);
+                    }
+                }
             }
+            scan = scan.getSuperclass();
         }
 
         for (String alias : aliases) {
