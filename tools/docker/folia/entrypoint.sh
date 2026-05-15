@@ -38,6 +38,7 @@ apply_property() {
 }
 apply_property "${DATA_DIR}/server.properties" view-distance "${VIEW_DISTANCE:-8}"
 apply_property "${DATA_DIR}/server.properties" online-mode "${ONLINE_MODE:-false}"
+apply_property "${DATA_DIR}/server.properties" server-port "${SERVER_PORT:-${P_SERVER_PORT:-25565}}"
 apply_property "${DATA_DIR}/server.properties" server-name "${SHARD_ID:-mythic}"
 apply_property "${DATA_DIR}/server.properties" motd "MythicPvP ${SERVER_TYPE:-server} (${SHARD_ID:-shard})"
 apply_property "${DATA_DIR}/plugins/voicechat/voicechat-server.properties" port "${VOICE_PORT:-24454}"
