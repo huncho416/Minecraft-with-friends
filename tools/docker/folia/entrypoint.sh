@@ -3,7 +3,7 @@ set -euo pipefail
 
 DATA_DIR="${DATA_DIR:-/data}"
 DEFAULTS_DIR="/opt/folia/defaults"
-SUITE_DIR="/opt/folia/suite"
+PACKAGED_PLUGINS_DIR="/opt/folia/plugins"
 VOICE_PLUGIN_DIR="${VOICE_PLUGIN_DIR:-/opt/folia/voice-plugins}"
 USER_PLUGINS_DIR="${USER_PLUGINS_DIR:-/opt/folia/user-plugins}"
 SERVER_JAR="/opt/folia/folia.jar"
@@ -44,6 +44,12 @@ apply_property "${DATA_DIR}/plugins/voicechat/voicechat-server.properties" port 
 apply_property "${DATA_DIR}/plugins/voicechat/voicechat-server.properties" voice_host "${VOICE_HOST:-}"
 
 mkdir -p "${DATA_DIR}/plugins"
+find "${DATA_DIR}/plugins" -maxdepth 1 -type f \( \
+    -name 'suite-*.jar' -o \
+    -name 'original-suite-*.jar' -o \
+    -name 'simplevoice-geyser.jar' \
+\) -delete
+
 install_jars() {
     local source_dir="$1"
     if compgen -G "${source_dir}/*.jar" > /dev/null; then
@@ -60,7 +66,7 @@ install_jars() {
     fi
 }
 
-install_jars "${SUITE_DIR}"
+install_jars "${PACKAGED_PLUGINS_DIR}"
 install_jars "${VOICE_PLUGIN_DIR}"
 install_jars "${USER_PLUGINS_DIR}"
 
