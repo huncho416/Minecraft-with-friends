@@ -20,7 +20,7 @@ class SpacetimeConnectionTest {
         String subscription = connection.subscriptionMessage("players");
         assertTrue(reducer.contains("\"CallReducer\""));
         assertTrue(reducer.contains("\"reducer\":\"award_points\""));
-        assertTrue(reducer.contains("\"args\":\"{\\\"amount\\\":10}\""));
+        assertTrue(reducer.contains("\"args\":{\"amount\":10}"));
         assertTrue(subscription.contains("\"Subscribe\""));
         assertTrue(subscription.contains("\"query_strings\":[\"SELECT * FROM players\"]"));
         assertThrows(IllegalArgumentException.class, () -> connection.subscriptionMessage("players;drop"));

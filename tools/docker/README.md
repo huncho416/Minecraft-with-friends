@@ -130,12 +130,16 @@ Simple Voice Chat and SimpleVoice-Geyser are resolved during the Folia image bui
 
 ## Modern Forwarding
 
-`folia/paper-global.yml` has Velocity modern forwarding disabled with a placeholder secret. When MythicCord ships full traffic support:
+`folia/paper-global.yml` has Velocity modern forwarding **enabled** with a placeholder secret. Infrarust does Mojang authentication; the hub trusts the signed handshake and gets the real player profile, UUID, IP, and skin without doing its own auth.
 
-1. Set `proxies.velocity.enabled: true` in `paper-global.yml`.
-2. Set a real `secret` and pass the same one to the proxy.
-3. Set `ONLINE_MODE=false` on Folia and `online-mode=true` on the proxy.
-4. Firewall direct Folia ports so only the proxy can reach them.
+Production checklist:
+
+1. Replace `proxies.velocity.secret` in `paper-global.yml` with a real 32+ byte random string. Use the same value for every backend Folia server.
+2. Pterodactyl egg generates `forwarding.secret` automatically on first install. Copy that file's contents into every backend's `paper-global.yml` `proxies.velocity.secret`.
+3. Backend Folia servers must keep `online-mode=false` in `server.properties` (the proxy does auth). `paper-global.yml` `proxies.velocity.online-mode: true` ensures the hub treats Velocity-forwarded profiles as online.
+4. Firewall direct Folia ports so only the proxy can reach them — otherwise a player who knows the backend port could connect with the proxy's spoofed identity.
+
+Cracked clients are rejected at the proxy; player skins resolve through Mojang because the backend trusts the proxy's authenticated profile.
 
 ## Build Pin
 

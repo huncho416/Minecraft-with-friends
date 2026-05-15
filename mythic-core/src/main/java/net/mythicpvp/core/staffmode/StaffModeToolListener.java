@@ -1,7 +1,7 @@
 package net.mythicpvp.core.staffmode;
 
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mythicpvp.core.config.CoreMessages;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -13,7 +13,9 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
@@ -144,27 +146,20 @@ public final class StaffModeToolListener implements Listener {
         staffPlayer.teleportAsync(chosen.getLocation());
     }
 
+    @Nullable
     private StaffModeTool matchTool(@NotNull ItemStack item) {
         ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.hasDisplayName()) {
+        if (meta == null) {
             return null;
         }
-        String displayName = PlainTextComponentSerializer.plainText().serialize(meta.displayName());
-        for (StaffModeTool tool : staff.tools()) {
-
-            String configuredPlain = stripHex(tool.name());
-            if (configuredPlain.equals(displayName) && item.getType() == tool.material()) {
-                return tool;
-            }
+        NamespacedKey key = staff.toolKey();
+        if (key == null) {
+            return null;
         }
-        return null;
-    }
-
-    @NotNull
-    private static String stripHex(@NotNull String input) {
-
-        return input.replaceAll("&#[0-9A-Fa-f]{6}", "")
-                .replaceAll("&[0-9a-fk-or]", "")
-                .trim();
+        String type = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+        if (type == null) {
+            return null;
+        }
+        return staff.toolByType(type);
     }
 }

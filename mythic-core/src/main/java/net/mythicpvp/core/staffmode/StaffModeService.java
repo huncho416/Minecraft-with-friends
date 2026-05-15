@@ -7,11 +7,13 @@ import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -107,6 +109,22 @@ public final class StaffModeService {
         return tools;
     }
 
+    @Nullable
+    public NamespacedKey toolKey() {
+        JavaPlugin p = plugin;
+        return p == null ? null : new NamespacedKey(p, "staff_mode_tool");
+    }
+
+    @Nullable
+    public StaffModeTool toolByType(@NotNull String type) {
+        for (StaffModeTool tool : tools) {
+            if (tool.type().equalsIgnoreCase(type)) {
+                return tool;
+            }
+        }
+        return null;
+    }
+
     public boolean vanishEnabled() {
         return vanish;
     }
@@ -145,6 +163,7 @@ public final class StaffModeService {
         inv.clear();
         inv.setArmorContents(new ItemStack[4]);
         inv.setItemInOffHand(null);
+        NamespacedKey key = toolKey();
         for (StaffModeTool tool : tools) {
             if (tool.slot() < 0 || tool.slot() > 8) {
                 continue;
@@ -152,7 +171,10 @@ public final class StaffModeService {
             ItemStack stack = new ItemStack(tool.material());
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                meta.displayName(MythicHex.colorize(tool.name()));
+                meta.displayName(MythicHex.colorize(tool.name()).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                if (key != null) {
+                    meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, tool.type());
+                }
                 stack.setItemMeta(meta);
             }
             inv.setItem(tool.slot(), stack);

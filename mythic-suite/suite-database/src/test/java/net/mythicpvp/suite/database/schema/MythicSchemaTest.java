@@ -207,7 +207,7 @@ class MythicSchemaTest {
         JsonObject callReducer = envelope.getAsJsonObject("CallReducer");
         assertNotNull(callReducer);
         assertEquals(reducer, callReducer.get("reducer").getAsString());
-        JsonElement argsElement = GSON.fromJson(callReducer.get("args").getAsString(), JsonElement.class);
+        JsonElement argsElement = callReducer.get("args");
         assertTrue(argsElement.isJsonArray(),
                 "expected positional args array, got: " + argsElement);
         return argsElement.getAsJsonArray();

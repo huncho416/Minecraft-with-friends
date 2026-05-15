@@ -1,8 +1,12 @@
 _version: 29
 proxies:
   velocity:
-    # Switch to true and set secret once MythicCord modern-forwarding is wired up.
-    enabled: false
+    # Modern forwarding: Infrarust authenticates with Mojang and signs the
+    # player handshake with this secret. The hub stays online-mode=false in
+    # server.properties because the proxy fronts it, but still gets the
+    # real player profile, UUID, IP, and skin via the Velocity handshake.
+    # Keep this secret in sync with Infrarust's forwarding.secret_file.
+    enabled: true
     online-mode: true
     secret: "change-me-to-a-shared-secret"
   bungee-cord:

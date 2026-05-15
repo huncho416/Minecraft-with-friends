@@ -34,12 +34,12 @@ public final class GrantFlowService {
         PaginatedMenu menu = PaginatedMenu.create(6, text.grantRankTitle(flow.targetName()));
         for (CoreRank rank : rankService.all()) {
             menu.addItem(MythicItem.create(rank.dye())
-                    .name(rank.color() + rank.name())
+                    .name(asAmpHex(rank.color()) + rank.name())
                     .lore(List.of(
                             "&7Staff Rank: &f" + yesNo(rank.staff()),
                             "&7Purchaseable: &f" + yesNo(rank.donator()),
-                            "&7Prefix: &f" + rank.prefix(),
-                            "&7Suffix: &f" + (rank.suffix().isBlank() ? "None" : rank.suffix()),
+                            "&7Prefix: &f" + sanitizeColors(rank.prefix()),
+                            "&7Suffix: &f" + (rank.suffix().isBlank() ? "None" : sanitizeColors(rank.suffix())),
                             "&7Parent: &f" + (rank.parent().isBlank() ? "None" : rank.parent()),
                             "&7Weight: &f" + rank.weight(),
                             "&7Permissions: &f" + rank.permissions().size(),
@@ -48,6 +48,19 @@ public final class GrantFlowService {
                     .build(), event -> openDuration(executor, flow.rank(rank.id())));
         }
         menu.open(executor);
+    }
+
+    @NotNull
+    static String asAmpHex(@NotNull String input) {
+        if (input.startsWith("#") && !input.startsWith("&#")) {
+            return "&" + input;
+        }
+        return input;
+    }
+
+    @NotNull
+    static String sanitizeColors(@NotNull String input) {
+        return input.replaceAll("(?<!&)#([A-Fa-f0-9]{6})", "&#$1");
     }
 
     public void openDuration(@NotNull Player executor, @NotNull GrantFlow flow) {

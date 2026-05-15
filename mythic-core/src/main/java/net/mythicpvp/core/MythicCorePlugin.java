@@ -293,6 +293,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         ChatGuard chatGuard = new ChatGuard(this, chatControlService, punishmentService, messages);
         getServer().getPluginManager().registerEvents(chatGuard, this);
         commandManager.register(new ChatCommand(chatControlService, messages));
+        commandManager.register(new net.mythicpvp.core.command.UnmuteCommand(chatControlService, messages));
 
         broadcastService = new BroadcastService(protocolManager, serverIdentity.id());
         broadcastService.load(configManager.getOrCreate("announcements"));
