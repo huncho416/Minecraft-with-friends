@@ -58,7 +58,7 @@ public final class ChatGuard implements Listener {
             event.setCancelled(true);
             player.sendMessage(messages.component(
                     "messages.chat-control.blocked-muted",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â\u00BB &#FF8A8AChat is currently muted."));
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AChat is currently muted."));
             return;
         }
         long waitMillis = chatControl.registerMessage(player.getUniqueId(), System.currentTimeMillis());
@@ -67,7 +67,7 @@ public final class ChatGuard implements Listener {
             long secondsRemaining = Math.max(1, (waitMillis + 999) / 1000);
             player.sendMessage(messages.component(
                     "messages.chat-control.blocked-slow",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â\u00BB &#FF8A8ASlow mode active. Wait &#FFFFFF%seconds%s &#FF8A8Abefore sending again.",
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8ASlow mode active. Wait &#FFFFFF%seconds%s &#FF8A8Abefore sending again.",
                     Map.of("seconds", Long.toString(secondsRemaining))));
         }
     }
@@ -93,7 +93,7 @@ public final class ChatGuard implements Listener {
             }
             player.sendMessage(messages.component(
                     "messages.chat-control.cleared",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â\u00BB &#9CFF9CChat has been cleared."));
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#9CFF9CChat has been cleared."));
         }
     }
 }

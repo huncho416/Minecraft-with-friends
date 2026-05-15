@@ -57,7 +57,7 @@ public final class PapiBridge {
                 setPlaceholders = papi.getMethod("setPlaceholders", OfflinePlayer.class, String.class);
             } catch (ReflectiveOperationException e) {
                 Logger.getLogger("MythicCore").warning(
-                        "[papi] reflection lookup failed â€” bridge disabled: " + e.getMessage());
+                        "[papi] reflection lookup failed - bridge disabled: " + e.getMessage());
                 setPlaceholders = null;
             }
             return setPlaceholders;

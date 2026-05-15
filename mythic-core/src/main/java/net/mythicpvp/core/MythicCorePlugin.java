@@ -224,7 +224,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
         String staffFormat = messages.raw(
                 "messages.staff.format",
-                "&#888888[%server%] %rank_color%%rank%%sender% &8ï¿½\u00BB &#FFFFFF%message%",
+                "&#888888[%server%] %rank_color%%rank%%sender% &8\u00BB &#FFFFFF%message%",
                 java.util.Map.of());
         staffChannelService.addAudience(new BukkitStaffAudience(staffFormat));
 
@@ -442,7 +442,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         String uri = System.getenv("STDB_URI");
         String module = System.getenv().getOrDefault("STDB_MODULE", "mythicpvp");
         if (uri == null || uri.isBlank()) {
-            getLogger().info("STDB_URI not set â€” mythic-core running in single-server / no-op persistence mode");
+            getLogger().info("STDB_URI not set - mythic-core running in single-server / no-op persistence mode");
             return NoopPersistenceGateway.INSTANCE;
         }
         try {

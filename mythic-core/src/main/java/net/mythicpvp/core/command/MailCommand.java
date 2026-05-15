@@ -32,7 +32,7 @@ public final class MailCommand extends MythicCommand {
     public void usage(@NotNull Player player) {
         player.sendMessage(messages.component(
                 "messages.social.mail-usage",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8ï¿½\u00BB &#FF8A8AUsage: &#FFFFFF/mail <send|inbox|read>"));
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AUsage: &#FFFFFF/mail <send|inbox|read>"));
     }
 
     @Subcommand("send")
@@ -47,7 +47,7 @@ public final class MailCommand extends MythicCommand {
         social.sendMail(player.getUniqueId(), target, "Message from " + player.getName(), body);
         player.sendMessage(messages.component(
                 "messages.social.mail-sent",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8ï¿½\u00BB &#9CFF9CMail sent to &#FFFFFF%target%&#9CFF9C.",
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#9CFF9CMail sent to &#FFFFFF%target%&#9CFF9C.",
                 Map.of("target", targetName)));
     }
 
@@ -56,7 +56,7 @@ public final class MailCommand extends MythicCommand {
         List<MailMessage> inbox = social.inbox(player.getUniqueId());
         player.sendMessage(messages.component(
                 "messages.social.mail-inbox",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8ï¿½\u00BB &#FFFFFFInbox: &#D2D8E0%count% &#FFFFFFmessages, &#D2D8E0%unread% &#FFFFFFunread.",
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FFFFFFInbox: &#D2D8E0%count% &#FFFFFFmessages, &#D2D8E0%unread% &#FFFFFFunread.",
                 Map.of(
                         "count", Integer.toString(inbox.size()),
                         "unread", Integer.toString(social.unread(player.getUniqueId()).size()))));
@@ -75,13 +75,13 @@ public final class MailCommand extends MythicCommand {
         if (mail == null) {
             player.sendMessage(messages.component(
                     "messages.social.mail-missing",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8ï¿½\u00BB &#FF8A8AMail not found."));
+                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AMail not found."));
             return;
         }
         social.markMailRead(mailId, player.getUniqueId());
         player.sendMessage(messages.component(
                 "messages.social.mail-read",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8ï¿½\u00BB &#FFFFFF%body%",
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FFFFFF%body%",
                 Map.of("body", mail.body())));
     }
 
