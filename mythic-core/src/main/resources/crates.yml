@@ -1,0 +1,40 @@
+# Crate definitions — loaded by CrateService at startup.
+# Each crate has a cost, currency, and weighted cosmetic pool.
+crates:
+  common_crate:
+    display-name: "Common Crate"
+    cost: 100
+    currency: "COINS"
+    pool:
+      - cosmetic-id: "particle_hearts"
+        weight: 40
+      - cosmetic-id: "tag_vip"
+        weight: 40
+      - cosmetic-id: "particle_flames"
+        weight: 20
+  rare_crate:
+    display-name: "Rare Crate"
+    cost: 500
+    currency: "COINS"
+    pool:
+      - cosmetic-id: "hat_halo"
+        weight: 30
+      - cosmetic-id: "particle_flames"
+        weight: 25
+      - cosmetic-id: "tag_mvp"
+        weight: 25
+      - cosmetic-id: "win_fireworks"
+        weight: 20
+  legendary_crate:
+    display-name: "Legendary Crate"
+    cost: 200
+    currency: "GEMS"
+    pool:
+      - cosmetic-id: "hat_crown"
+        weight: 15
+      - cosmetic-id: "kill_lightning"
+        weight: 25
+      - cosmetic-id: "hat_halo"
+        weight: 30
+      - cosmetic-id: "win_fireworks"
+        weight: 30

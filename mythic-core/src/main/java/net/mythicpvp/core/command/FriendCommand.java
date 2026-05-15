@@ -4,6 +4,7 @@ import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.social.FriendRequest;
 import net.mythicpvp.core.social.SocialService;
 import net.mythicpvp.suite.command.CommandAlias;
+import net.mythicpvp.suite.command.Complete;
 import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
 import net.mythicpvp.suite.command.Subcommand;
@@ -35,6 +36,7 @@ public final class FriendCommand extends MythicCommand {
     }
 
     @Subcommand("add")
+    @Complete({"players"})
     public void add(@NotNull Player player, @NotNull String targetName) {
         Player target = Bukkit.getPlayerExact(targetName);
         if (target == null) {
@@ -87,6 +89,7 @@ public final class FriendCommand extends MythicCommand {
     }
 
     @Subcommand("remove")
+    @Complete({"players"})
     public void remove(@NotNull Player player, @NotNull String targetName) {
         UUID target = resolveOnlineUuid(targetName);
         if (target == null || !social.areFriends(player.getUniqueId(), target)) {

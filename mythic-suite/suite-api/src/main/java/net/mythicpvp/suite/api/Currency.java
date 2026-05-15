@@ -5,7 +5,8 @@ import org.jetbrains.annotations.NotNull;
 public enum Currency {
     COINS("Coins", "&#FF00F8"),
     POINTS("Points", "&#FFFFFF"),
-    GEMS("Gems", "&#FF9FFC");
+    GEMS("Gems", "&#FF9FFC"),
+    CREDITS("Credits", "&#FFD700");
 
     private final String displayName;
     private final String hexColor;

@@ -1,0 +1,7 @@
+name: MythicHub
+version: '${project.version}'
+main: net.mythicpvp.hub.MythicHubPlugin
+api-version: '1.21'
+depend:
+  - MythicCore
+folia-supported: true

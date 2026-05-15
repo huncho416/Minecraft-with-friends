@@ -4,6 +4,7 @@ import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.social.Party;
 import net.mythicpvp.core.social.SocialService;
 import net.mythicpvp.suite.command.CommandAlias;
+import net.mythicpvp.suite.command.Complete;
 import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
 import net.mythicpvp.suite.command.Subcommand;
@@ -43,6 +44,7 @@ public final class PartyCommand extends MythicCommand {
     }
 
     @Subcommand("invite")
+    @Complete({"players"})
     public void invite(@NotNull Player player, @NotNull String targetName) {
         Party party = social.partyOf(player.getUniqueId());
         if (party == null || !party.leader().equals(player.getUniqueId())) {

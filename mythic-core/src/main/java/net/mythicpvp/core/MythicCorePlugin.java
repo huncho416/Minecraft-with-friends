@@ -184,7 +184,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new ClearPunishmentsCommand(punishmentService));
         commandManager.register(new PunishmentAddCommand(punishmentService));
         commandManager.register(new PunishmentRemoveCommand(punishmentService));
-        commandManager.register(new PunishmentEditCommand(punishmentService));
+        commandManager.register(new PunishmentEditCommand(punishmentService, chatPromptService));
         commandManager.register(new GamemodeCommand(essentialsService));
         commandManager.register(new GmcCommand(essentialsService));
         commandManager.register(new GmsCommand(essentialsService));
@@ -232,6 +232,35 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         cosmeticBundles.load(configManager.getOrCreate("ranks"));
         grantService.setGrantObserver(new RankBundleGrantHook(
                 cosmeticBundles, auditLog, getLogger(), persistenceGateway));
+
+        saveResourceIfMissing("cosmetics.yml");
+        saveResourceIfMissing("crates.yml");
+        net.mythicpvp.core.cosmetic.CosmeticCatalogLoader catalogLoader =
+                new net.mythicpvp.core.cosmetic.CosmeticCatalogLoader(configManager.getOrCreate("cosmetics"), getLogger());
+        catalogLoader.load();
+        net.mythicpvp.core.cosmetic.CosmeticService cosmeticService =
+                new net.mythicpvp.core.cosmetic.CosmeticService(persistenceGateway, this);
+        net.mythicpvp.core.cosmetic.CrateService crateService =
+                new net.mythicpvp.core.cosmetic.CrateService(cosmeticService, getLogger());
+        crateService.loadFromConfig(configManager.getOrCreate("crates"));
+        net.mythicpvp.core.cosmetic.CosmeticMenuText cosmeticMenuText =
+                new net.mythicpvp.core.cosmetic.CosmeticMenuText(menusConfig);
+        net.mythicpvp.core.cosmetic.CosmeticMenuService cosmeticMenuService =
+                new net.mythicpvp.core.cosmetic.CosmeticMenuService(cosmeticService, crateService, cosmeticMenuText);
+        commandManager.register(new net.mythicpvp.core.command.CosmeticsCommand(cosmeticMenuService));
+        getServer().getPluginManager().registerEvents(
+                new net.mythicpvp.core.cosmetic.CosmeticRedeemListener(cosmeticService), this);
+
+        saveResourceIfMissing("creditshop.yml");
+        net.mythicpvp.core.credit.CreditService creditService = new net.mythicpvp.core.credit.CreditService();
+        net.mythicpvp.core.credit.CreditShopText creditShopText =
+                new net.mythicpvp.core.credit.CreditShopText(menusConfig);
+        net.mythicpvp.core.credit.CreditShopService creditShopService =
+                new net.mythicpvp.core.credit.CreditShopService(
+                        creditService, grantService, cosmeticService, crateService, creditShopText);
+        creditShopService.loadFromConfig(configManager.getOrCreate("creditshop"));
+        commandManager.register(new net.mythicpvp.core.command.CreditsCommand(creditService));
+        commandManager.register(new net.mythicpvp.core.command.CreditShopCommand(creditShopService));
 
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());
         ChatGuard chatGuard = new ChatGuard(this, chatControlService, messages);

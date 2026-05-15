@@ -49,6 +49,12 @@ public final class MainThreadHydrationSink implements HydrationSink {
     @Override public void applyMail(@NotNull MailMessage mail) { schedule(s -> s.applyMail(mail)); }
     @Override public void removeMail(long mailId) { schedule(s -> s.removeMail(mailId)); }
     @Override public void applyLoginStreak(@NotNull LoginStreak streak) { schedule(s -> s.applyLoginStreak(streak)); }
+    @Override public void applyCosmeticGrant(@NotNull UUID player, @NotNull String cosmeticId, @NotNull String cosmeticType) {
+        schedule(s -> s.applyCosmeticGrant(player, cosmeticId, cosmeticType));
+    }
+    @Override public void applyCosmeticEquip(@NotNull UUID player, @NotNull String cosmeticType, @NotNull String cosmeticId) {
+        schedule(s -> s.applyCosmeticEquip(player, cosmeticType, cosmeticId));
+    }
 
     private void schedule(@NotNull Consumer<HydrationSink> action) {
 

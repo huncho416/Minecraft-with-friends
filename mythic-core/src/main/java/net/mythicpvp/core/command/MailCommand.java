@@ -4,6 +4,7 @@ import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.social.MailMessage;
 import net.mythicpvp.core.social.SocialService;
 import net.mythicpvp.suite.command.CommandAlias;
+import net.mythicpvp.suite.command.Complete;
 import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
 import net.mythicpvp.suite.command.Subcommand;
@@ -35,6 +36,7 @@ public final class MailCommand extends MythicCommand {
     }
 
     @Subcommand("send")
+    @Complete({"players"})
     public void send(@NotNull Player player, @NotNull String targetName, @NotNull String[] words) {
         if (words.length == 0) {
             usage(player);

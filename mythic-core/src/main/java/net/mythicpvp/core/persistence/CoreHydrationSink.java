@@ -76,6 +76,20 @@ public final class CoreHydrationSink implements HydrationSink {
     @Override public void removeMail(long mailId) { socialService.removeMail(mailId); }
     @Override public void applyLoginStreak(@NotNull LoginStreak streak) { socialService.applyLoginStreak(streak); }
 
+    @Override
+    public void applyCosmeticGrant(@NotNull UUID player, @NotNull String cosmeticId, @NotNull String cosmeticType) {
+        net.mythicpvp.suite.cosmetic.CosmeticManager.getInstance().grantCosmetic(player, cosmeticId);
+    }
+
+    @Override
+    public void applyCosmeticEquip(@NotNull UUID player, @NotNull String cosmeticType, @NotNull String cosmeticId) {
+        try {
+            net.mythicpvp.suite.cosmetic.CosmeticType type = net.mythicpvp.suite.cosmetic.CosmeticType.valueOf(cosmeticType);
+            net.mythicpvp.suite.cosmetic.CosmeticManager.getInstance().equip(player, type, cosmeticId);
+        } catch (IllegalArgumentException ignored) {
+        }
+    }
+
     @NotNull
     public java.util.Set<UUID> blacklistedUuids() {
         return java.util.Set.copyOf(blacklist.keySet());

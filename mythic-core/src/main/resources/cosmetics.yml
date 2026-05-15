@@ -1,0 +1,71 @@
+# Cosmetic catalog — loaded by CosmeticCatalogLoader at startup.
+# Each entry under a type key becomes a registered Cosmetic in CosmeticManager.
+cosmetics:
+  HAT:
+    hat_crown:
+      display-name: "Crown"
+      description: "A golden crown fit for royalty."
+      item-model: "mythic:hat_crown"
+      rarity: "LEGENDARY"
+      tradable: true
+      limited: false
+    hat_halo:
+      display-name: "Halo"
+      description: "An angelic halo."
+      item-model: "mythic:hat_halo"
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+  TITLE:
+    title_champion:
+      display-name: "Champion"
+      description: "Awarded to tournament winners."
+      rarity: "LEGENDARY"
+      tradable: false
+      limited: true
+    title_og:
+      display-name: "OG"
+      description: "An original player of the network."
+      rarity: "RARE"
+      tradable: false
+      limited: true
+  PARTICLE:
+    particle_flames:
+      display-name: "Flames"
+      description: "Engulf yourself in fire particles."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+    particle_hearts:
+      display-name: "Hearts"
+      description: "Spread the love with hearts."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+  KILL_EFFECT:
+    kill_lightning:
+      display-name: "Lightning Strike"
+      description: "Strike your foes with lightning."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+  WIN_EFFECT:
+    win_fireworks:
+      display-name: "Fireworks"
+      description: "Celebrate with fireworks."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+  CHAT_TAG:
+    tag_vip:
+      display-name: "VIP"
+      description: "Show off your VIP status."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+    tag_mvp:
+      display-name: "MVP"
+      description: "The most valuable player tag."
+      rarity: "RARE"
+      tradable: true
+      limited: false

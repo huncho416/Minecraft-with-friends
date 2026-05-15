@@ -17,6 +17,7 @@
 
     <modules>
         <module>suite-api</module>
+        <module>suite-plugin</module>
         <module>suite-packet</module>
         <module>suite-hex</module>
         <module>suite-config</module>

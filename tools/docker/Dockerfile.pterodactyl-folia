@@ -1,0 +1,100 @@
+# syntax=docker/dockerfile:1.7
+FROM maven:3.9-eclipse-temurin-21 AS plugin-build
+WORKDIR /build
+COPY pom.xml ./
+COPY mythic-suite/ ./mythic-suite/
+COPY mythic-core/ ./mythic-core/
+COPY mythic-hub/ ./mythic-hub/
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B -ntp -pl mythic-suite/suite-plugin,mythic-core,mythic-hub -am -DskipTests package
+
+FROM eclipse-temurin:21-jre-jammy AS folia-fetch
+ARG FOLIA_VERSION=1.21.11
+ARG FOLIA_BUILD=latest
+WORKDIR /folia
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl jq ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    BUILDS_JSON=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" \
+        "https://fill.papermc.io/v3/projects/folia/versions/${FOLIA_VERSION}/builds"); \
+    if [ "$FOLIA_BUILD" = "latest" ]; then \
+        FOLIA_BUILD=$(printf '%s' "$BUILDS_JSON" \
+            | jq -r 'map(select((.channel | ascii_upcase) == "RECOMMENDED" or (.channel | ascii_upcase) == "STABLE")) | .[0].id // empty'); \
+        if [ -z "$FOLIA_BUILD" ]; then \
+            FOLIA_BUILD=$(printf '%s' "$BUILDS_JSON" | jq -r '.[0].id'); \
+        fi; \
+    fi; \
+    DOWNLOAD_URL=$(printf '%s' "$BUILDS_JSON" \
+        | jq -r --arg build "$FOLIA_BUILD" 'map(select((.id | tostring) == $build)) | .[0].downloads["server:default"].url'); \
+    test -n "$DOWNLOAD_URL"; \
+    test "$DOWNLOAD_URL" != "null"; \
+    curl -fsSL -o folia.jar "$DOWNLOAD_URL"
+
+FROM eclipse-temurin:21-jre-jammy AS voice-plugin-fetch
+ARG VOICE_PLUGINS=true
+ARG SIMPLE_VOICE_CHAT_VERSION=Qnk9puxN
+ARG SIMPLE_VOICE_CHAT_SHA1=bc1e32243e3ef1b4999ac9d15720fdaddc7a3622
+WORKDIR /voice-plugins
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl jq ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    fetch_modrinth() { \
+        project="$1"; \
+        version="$2"; \
+        sha1="$3"; \
+        output="$4"; \
+        url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" "https://api.modrinth.com/v2/project/${project}/version/${version}" \
+            | jq -r '.files[]? | select(.primary == true) | .url' \
+            | head -n 1); \
+        if [ -z "${url}" ] || [ "${url}" = "null" ]; then \
+            url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" "https://api.modrinth.com/v2/project/${project}/version/${version}" \
+                | jq -r '.files[0].url'); \
+        fi; \
+        test -n "${url}"; \
+        test "${url}" != "null"; \
+        curl -fsSL -o "${output}" "${url}"; \
+        echo "${sha1}  ${output}" | sha1sum -c -; \
+    }; \
+    if [ "${VOICE_PLUGINS}" = "true" ]; then \
+        fetch_modrinth simple-voice-chat "${SIMPLE_VOICE_CHAT_VERSION}" "${SIMPLE_VOICE_CHAT_SHA1}" simple-voice-chat.jar; \
+    fi
+
+FROM eclipse-temurin:21-jre-jammy
+LABEL org.opencontainers.image.title="MythicPvP Pterodactyl Folia"
+LABEL org.opencontainers.image.source="https://github.com/mythicpvp"
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends bash ca-certificates curl tini \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /home/container
+COPY --from=folia-fetch /folia/folia.jar /opt/folia/folia.jar
+COPY --from=plugin-build /build/mythic-suite/suite-plugin/target/suite-plugin-*.jar /opt/folia/plugins/
+COPY --from=plugin-build /build/mythic-core/target/mythic-core-*.jar /opt/folia/plugins/
+COPY --from=plugin-build /build/mythic-hub/target/mythic-hub-*.jar /opt/folia/plugins/
+COPY --from=voice-plugin-fetch /voice-plugins/ /opt/folia/voice-plugins/
+COPY tools/docker/folia/entrypoint.sh /opt/folia/entrypoint.sh
+COPY tools/docker/folia/eula.txt /opt/folia/defaults/eula.txt
+COPY tools/docker/folia/server.properties /opt/folia/defaults/server.properties
+COPY tools/docker/folia/bukkit.yml /opt/folia/defaults/bukkit.yml
+COPY tools/docker/folia/spigot.yml /opt/folia/defaults/spigot.yml
+COPY tools/docker/folia/paper-global.yml /opt/folia/defaults/paper-global.yml
+COPY tools/docker/folia/voicechat-server.properties /opt/folia/defaults/voicechat-server.properties
+
+RUN chmod +x /opt/folia/entrypoint.sh \
+ && mkdir -p /opt/folia/user-plugins /home/container \
+ && chmod -R 755 /opt/folia
+
+EXPOSE 25565 24454/udp
+
+ENV DATA_DIR=/home/container \
+    JAVA_OPTS="-Xms128M -XX:MaxRAMPercentage=95.0 -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC" \
+    SERVER_TYPE=hub \
+    SHARD_ID=hub-1 \
+    VIEW_DISTANCE=8 \
+    ONLINE_MODE=false \
+    VOICE_PORT=24454
+
+CMD ["/usr/bin/tini", "--", "/opt/folia/entrypoint.sh"]

@@ -1,0 +1,190 @@
+name: mythicpvp-vps
+
+x-folia-base: &folia-base
+  build:
+    context: ../..
+    dockerfile: tools/docker/Dockerfile.folia
+  restart: unless-stopped
+  stop_grace_period: 60s
+  tty: true
+  stdin_open: true
+  depends_on:
+    stdb-publish:
+      condition: service_completed_successfully
+  networks: [mythicnet-vps]
+
+services:
+  spacetimedb:
+    image: clockworklabs/spacetime:latest
+    container_name: mythic-vps-stdb
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_BIND:-127.0.0.1}:${STDB_HTTP_PORT:-3000}:3000"
+    volumes:
+      - stdb-vps-data:/stdb
+    environment:
+      SPACETIMEDB_LOG_LEVEL: ${SPACETIMEDB_LOG_LEVEL:-info}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks: [mythicnet-vps]
+
+  stdb-publish:
+    build:
+      context: ../..
+      dockerfile: tools/docker/Dockerfile.stdb-publish
+    container_name: mythic-vps-stdb-publish
+    restart: "no"
+    environment:
+      STDB_HOST: http://spacetimedb:3000
+      STDB_MODULE: ${STDB_MODULE:-mythicpvp}
+    depends_on:
+      spacetimedb:
+        condition: service_healthy
+    networks: [mythicnet-vps]
+
+  mythiccord:
+    build:
+      context: ../..
+      dockerfile: tools/docker/Dockerfile.mythiccord
+    container_name: mythic-vps-cord
+    restart: unless-stopped
+    ports:
+      - "${PUBLIC_BIND:-0.0.0.0}:${MYTHICCORD_PORT:-25565}:25565"
+      - "${ADMIN_BIND:-127.0.0.1}:${MYTHICCORD_ADMIN_PORT:-8080}:8080"
+    environment:
+      STDB_URI: http://spacetimedb:3000
+      STDB_MODULE: ${STDB_MODULE:-mythicpvp}
+      MYTHIC_SHARD_ID: ${MYTHICCORD_SHARD_ID:-proxy-vps-1}
+      MYTHIC_ROLE: ${MYTHICCORD_ROLE:-HUB}
+      MYTHIC_REGION: ${MYTHIC_REGION:-vps}
+      MYTHIC_ADDRESS: mythiccord:25565
+      MYTHIC_MAX_PLAYERS: ${MYTHIC_MAX_PLAYERS:-500}
+      MYTHIC_ADMIN_BIND: 0.0.0.0:8080
+      MYTHIC_LOG_FORMAT: ${MYTHIC_LOG_FORMAT:-json}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-vps-test}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-local}
+      RUST_LOG: ${RUST_LOG:-info,mythiccord=debug}
+    depends_on:
+      stdb-publish:
+        condition: service_completed_successfully
+    networks: [mythicnet-vps]
+
+  geyser:
+    build:
+      context: ../..
+      dockerfile: tools/docker/Dockerfile.geyser
+    container_name: mythic-vps-geyser
+    restart: unless-stopped
+    ports:
+      - "${PUBLIC_BIND:-0.0.0.0}:${GEYSER_BEDROCK_PORT:-19132}:19132/udp"
+    environment:
+      GEYSER_BEDROCK_PORT: "19132"
+      GEYSER_REMOTE_ADDRESS: ${GEYSER_REMOTE_ADDRESS:-hub}
+      GEYSER_REMOTE_PORT: ${GEYSER_REMOTE_PORT:-25565}
+      GEYSER_REMOTE_AUTH_TYPE: ${GEYSER_REMOTE_AUTH_TYPE:-online}
+    volumes:
+      - ./servers/geyser:/data
+      - ./geyser/packs:/data/packs:ro
+    depends_on:
+      hub:
+        condition: service_started
+    networks: [mythicnet-vps]
+
+  hub:
+    <<: *folia-base
+    container_name: mythic-vps-hub
+    hostname: hub
+    environment:
+      JAVA_OPTS: ${HUB_JAVA_OPTS:--Xms1G -Xmx2G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch}
+      STDB_URI: http://spacetimedb:3000
+      STDB_MODULE: ${STDB_MODULE:-mythicpvp}
+      SERVER_TYPE: hub
+      SHARD_ID: ${HUB_SHARD_ID:-hub-vps-1}
+      VIEW_DISTANCE: ${HUB_VIEW_DISTANCE:-8}
+      ONLINE_MODE: ${ONLINE_MODE:-false}
+      VOICE_HOST: ${VOICE_HOST:-localhost}
+      VOICE_PORT: "24454"
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-vps-test}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-local}
+    ports:
+      - "${PUBLIC_BIND:-0.0.0.0}:${HUB_PORT:-25566}:25565"
+      - "${PUBLIC_BIND:-0.0.0.0}:${HUB_VOICE_PORT:-24454}:24454/udp"
+      - "${ADMIN_BIND:-127.0.0.1}:${HUB_VOICE_WEB_PORT:-8090}:8090"
+    volumes:
+      - ./servers/hub:/data
+      - ./folia/plugins:/opt/folia/user-plugins:ro
+
+  skyblock-1:
+    <<: *folia-base
+    container_name: mythic-vps-skyblock-1
+    hostname: skyblock-1
+    environment:
+      JAVA_OPTS: ${SKYBLOCK_JAVA_OPTS:--Xms2G -Xmx4G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch}
+      STDB_URI: http://spacetimedb:3000
+      STDB_MODULE: ${STDB_MODULE:-mythicpvp}
+      SERVER_TYPE: skyblock
+      SHARD_ID: ${SKYBLOCK_SHARD_ID:-skyblock-vps-1}
+      VIEW_DISTANCE: ${SKYBLOCK_VIEW_DISTANCE:-6}
+      ONLINE_MODE: ${ONLINE_MODE:-false}
+      VOICE_HOST: ${VOICE_HOST:-localhost}
+      VOICE_PORT: "24454"
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-vps-test}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-local}
+    ports:
+      - "${PUBLIC_BIND:-0.0.0.0}:${SKYBLOCK_PORT:-25567}:25565"
+      - "${PUBLIC_BIND:-0.0.0.0}:${SKYBLOCK_VOICE_PORT:-24455}:24454/udp"
+      - "${ADMIN_BIND:-127.0.0.1}:${SKYBLOCK_VOICE_WEB_PORT:-8091}:8090"
+    volumes:
+      - ./servers/skyblock-1:/data
+      - ./folia/plugins:/opt/folia/user-plugins:ro
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mythic-vps-prometheus
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    ports:
+      - "${ADMIN_BIND:-127.0.0.1}:${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-vps-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=14d
+      - --web.enable-lifecycle
+    networks: [mythicnet-vps]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mythic-vps-grafana
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    ports:
+      - "${ADMIN_BIND:-127.0.0.1}:${GRAFANA_PORT:-3001}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-mythic}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-vps-data:/var/lib/grafana
+    depends_on: [prometheus]
+    networks: [mythicnet-vps]
+
+volumes:
+  stdb-vps-data:
+  prometheus-vps-data:
+  grafana-vps-data:
+
+networks:
+  mythicnet-vps:
+    driver: bridge

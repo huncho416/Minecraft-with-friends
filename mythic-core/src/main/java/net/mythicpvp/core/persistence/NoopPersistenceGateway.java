@@ -35,6 +35,7 @@ public final class NoopPersistenceGateway implements PersistenceGateway {
     @Override public void cosmeticGrant(@NotNull UUID player, @NotNull String cosmeticId,
                                         @NotNull String cosmeticType, @NotNull String source,
                                         @NotNull String reference) {}
+    @Override public void cosmeticEquip(@NotNull UUID player, @NotNull String cosmeticType, @NotNull String cosmeticId) {}
     @Override public void friendRequest(@NotNull UUID from, @NotNull UUID to) {}
     @Override public void friendAccept(long requestId) {}
     @Override public void friendDeny(long requestId) {}

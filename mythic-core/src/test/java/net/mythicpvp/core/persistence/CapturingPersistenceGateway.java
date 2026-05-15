@@ -71,6 +71,10 @@ public final class CapturingPersistenceGateway implements PersistenceGateway {
                                         @NotNull String reference) {
         calls.add(new CosmeticGrant(player, cosmeticId, cosmeticType, source, reference));
     }
+    public record CosmeticEquip(UUID player, String cosmeticType, String cosmeticId) {}
+    @Override public void cosmeticEquip(@NotNull UUID player, @NotNull String cosmeticType, @NotNull String cosmeticId) {
+        calls.add(new CosmeticEquip(player, cosmeticType, cosmeticId));
+    }
     @Override public void friendRequest(@NotNull UUID from, @NotNull UUID to) {
         calls.add(new FriendRequestCall(from, to));
     }

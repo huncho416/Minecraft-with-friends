@@ -39,6 +39,7 @@ public final class GrantFlowService {
                             "&7Staff Rank: &f" + yesNo(rank.staff()),
                             "&7Purchaseable: &f" + yesNo(rank.donator()),
                             "&7Prefix: &f" + rank.prefix(),
+                            "&7Suffix: &f" + (rank.suffix().isBlank() ? "None" : rank.suffix()),
                             "&7Parent: &f" + (rank.parent().isBlank() ? "None" : rank.parent()),
                             "&7Weight: &f" + rank.weight(),
                             "&7Permissions: &f" + rank.permissions().size(),
