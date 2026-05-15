@@ -44,6 +44,7 @@ apply_property "${DATA_DIR}/plugins/voicechat/voicechat-server.properties" port 
 apply_property "${DATA_DIR}/plugins/voicechat/voicechat-server.properties" voice_host "${VOICE_HOST:-}"
 
 mkdir -p "${DATA_DIR}/plugins"
+rm -rf "${DATA_DIR}/plugins/.paper-remapped"
 find "${DATA_DIR}/plugins" -maxdepth 1 -type f \( \
     -name 'suite-*.jar' -o \
     -name 'original-suite-*.jar' -o \
