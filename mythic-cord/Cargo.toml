@@ -6,12 +6,15 @@ members = [
     "plugin-routing",
     "proxy",
 ]
-
+exclude = [
+    "infrarust",
+]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.94"
+license-file = "infrarust/LICENSE"
 # Infrarust is AGPL-3.0 (plugin exception). Forking obliges us to publish
 # proxy source under the same license. Closed-source plugins are still OK.
 license = "AGPL-3.0-or-later"
