@@ -9,20 +9,27 @@ RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -ntp -pl mythic-core -am -DskipTests package
 
 FROM eclipse-temurin:21-jre-jammy AS folia-fetch
-ARG FOLIA_VERSION=1.21.1
+ARG FOLIA_VERSION=1.21.11
 ARG FOLIA_BUILD=latest
 WORKDIR /folia
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl jq ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 RUN set -eux; \
+    BUILDS_JSON=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" \
+        "https://fill.papermc.io/v3/projects/folia/versions/${FOLIA_VERSION}/builds"); \
     if [ "$FOLIA_BUILD" = "latest" ]; then \
-        FOLIA_BUILD=$(curl -fsSL "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}" \
-            | jq '.builds[-1]'); \
+        FOLIA_BUILD=$(printf '%s' "$BUILDS_JSON" \
+            | jq -r 'map(select((.channel | ascii_upcase) == "RECOMMENDED" or (.channel | ascii_upcase) == "STABLE")) | .[0].id // empty'); \
+        if [ -z "$FOLIA_BUILD" ]; then \
+            FOLIA_BUILD=$(printf '%s' "$BUILDS_JSON" | jq -r '.[0].id'); \
+        fi; \
     fi; \
-    JAR="folia-${FOLIA_VERSION}-${FOLIA_BUILD}.jar"; \
-    curl -fsSL -o folia.jar \
-        "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}/builds/${FOLIA_BUILD}/downloads/${JAR}"
+    DOWNLOAD_URL=$(printf '%s' "$BUILDS_JSON" \
+        | jq -r --arg build "$FOLIA_BUILD" 'map(select((.id | tostring) == $build)) | .[0].downloads.application.url'); \
+    test -n "$DOWNLOAD_URL"; \
+    test "$DOWNLOAD_URL" != "null"; \
+    curl -fsSL -o folia.jar "$DOWNLOAD_URL"
 
 FROM eclipse-temurin:21-jre-jammy AS voice-plugin-fetch
 ARG VOICE_PLUGINS=true
