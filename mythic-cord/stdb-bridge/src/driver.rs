@@ -226,58 +226,87 @@ async fn handle_command(
 }
 
 fn handle_incoming(text: &str, state: &mut InFlight) -> Result<(), String> {
-    tracing::info!("STDB INCOMING: {}", text);
     let value: Value = serde_json::from_str(text).map_err(|e| format!("json: {e}"))?;
     let obj = value.as_object().ok_or("expected object")?;
 
-    if let Some(req_id) = obj.get("requestId").and_then(Value::as_str) {
-        let id = Uuid::parse_str(req_id).map_err(|e| format!("uuid: {e}"))?;
-        if let Some(reply) = state.pending_calls.remove(&id) {
-            let result = if let Some(err) = obj.get("error").and_then(Value::as_str) {
-                Err(StdbError::ReducerRejected {
-                    reducer: obj
-                        .get("reducer")
-                        .and_then(Value::as_str)
-                        .unwrap_or("?")
-                        .into(),
-                    message: err.into(),
-                })
-            } else {
-                Ok(obj.get("payload").cloned().unwrap_or(Value::Null))
+    // We can ignore IdentityToken
+    if obj.contains_key("IdentityToken") {
+        return Ok(());
+    }
+
+    // Handle v1 CallReducerResponse if present
+    if let Some(call_res) = obj.get("CallReducerResponse") {
+        if let Some(req_id) = call_res.get("request_id").and_then(Value::as_str) {
+            let id = match Uuid::parse_str(req_id) {
+                Ok(u) => u,
+                Err(_) => return Ok(()),
             };
-            let _ = reply.send(result);
+            if let Some(reply) = state.pending_calls.remove(&id) {
+                let result = if let Some(err) = call_res.get("error").and_then(Value::as_str) {
+                    Err(StdbError::ReducerRejected {
+                        reducer: "?".into(),
+                        message: err.into(),
+                    })
+                } else {
+                    Ok(call_res.get("payload").cloned().unwrap_or(Value::Null))
+                };
+                let _ = reply.send(result);
+            }
         }
         return Ok(());
     }
 
-    if let Some(table) = obj.get("table").and_then(Value::as_str) {
-        let op = match obj.get("operation").and_then(Value::as_str) {
-            Some("insert") => TableOp::Insert,
-            Some("delete") => TableOp::Delete,
-            _ => TableOp::Update,
-        };
-        let payload = obj
-            .get("payload")
-            .map(ToString::to_string)
-            .unwrap_or_default();
+    // Handle v1 Subscription data
+    let db_update = if let Some(init) = obj.get("InitialSubscription") {
+        init.get("database_update")
+    } else if let Some(update) = obj.get("SubscriptionUpdate") {
+        update.get("database_update")
+    } else {
+        None
+    };
 
-        let subs = state
-            .subscriptions
-            .iter()
-            .find(|(k, _)| **k == table)
-            .map(|(k, v)| (*k, v.clone()));
-        if let Some((static_table, senders)) = subs {
-            let event = TableEvent {
-                table: static_table,
-                op,
-                payload,
-            };
-            for s in senders {
-                let _ = s.send(event.clone());
+    if let Some(db_update) = db_update {
+        if let Some(tables) = db_update.get("tables").and_then(Value::as_array) {
+            for table_obj in tables {
+                if let Some(table_name) = table_obj.get("table_name").and_then(Value::as_str) {
+                    if let Some(updates) = table_obj.get("updates").and_then(Value::as_array) {
+                        for update in updates {
+                            if let Some(inserts) = update.get("inserts").and_then(Value::as_array) {
+                                for insert in inserts {
+                                    dispatch_event(table_name, TableOp::Insert, insert.as_str().unwrap_or_default().to_string(), state);
+                                }
+                            }
+                            if let Some(deletes) = update.get("deletes").and_then(Value::as_array) {
+                                for delete in deletes {
+                                    dispatch_event(table_name, TableOp::Delete, delete.as_str().unwrap_or_default().to_string(), state);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+
     Ok(())
+}
+
+fn dispatch_event(table: &str, op: TableOp, payload: String, state: &mut InFlight) {
+    let subs = state
+        .subscriptions
+        .iter()
+        .find(|(k, _)| **k == table)
+        .map(|(k, v)| (*k, v.clone()));
+    if let Some((static_table, senders)) = subs {
+        let event = TableEvent {
+            table: static_table,
+            op,
+            payload,
+        };
+        for s in senders {
+            let _ = s.send(event.clone());
+        }
+    }
 }
 
 pub async fn assert_schema_version(handle: &StdbHandle) -> StdbResult<()> {
