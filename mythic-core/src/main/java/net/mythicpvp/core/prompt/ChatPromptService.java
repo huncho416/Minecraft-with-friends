@@ -27,9 +27,11 @@ public final class ChatPromptService implements Listener {
     }
 
     public void await(@NotNull Player player, @NotNull BiConsumer<Player, String> handler) {
-        prompts.put(player.getUniqueId(), handler);
+        boolean alreadyWaiting = prompts.put(player.getUniqueId(), handler) != null;
         player.closeInventory();
-        player.sendMessage("Enter the value in chat, or type cancel.");
+        if (!alreadyWaiting) {
+            player.sendMessage("Enter the value in chat, or type cancel.");
+        }
     }
 
     public void cancel(@NotNull UUID player) {

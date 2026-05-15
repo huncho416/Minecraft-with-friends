@@ -4,7 +4,9 @@ import net.mythicpvp.suite.protocol.ProtocolManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class StaffChannelService {
@@ -14,6 +16,7 @@ public final class StaffChannelService {
     private final String serverId;
     private final List<StaffAudience> audiences = new CopyOnWriteArrayList<>();
     private final List<StaffMessage> history = new CopyOnWriteArrayList<>();
+    private final Map<UUID, StaffChannel> toggles = new ConcurrentHashMap<>();
 
     public StaffChannelService(@NotNull ProtocolManager protocolManager, @NotNull String serverId) {
         this.protocolManager = protocolManager;
@@ -28,6 +31,24 @@ public final class StaffChannelService {
     public void send(@NotNull StaffChannel channel, @NotNull UUID senderUuid, @NotNull String senderName, @NotNull String rank, @NotNull String rankColor, @NotNull String message) {
         StaffMessage staffMessage = new StaffMessage(channel, serverId, senderUuid, senderName, rank, rankColor, message, System.currentTimeMillis());
         protocolManager.publish(CHANNEL, staffMessage);
+    }
+
+    public boolean toggle(@NotNull UUID playerUuid, @NotNull StaffChannel channel) {
+        StaffChannel current = toggles.get(playerUuid);
+        if (current == channel) {
+            toggles.remove(playerUuid);
+            return false;
+        }
+        toggles.put(playerUuid, channel);
+        return true;
+    }
+
+    public void clearToggle(@NotNull UUID playerUuid) {
+        toggles.remove(playerUuid);
+    }
+
+    public StaffChannel toggledChannel(@NotNull UUID playerUuid) {
+        return toggles.get(playerUuid);
     }
 
     @NotNull

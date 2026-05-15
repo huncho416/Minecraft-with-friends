@@ -13,11 +13,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiPredicate;
 
 public final class NametagManager {
 
     private static final NametagManager INSTANCE = new NametagManager();
+    private static final boolean FOLIA = detectFolia();
     private final Map<UUID, NametagData> nametags = new ConcurrentHashMap<>();
+    private volatile BiPredicate<Player, Player> visibilityPredicate = (viewer, target) -> true;
 
     private NametagManager() {}
 
@@ -33,6 +36,10 @@ public final class NametagManager {
     public void setNametag(@NotNull Player player, @NotNull String prefix, @NotNull String suffix, int sortWeight, @Nullable String glowColor) {
         nametags.put(player.getUniqueId(), new NametagData(prefix, suffix, sortWeight, glowColor));
         applyToAll(player);
+    }
+
+    public void setVisibilityPredicate(@NotNull BiPredicate<Player, Player> visibilityPredicate) {
+        this.visibilityPredicate = visibilityPredicate;
     }
 
     public void loadNametag(@NotNull Player player, @NotNull ConfigText text, @NotNull String key) {
@@ -78,16 +85,21 @@ public final class NametagManager {
     }
 
     private void applyFor(@NotNull Player viewer, @NotNull Player target, @NotNull NametagData data) {
-        Scoreboard board = viewer.getScoreboard();
-        String teamName = teamName(data.sortWeight(), target.getUniqueId());
-        Team team = board.getTeam(teamName);
-        if (team == null) {
-            team = board.registerNewTeam(teamName);
+        if (!visibilityPredicate.test(viewer, target)) {
+            return;
         }
-        team.prefix(MythicHex.colorize(data.prefix()));
-        team.suffix(MythicHex.colorize(data.suffix()));
-        if (!team.hasEntry(target.getName())) {
-            team.addEntry(target.getName());
+        if (!FOLIA) {
+            Scoreboard board = viewer.getScoreboard();
+            String teamName = teamName(data.sortWeight(), target.getUniqueId());
+            Team team = board.getTeam(teamName);
+            if (team == null) {
+                team = board.registerNewTeam(teamName);
+            }
+            team.prefix(MythicHex.colorize(data.prefix()));
+            team.suffix(MythicHex.colorize(data.suffix()));
+            if (!team.hasEntry(target.getName())) {
+                team.addEntry(target.getName());
+            }
         }
         String displayName = DisguiseManager.getInstance().getVisibleName(viewer.getUniqueId(), target.getUniqueId(), target.getName());
         PacketAction.send(viewer, new PacketAction.NametagState(
@@ -108,6 +120,9 @@ public final class NametagManager {
 
     public void remove(@NotNull Player player) {
         nametags.remove(player.getUniqueId());
+        if (FOLIA) {
+            return;
+        }
         for (Player viewer : player.getServer().getOnlinePlayers()) {
             Scoreboard board = viewer.getScoreboard();
             for (Team team : board.getTeams()) {
@@ -129,6 +144,16 @@ public final class NametagManager {
 
     public void clear() {
         nametags.clear();
+        visibilityPredicate = (viewer, target) -> true;
+    }
+
+    private static boolean detectFolia() {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     public record NametagData(@NotNull String prefix, @NotNull String suffix, int sortWeight, @Nullable String glowColor) {

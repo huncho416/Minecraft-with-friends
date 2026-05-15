@@ -77,6 +77,9 @@ public final class ConfigText {
 
     @NotNull
     private String path(@NotNull String key) {
-        return root.isBlank() ? key : root + "." + key;
+        if (root.isBlank() || key.equals(root) || key.startsWith(root + ".")) {
+            return key;
+        }
+        return root + "." + key;
     }
 }

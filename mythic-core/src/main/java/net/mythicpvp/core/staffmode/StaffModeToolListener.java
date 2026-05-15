@@ -1,18 +1,21 @@
 package net.mythicpvp.core.staffmode;
 
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mythicpvp.core.config.CoreMessages;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
@@ -98,9 +101,15 @@ public final class StaffModeToolListener implements Listener {
     }
 
     @EventHandler
+    public void onJoin(@NotNull PlayerJoinEvent event) {
+        staff.refreshVisibility();
+    }
+
+    @EventHandler
     public void onQuit(@NotNull PlayerQuitEvent event) {
 
         staff.onQuit(event.getPlayer());
+        staff.refreshVisibility();
     }
 
     private void handleInspect(@NotNull Player staffPlayer, @NotNull Player target) {
@@ -109,7 +118,7 @@ public final class StaffModeToolListener implements Listener {
         String rankName = rank == null ? "default" : rank.name();
         staffPlayer.sendMessage(messages.component(
                 "messages.staff-mode.inspect",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFF%target%: rank=%rank% gamemode=%gamemode%",
+                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â» &#FFFFFF%target%: rank=%rank% gamemode=%gamemode%",
                 Map.of(
                         "target", target.getName(),
                         "rank", rankName,
@@ -121,8 +130,8 @@ public final class StaffModeToolListener implements Listener {
         staffPlayer.sendMessage(messages.component(
                 nowFrozen ? "messages.staff-mode.frozen" : "messages.staff-mode.unfrozen",
                 nowFrozen
-                        ? "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CFroze &#FFFFFF%target%&#9CFF9C."
-                        : "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CUnfroze &#FFFFFF%target%&#9CFF9C.",
+                        ? "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â» &#9CFF9CFroze &#FFFFFF%target%&#9CFF9C."
+                        : "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8Â» &#9CFF9CUnfroze &#FFFFFF%target%&#9CFF9C.",
                 Map.of("target", target.getName())));
     }
 
@@ -134,30 +143,23 @@ public final class StaffModeToolListener implements Listener {
             return;
         }
         Player chosen = candidates.get((int) (Math.random() * candidates.size()));
-        staffPlayer.teleport(chosen.getLocation());
+        staffPlayer.teleportAsync(chosen.getLocation());
     }
 
+    @Nullable
     private StaffModeTool matchTool(@NotNull ItemStack item) {
         ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.hasDisplayName()) {
+        if (meta == null) {
             return null;
         }
-        String displayName = PlainTextComponentSerializer.plainText().serialize(meta.displayName());
-        for (StaffModeTool tool : staff.tools()) {
-
-            String configuredPlain = stripHex(tool.name());
-            if (configuredPlain.equals(displayName) && item.getType() == tool.material()) {
-                return tool;
-            }
+        NamespacedKey key = staff.toolKey();
+        if (key == null) {
+            return null;
         }
-        return null;
-    }
-
-    @NotNull
-    private static String stripHex(@NotNull String input) {
-
-        return input.replaceAll("&#[0-9A-Fa-f]{6}", "")
-                .replaceAll("&[0-9a-fk-or]", "")
-                .trim();
+        String type = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+        if (type == null) {
+            return null;
+        }
+        return staff.toolByType(type);
     }
 }

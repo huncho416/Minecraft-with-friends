@@ -1,6 +1,11 @@
 package net.mythicpvp.core.persistence;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import net.mythicpvp.core.punishment.PunishmentCategory;
 import net.mythicpvp.core.punishment.PunishmentRecord;
 import net.mythicpvp.core.punishment.PunishmentTemplate;
@@ -43,7 +48,31 @@ import java.util.logging.Logger;
 
 public final class StdbPersistenceGateway implements PersistenceGateway {
 
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = buildGson();
+
+    private static Gson buildGson() {
+        JsonDeserializer<Long> stdbLong = (json, type, ctx) -> {
+            if (json.isJsonPrimitive()) {
+                JsonPrimitive p = json.getAsJsonPrimitive();
+                return p.isNumber() ? p.getAsLong() : Long.parseLong(p.getAsString());
+            }
+            if (json.isJsonObject()) {
+                JsonObject obj = json.getAsJsonObject();
+                JsonElement micros = obj.get("__timestamp_micros_since_unix_epoch__");
+                if (micros == null) {
+                    micros = obj.get("__time_duration_micros__");
+                }
+                if (micros != null && micros.isJsonPrimitive()) {
+                    return micros.getAsLong();
+                }
+            }
+            return 0L;
+        };
+        return new GsonBuilder()
+                .registerTypeAdapter(Long.class, stdbLong)
+                .registerTypeAdapter(long.class, stdbLong)
+                .create();
+    }
 
     private final Logger logger;
     private final MythicSchema schema;

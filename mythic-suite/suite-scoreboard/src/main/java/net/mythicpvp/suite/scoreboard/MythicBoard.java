@@ -17,6 +17,8 @@ import java.util.List;
 
 public class MythicBoard {
 
+    private static final boolean FOLIA = detectFolia();
+
     private final Player player;
     private final Scoreboard scoreboard;
     private final Objective objective;
@@ -29,10 +31,15 @@ public class MythicBoard {
     public MythicBoard(@NotNull Player player, @NotNull String title) {
         this.player = player;
         this.title = title;
-        this.scoreboard = player.getServer().getScoreboardManager().getNewScoreboard();
-        this.objective = scoreboard.registerNewObjective("mythic", Criteria.DUMMY, MythicHex.colorize(title));
-        this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-        player.setScoreboard(scoreboard);
+        if (FOLIA) {
+            this.scoreboard = null;
+            this.objective = null;
+        } else {
+            this.scoreboard = player.getServer().getScoreboardManager().getNewScoreboard();
+            this.objective = scoreboard.registerNewObjective("mythic", Criteria.DUMMY, MythicHex.colorize(title));
+            this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+            player.setScoreboard(scoreboard);
+        }
         emit();
     }
 
@@ -46,7 +53,9 @@ public class MythicBoard {
     @NotNull
     public MythicBoard setTitle(@NotNull String title) {
         this.title = title;
-        objective.displayName(MythicHex.font(fontKey, title));
+        if (objective != null) {
+            objective.displayName(MythicHex.font(fontKey, title));
+        }
         emit();
         return this;
     }
@@ -105,15 +114,17 @@ public class MythicBoard {
     }
 
     private void rebuild() {
-        for (String entry : scoreboard.getEntries()) {
-            scoreboard.resetScores(entry);
-        }
-        for (int i = 0; i < lines.size(); i++) {
-            String entry = MythicHex.toLegacy(MythicHex.font(fontKey, lines.get(i)));
-            if (entry.isBlank()) {
-                entry = " ".repeat(i + 1);
+        if (scoreboard != null && objective != null) {
+            for (String entry : scoreboard.getEntries()) {
+                scoreboard.resetScores(entry);
             }
-            objective.getScore(entry).setScore(lines.size() - i);
+            for (int i = 0; i < lines.size(); i++) {
+                String entry = MythicHex.toLegacy(MythicHex.font(fontKey, lines.get(i)));
+                if (entry.isBlank()) {
+                    entry = " ".repeat(i + 1);
+                }
+                objective.getScore(entry).setScore(lines.size() - i);
+            }
         }
         emit();
     }
@@ -124,7 +135,18 @@ public class MythicBoard {
     }
 
     public void remove() {
-        player.setScoreboard(player.getServer().getScoreboardManager().getMainScoreboard());
+        if (!FOLIA) {
+            player.setScoreboard(player.getServer().getScoreboardManager().getMainScoreboard());
+        }
+    }
+
+    private static boolean detectFolia() {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     @NotNull

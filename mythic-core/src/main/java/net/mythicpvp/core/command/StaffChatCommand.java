@@ -34,7 +34,10 @@ public abstract class StaffChatCommand extends MythicCommand {
     @Default
     public void execute(@NotNull Player sender, @NotNull String[] words) {
         if (words.length == 0) {
-            sender.sendMessage("Usage: /" + channel.id() + "chat <message...>");
+            boolean enabled = staffChat.toggle(sender.getUniqueId(), channel);
+            sender.sendMessage(enabled
+                    ? "Staff chat toggled: " + channel.id()
+                    : "Staff chat toggled off.");
             return;
         }
         String message = String.join(" ", words);
@@ -47,7 +50,7 @@ public abstract class StaffChatCommand extends MythicCommand {
         staffChat.send(channel, uuid, sender.getName(), rankName, rankColor, message);
     }
 
-    @CommandAlias("staffchat")
+    @CommandAlias("staffchat|sc")
     @CommandPermission("mythic.core.staffchat")
     public static final class Staff extends StaffChatCommand {
         public Staff(@NotNull StaffChannelService s, @NotNull RankService r, @NotNull GrantService g) {
@@ -55,7 +58,7 @@ public abstract class StaffChatCommand extends MythicCommand {
         }
     }
 
-    @CommandAlias("builderchat")
+    @CommandAlias("builderchat|bc")
     @CommandPermission("mythic.core.builderchat")
     public static final class Builder extends StaffChatCommand {
         public Builder(@NotNull StaffChannelService s, @NotNull RankService r, @NotNull GrantService g) {
@@ -63,7 +66,7 @@ public abstract class StaffChatCommand extends MythicCommand {
         }
     }
 
-    @CommandAlias("managementchat")
+    @CommandAlias("managementchat|mc")
     @CommandPermission("mythic.core.managementchat")
     public static final class Management extends StaffChatCommand {
         public Management(@NotNull StaffChannelService s, @NotNull RankService r, @NotNull GrantService g) {
@@ -71,7 +74,7 @@ public abstract class StaffChatCommand extends MythicCommand {
         }
     }
 
-    @CommandAlias("adminchat")
+    @CommandAlias("adminchat|ac")
     @CommandPermission("mythic.core.adminchat")
     public static final class Admin extends StaffChatCommand {
         public Admin(@NotNull StaffChannelService s, @NotNull RankService r, @NotNull GrantService g) {
@@ -79,7 +82,7 @@ public abstract class StaffChatCommand extends MythicCommand {
         }
     }
 
-    @CommandAlias("ownerchat")
+    @CommandAlias("ownerchat|oc")
     @CommandPermission("mythic.core.ownerchat")
     public static final class Owner extends StaffChatCommand {
         public Owner(@NotNull StaffChannelService s, @NotNull RankService r, @NotNull GrantService g) {

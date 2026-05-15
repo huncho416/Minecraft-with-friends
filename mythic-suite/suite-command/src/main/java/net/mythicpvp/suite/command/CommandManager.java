@@ -67,14 +67,20 @@ public final class CommandManager {
 
         RegisteredCommand registered = new RegisteredCommand(command, permAnnotation != null ? permAnnotation.value() : null);
 
-        for (Method method : command.getClass().getDeclaredMethods()) {
-            method.setAccessible(true);
-            if (method.isAnnotationPresent(Default.class)) {
-                registered.setDefaultHandler(method);
-            } else if (method.isAnnotationPresent(Subcommand.class)) {
-                String sub = method.getAnnotation(Subcommand.class).value().toLowerCase();
-                registered.addSubcommand(sub, method);
+        Class<?> scan = command.getClass();
+        while (scan != null && scan != Object.class) {
+            for (Method method : scan.getDeclaredMethods()) {
+                method.setAccessible(true);
+                if (method.isAnnotationPresent(Default.class) && registered.getDefaultHandler() == null) {
+                    registered.setDefaultHandler(method);
+                } else if (method.isAnnotationPresent(Subcommand.class)) {
+                    String sub = method.getAnnotation(Subcommand.class).value().toLowerCase();
+                    if (registered.getSubcommand(sub) == null) {
+                        registered.addSubcommand(sub, method);
+                    }
+                }
             }
+            scan = scan.getSuperclass();
         }
 
         for (String alias : aliases) {
@@ -84,14 +90,14 @@ public final class CommandManager {
         Command bukkitCommand = new Command(primaryAlias, "", "", Arrays.asList(aliases)) {
             @Override
             public boolean execute(@NotNull CommandSender sender, @NotNull String label, @NotNull String[] args) {
-                handleCommand(sender, primaryAlias, args);
+                CommandManager.this.handleCommand(sender, label.toLowerCase(Locale.ROOT), args);
                 return true;
             }
 
             @Override
             @NotNull
             public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
-                return tabComplete(sender, primaryAlias, args);
+                return CommandManager.this.tabComplete(sender, alias.toLowerCase(Locale.ROOT), args);
             }
         };
 

@@ -44,7 +44,16 @@ public final class RankEditorCommand extends MythicCommand {
 
     @Default
     @Complete({"ranks"})
-    public void execute(@NotNull Player player, @NotNull String rankId) {
+    public void execute(@NotNull Player player, @NotNull String[] args) {
+        if (args.length == 0) {
+            if (editorMenu != null) {
+                editorMenu.openRankList(player);
+                return;
+            }
+            player.sendMessage("Usage: /rankeditor <rank>");
+            return;
+        }
+        String rankId = args[0];
         var rank = rankService.get(rankId);
         if (rank == null) {
             player.sendMessage("Unknown rank.");
