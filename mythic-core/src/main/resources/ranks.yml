@@ -11,8 +11,9 @@ ranks:
     parent: ""
     permissions:
       - "mythic.join"
+      - "mythic.core.chatcolor"
     chat-prefix: "&#D2D8E0"
-    chat-format: "%chat_prefix%%player%&7: &#FFFFFF%message%"
+    chat-format: "&#D2D8E0%player% &8» &7%message%"
     tab-prefix: "&#D2D8E0"
     tab-format: "%tab_prefix%%player%"
     nametag-prefix: "&#D2D8E0"
@@ -29,6 +30,7 @@ ranks:
     parent: "default"
     permissions:
       - "mythic.*"
+      - "mythic.core.color.*"
     chat-prefix: "&#DD3838O&#E01B1Bw&#E72C2Cn&#EE3D3De&#EE0B0Br #DE2222"
     chat-format: "%chat_prefix%%player%&7: &#FFFFFF%message%"
     tab-prefix: "&#D22020&lO&#DE2222&lW&#C12D2D&lN&#A43737&lE&#E90000&lR #FFFFFF&l"

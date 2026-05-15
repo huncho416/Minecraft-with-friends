@@ -13,12 +13,11 @@ spawn:
 # `server_registry.role` column populated by mythic-core's
 # registry heartbeat. Servers in the registry are auto-discovered
 # and grouped by role; the entries below define the icon + label
-# shown for each group.
+# shown for each group. The HUB role is intentionally absent — players
+# return to a hub via the dedicated beacon at hotbar slot 9, not the
+# gamemode selector.
 selector:
   groups:
-    - role: "HUB"
-      display-name: "&#F529BEHub"
-      material: "BEACON"
     - role: "SKYBLOCK"
       display-name: "&#F529BESkyblock"
       material: "GRASS_BLOCK"

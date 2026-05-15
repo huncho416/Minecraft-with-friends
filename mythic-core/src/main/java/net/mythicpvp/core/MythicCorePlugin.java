@@ -2,7 +2,10 @@ package net.mythicpvp.core;
 
 import net.mythicpvp.core.announce.BroadcastService;
 import net.mythicpvp.core.audit.CoreAuditLog;
+import net.mythicpvp.core.chat.ChatColorMenuService;
+import net.mythicpvp.core.chat.ChatColorService;
 import net.mythicpvp.core.chat.ChatControlService;
+import net.mythicpvp.core.chat.ChatFormatListener;
 import net.mythicpvp.core.cosmetic.RankBundleGrantHook;
 import net.mythicpvp.core.cosmetic.RankCosmeticBundles;
 import net.mythicpvp.core.chat.ChatGuard;
@@ -97,6 +100,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private PunishmentService punishmentService;
     private PunishmentMenuService punishmentMenuService;
     private ChatControlService chatControlService;
+    private ChatColorService chatColorService;
     private RankService rankService;
     private GrantService grantService;
     private GrantFlowService grantFlowService;
@@ -187,9 +191,19 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         getServer().getPluginManager().registerEvents(new net.mythicpvp.core.security.OpCommandGuard(), this);
         net.mythicpvp.core.transfer.ProxyTransferService transferService =
                 new net.mythicpvp.core.transfer.ProxyTransferService(this);
+        net.mythicpvp.core.transfer.TransferQueueService transferQueueService =
+                new net.mythicpvp.core.transfer.TransferQueueService(
+                        this, transferService, rankService, grantService);
+        getServer().getServicesManager().register(
+                net.mythicpvp.core.transfer.TransferQueueService.class,
+                transferQueueService,
+                this,
+                org.bukkit.plugin.ServicePriority.Normal);
         commandManager.register(new net.mythicpvp.core.command.ServerCommand(transferService, messages));
         commandManager.register(new net.mythicpvp.core.command.HubCommand(
                 transferService, messages, serverIdentity.id(), serverIdentity.type(), getLogger()));
+        commandManager.register(new net.mythicpvp.core.command.QueueCommand(transferQueueService));
+        displayService.setQueuePositionLookup(transferQueueService::position);
         commandManager.register(new GrantCommand(grantFlowService));
         commandManager.register(new GrantsCommand(grantService, rankService));
         commandManager.register(new CGrantCommand(grantService));
@@ -298,6 +312,13 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());
         ChatGuard chatGuard = new ChatGuard(this, chatControlService, punishmentService, messages);
         getServer().getPluginManager().registerEvents(chatGuard, this);
+        chatColorService = new ChatColorService();
+        getServer().getPluginManager().registerEvents(
+                new ChatFormatListener(rankService, grantService, configManager.getOrCreate("core"), chatColorService),
+                this);
+        ChatColorMenuService chatColorMenuService = new ChatColorMenuService(chatColorService);
+        commandManager.register(new net.mythicpvp.core.command.ChatColorCommand(chatColorMenuService));
+        commandManager.register(new net.mythicpvp.core.command.CcCommand(chatColorMenuService));
         commandManager.register(new ChatCommand(chatControlService, messages));
         commandManager.register(new net.mythicpvp.core.command.UnmuteCommand(chatControlService, messages));
 
@@ -383,6 +404,11 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     @NotNull
     public ChatControlService chatControlService() {
         return chatControlService;
+    }
+
+    @NotNull
+    public ChatColorService chatColorService() {
+        return chatColorService;
     }
 
     @NotNull

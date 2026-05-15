@@ -1,5 +1,22 @@
+# mythic-core network-wide config.
+#
+# `chat.format.default` is the chat template applied to players whose active
+# rank is `default` (or whose rank has no chat-format of its own). Non-default
+# ranks fall back to their per-rank `chat-format` from ranks.yml.
+#
+# Placeholders:
+#   %player%       - sender name
+#   %message%      - sanitized message body, prefixed with the player's chosen
+#                    chat color (or rank color, or &7 fallback)
+#   %chat_prefix%  - rank's chat-prefix from ranks.yml
+#   %rank%         - rank name
+#   %rank_color%   - rank color as &#RRGGBB
+
 server:
   id: "local"
   type: "development"
 links:
   discord: "https://discord.gg/mythicpvp"
+chat:
+  format:
+    default: "&#D2D8E0%player% &8» &7%message%"

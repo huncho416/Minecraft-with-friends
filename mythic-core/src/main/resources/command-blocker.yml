@@ -39,6 +39,24 @@ blocked-commands:
   - "bukkit:about"
   - "tps"
   - "mem"
+  # Chat-bypass guard. ChatGuard only sees AsyncChatEvent — these commands
+  # emit chat through different code paths and would otherwise let players
+  # talk while chat is muted/slowed, or DM via Minecraft's built-in path
+  # instead of mythic-core's PrivateMessageCommand. The vanilla `me` and
+  # `say` are blocked outright; the namespaced versions of mythic-core's
+  # /msg /tell /w /r aliases (minecraft:tell etc.) are blocked so they
+  # can't sidestep mute by going through Bukkit's default impl.
+  - "me"
+  - "minecraft:me"
+  - "say"
+  - "minecraft:say"
+  - "minecraft:tell"
+  - "minecraft:msg"
+  - "minecraft:w"
+  - "minecraft:teammsg"
+  - "minecraft:tm"
+  - "teammsg"
+  - "tm"
 
 # Permission gates for staff-only commands. Ops bypass via the bypass
 # permission. Each entry is `<command-with-namespace?>: <permission>`.
@@ -99,6 +117,10 @@ required-permissions:
   credits: "mythic.core.credits"
   creditshop: "mythic.core.creditshop"
   server: "mythic.core.server.transfer"
+  buildmode: "mythic.hub.buildmode"
+  queue: "mythic.core.queue.admin"
   # /appeal is intentionally NOT permission-gated — anyone can file.
   # /hub /lobby /serverselector /servers /selector are intentionally
   # NOT permission-gated — anyone can use them.
+  # /chatcolor /cc are intentionally NOT permission-gated — anyone can
+  # open the menu. Per-color access is gated by mythic.core.color.<name>.

@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.IntSupplier;
 
 public final class DisplayService {
@@ -36,6 +37,7 @@ public final class DisplayService {
     private String scoreboardTitle = "";
     private List<String> scoreboardLines = List.of();
     private StaffModeService staffModeService;
+    private Function<UUID, Integer> queuePositionLookup;
 
     public DisplayService(
             @NotNull JavaPlugin plugin,
@@ -46,6 +48,10 @@ public final class DisplayService {
         this.rankService = rankService;
         this.grantService = grantService;
         this.serverId = serverId;
+    }
+
+    public void setQueuePositionLookup(@NotNull Function<UUID, Integer> lookup) {
+        this.queuePositionLookup = lookup;
     }
 
     public void setStaffModeService(@NotNull StaffModeService staffModeService) {
@@ -149,7 +155,17 @@ public final class DisplayService {
                 .set("suffix", rank.suffix())
 
                 .set("cosmetic_chat_tag", cosmeticDisplay(player.getUniqueId(), CosmeticType.CHAT_TAG))
-                .set("cosmetic_title", cosmeticDisplay(player.getUniqueId(), CosmeticType.TITLE));
+                .set("cosmetic_title", cosmeticDisplay(player.getUniqueId(), CosmeticType.TITLE))
+                .set("queue_position", queuePositionDisplay(player.getUniqueId()));
+    }
+
+    @NotNull
+    private String queuePositionDisplay(@NotNull UUID playerUuid) {
+        if (queuePositionLookup == null) {
+            return "";
+        }
+        Integer pos = queuePositionLookup.apply(playerUuid);
+        return pos == null ? "" : "#" + pos;
     }
 
     @NotNull
