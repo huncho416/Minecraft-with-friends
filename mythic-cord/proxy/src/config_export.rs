@@ -14,7 +14,7 @@ use tracing::{debug, info, warn};
 struct ExportedServerConfig<'a> {
     name: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
-    network: Option<&'a str>,
+    network: Option<String>,
     addresses: Vec<&'a str>,
     domains: Vec<String>,
     proxy_mode: &'static str,
@@ -89,7 +89,7 @@ impl ConfigExporter {
     async fn write_one(&self, entry: &ServerEntry) -> std::io::Result<()> {
         let proxy_mode = proxy_mode_str(&self.proxy_mode);
         let network = if proxy_mode_supports_network(proxy_mode) {
-            Some(entry.role.as_str())
+            Some(sanitize_network(&entry.role))
         } else {
             None
         };
@@ -177,6 +177,12 @@ fn proxy_mode_supports_network(proxy_mode: &str) -> bool {
     matches!(proxy_mode, "client_only" | "offline")
 }
 
+fn sanitize_network(role: &str) -> String {
+    role.chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c.to_ascii_lowercase() } else if c == '_' || c == '-' { c } else { '_' })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -252,6 +258,31 @@ mod tests {
             .collect();
         assert!(listing.contains(&"hub-1.toml".to_string()));
         assert!(!listing.contains(&"ghost.toml".to_string()));
+    }
+
+    #[tokio::test]
+    async fn client_only_proxy_mode_writes_lowercase_network() {
+        let tmp = tempfile::tempdir().unwrap();
+        let view = RegistryView::new();
+        view.insert_entry(entry("hub-1", "HUB", ServerStatus::Healthy, 5));
+        view.insert_entry(entry("sb-1", "SKYBLOCK", ServerStatus::Healthy, 0));
+        let mut exp = exporter(view.clone(), tmp.path().to_path_buf());
+        exp.proxy_mode = "client_only".into();
+        exp.write_all(&view.snapshot()).await.unwrap();
+        let hub_body = std::fs::read_to_string(tmp.path().join("hub-1.toml")).unwrap();
+        let sky_body = std::fs::read_to_string(tmp.path().join("sb-1.toml")).unwrap();
+        assert!(hub_body.contains("network = \"hub\""), "hub body: {hub_body}");
+        assert!(sky_body.contains("network = \"skyblock\""), "sky body: {sky_body}");
+        assert!(hub_body.contains("proxy_mode = \"client_only\""));
+    }
+
+    #[test]
+    fn sanitize_network_lowercases_and_replaces_invalid_chars() {
+        assert_eq!(sanitize_network("HUB"), "hub");
+        assert_eq!(sanitize_network("SKYBLOCK"), "skyblock");
+        assert_eq!(sanitize_network("Game.Mode"), "game_mode");
+        assert_eq!(sanitize_network("evt-1"), "evt-1");
+        assert_eq!(sanitize_network("under_score"), "under_score");
     }
 
     #[test]
