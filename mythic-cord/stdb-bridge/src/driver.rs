@@ -99,12 +99,21 @@ async fn driver_main(config: DriverConfig, mut rx: mpsc::Receiver<Command>) {
 }
 
 async fn connect(config: &DriverConfig) -> Result<WsStream, String> {
+    use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+    
     let url = config
         .stdb_uri
         .replacen("http://", "ws://", 1)
         .replacen("https://", "wss://", 1);
     let url = format!("{url}/v1/database/{}/subscribe", config.module_name);
-    let (ws, _) = tokio_tungstenite::connect_async(&url)
+    
+    let mut req = url.into_client_request().map_err(|e| format!("bad url: {e}"))?;
+    req.headers_mut().insert(
+        "Sec-WebSocket-Protocol",
+        "v1.json.spacetimedb".parse().unwrap()
+    );
+
+    let (ws, _) = tokio_tungstenite::connect_async(req)
         .await
         .map_err(|e| format!("ws connect to {url}: {e}"))?;
     Ok(ws)
