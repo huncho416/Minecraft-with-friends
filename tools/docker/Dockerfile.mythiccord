@@ -9,7 +9,7 @@
 # traffic. That's enough for the rest of the network to come up.
 
 ARG RUST_VERSION=1.94
-ARG MYTHICCORD_FEATURES=
+ARG MYTHICCORD_FEATURES=with-infrarust
 
 FROM rust:${RUST_VERSION}-slim-bookworm AS build
 ARG MYTHICCORD_FEATURES

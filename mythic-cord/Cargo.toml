@@ -5,11 +5,9 @@ members = [
     "stdb-bridge",
     "plugin-routing",
     "proxy",
-    # "infrarust/crates/*",   # added by tools/vendor-infrarust.sh after `init`
+    "infrarust/crates/*",
 ]
-exclude = [
-    "infrarust",
-]
+
 
 [workspace.package]
 version = "0.1.0"
