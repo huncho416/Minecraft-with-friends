@@ -15,6 +15,16 @@ public final class ReportService {
 
     private final Map<Long, Report> reports = new ConcurrentHashMap<>();
     private final AtomicLong sequence = new AtomicLong();
+    private volatile ReportStore store;
+
+    public void setStore(@NotNull ReportStore store) {
+        this.store = store;
+        ReportStore.LoadResult loaded = store.load();
+        for (Report report : loaded.reports()) {
+            reports.put(report.id(), report);
+        }
+        sequence.set(Math.max(sequence.get(), loaded.maxId()));
+    }
 
     @NotNull
     public Report submit(@NotNull UUID reporterUuid,
@@ -27,6 +37,7 @@ public final class ReportService {
         Report report = new Report(id, reporterUuid, reporterName, targetUuid, targetName,
                 category, reporterServer, System.currentTimeMillis());
         reports.put(id, report);
+        flush();
         return report;
     }
 
@@ -60,6 +71,25 @@ public final class ReportService {
     }
 
     public boolean delete(long id) {
-        return reports.remove(id) != null;
+        boolean removed = reports.remove(id) != null;
+        if (removed) flush();
+        return removed;
+    }
+
+    public boolean resolve(long id, @NotNull UUID resolverUuid, @NotNull String resolverName,
+                           @NotNull String resolution) {
+        Report report = reports.get(id);
+        if (report == null || report.resolved()) {
+            return false;
+        }
+        report.markResolved(resolverUuid, resolverName, resolution, System.currentTimeMillis());
+        flush();
+        return true;
+    }
+
+    public void flush() {
+        if (store != null) {
+            store.save(sequence.get(), new ArrayList<>(reports.values()));
+        }
     }
 }

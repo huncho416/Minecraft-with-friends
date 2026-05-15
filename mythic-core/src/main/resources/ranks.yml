@@ -33,6 +33,7 @@ ranks:
     permissions:
       - "mythic.*"
       - "mythic.core.color.*"
+      - "mythic.core.staffsettings.bypass"
     chat-prefix: "&#DD3838O&#E01B1Bw&#E72C2Cn&#EE3D3De&#EE0B0Br #DE2222"
     chat-format: "%chat_prefix%%player%&7: &#FFFFFF%message%"
     tab-prefix: "&#D22020&lO&#DE2222&lW&#C12D2D&lN&#A43737&lE&#E90000&lR #FFFFFF&l"

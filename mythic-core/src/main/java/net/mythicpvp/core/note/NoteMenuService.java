@@ -35,7 +35,7 @@ public final class NoteMenuService {
         for (PlayerNote note : all) {
             menu.addItem(buildNoteItem(note), event -> {
                 if (note.active() && event.getClick().isLeftClick()) {
-                    note.setActive(false);
+                    noteService.setActive(note.id(), false);
                     staff.sendMessage(MythicHex.colorize(
                             "&#FFEC8ANote &#FFFFFF" + note.title() + " &#FFEC8Amarked inactive."));
                     openFor(staff, targetUuid, targetName, 0);

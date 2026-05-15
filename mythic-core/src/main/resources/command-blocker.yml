@@ -122,6 +122,11 @@ required-permissions:
   reports: "mythic.core.report.review"
   notes: "mythic.core.notes"
   note: "mythic.core.notes"
+  stafflist: "mythic.core.stafflist"
+  clearinv: "mythic.core.clearinv"
+  ci: "mythic.core.clearinv"
+  managepunishments: "mythic.core.punish.manage"
+  staffsettings: "mythic.core.staffsettings"
   # /appeal is intentionally NOT permission-gated — anyone can file.
   # /report /helpop /request are intentionally NOT permission-gated —
   # anyone can use them. Cooldowns + staff visibility live in reports.yml.

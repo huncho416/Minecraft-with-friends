@@ -325,6 +325,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
         net.mythicpvp.core.report.ReportService reportService =
                 new net.mythicpvp.core.report.ReportService();
+        reportService.setStore(new net.mythicpvp.core.report.ReportStore(
+                new java.io.File(getDataFolder(), "reports-data.yml"), getLogger()));
         net.mythicpvp.core.report.ReportMenuService reportMenuService =
                 new net.mythicpvp.core.report.ReportMenuService(reportService, chatPromptService, serverIdentity.id());
         net.mythicpvp.core.command.ReportConfig reportConfig =
@@ -336,11 +338,42 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new net.mythicpvp.core.command.RequestCommand(reportConfig, serverIdentity.id()));
 
         net.mythicpvp.core.note.NoteService noteService = new net.mythicpvp.core.note.NoteService();
+        noteService.setStore(new net.mythicpvp.core.note.NoteStore(
+                new java.io.File(getDataFolder(), "notes-data.yml"), getLogger()));
         net.mythicpvp.core.note.NoteMenuService noteMenuService =
                 new net.mythicpvp.core.note.NoteMenuService(noteService);
         commandManager.register(new net.mythicpvp.core.command.NotesCommand(noteService, noteMenuService));
         commandManager.register(new net.mythicpvp.core.command.NoteCommand(
                 noteService, chatPromptService, serverIdentity.id()));
+
+        net.mythicpvp.core.punishment.ManagePunishmentsMenuService managePunishmentsMenu =
+                new net.mythicpvp.core.punishment.ManagePunishmentsMenuService(
+                        punishmentService, noteService, chatPromptService);
+        commandManager.register(new net.mythicpvp.core.command.ManagePunishmentsCommand(
+                managePunishmentsMenu, punishmentService));
+        commandManager.register(new net.mythicpvp.core.command.ClearInvCommand());
+        commandManager.register(new net.mythicpvp.core.command.CiCommand());
+
+        net.mythicpvp.core.session.SessionTracker sessionTracker = new net.mythicpvp.core.session.SessionTracker();
+        getServer().getPluginManager().registerEvents(sessionTracker, this);
+        net.mythicpvp.core.staff.StaffListMenuService staffListMenu =
+                new net.mythicpvp.core.staff.StaffListMenuService(rankService, grantService, sessionTracker);
+        commandManager.register(new net.mythicpvp.core.command.StaffListCommand(staffListMenu));
+
+        net.mythicpvp.core.staffmode.StaffSettings staffSettings =
+                new net.mythicpvp.core.staffmode.StaffSettings(
+                        new java.io.File(getDataFolder(), "staff-settings.yml"), getLogger());
+        net.mythicpvp.core.staffmode.StaffStateStore staffStateStore =
+                new net.mythicpvp.core.staffmode.StaffStateStore(
+                        new java.io.File(getDataFolder(), "staff-state.yml"), getLogger());
+        net.mythicpvp.core.staffmode.StaffSettingsMenuService staffSettingsMenu =
+                new net.mythicpvp.core.staffmode.StaffSettingsMenuService(staffSettings);
+        commandManager.register(new net.mythicpvp.core.command.StaffSettingsCommand(staffSettingsMenu));
+        getServer().getPluginManager().registerEvents(
+                new net.mythicpvp.core.staffmode.StaffModeJoinHandler(
+                        this, staffModeService, staffStateStore, staffSettings,
+                        rankService, grantService, staffChannelService),
+                this);
 
         broadcastService = new BroadcastService(protocolManager, serverIdentity.id());
         broadcastService.load(configManager.getOrCreate("announcements"));

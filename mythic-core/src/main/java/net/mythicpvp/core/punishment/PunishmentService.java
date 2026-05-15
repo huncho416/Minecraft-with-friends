@@ -130,6 +130,31 @@ public final class PunishmentService {
     }
 
     @NotNull
+    public List<PunishmentRecord> all() {
+        return records.stream()
+                .sorted(Comparator.comparingLong(PunishmentRecord::createdAtMillis).reversed())
+                .toList();
+    }
+
+    @NotNull
+    public List<PunishmentRecord> byType(@NotNull PunishmentType type) {
+        return records.stream()
+                .filter(record -> record.type() == type)
+                .sorted(Comparator.comparingLong(PunishmentRecord::createdAtMillis).reversed())
+                .toList();
+    }
+
+    public int clearByType(@NotNull PunishmentType type, @NotNull UUID staff) {
+        int before = records.size();
+        records.removeIf(record -> record.type() == type);
+        int removed = before - records.size();
+        if (removed > 0) {
+            persistence.punishClearHistory(SYSTEM_STAFF, staff);
+        }
+        return removed;
+    }
+
+    @NotNull
     public List<PunishmentRecord> active(@NotNull UUID targetUuid) {
         long nowMillis = clock.instant().toEpochMilli();
         return history(targetUuid).stream()

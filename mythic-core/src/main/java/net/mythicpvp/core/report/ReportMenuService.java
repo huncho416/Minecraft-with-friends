@@ -164,14 +164,12 @@ public final class ReportMenuService {
                 p.sendMessage(MythicHex.colorize("&#FF8A8AResolution cannot be empty."));
                 return;
             }
-            Report current = reportService.get(report.id());
-            if (current == null || current.resolved()) {
+            if (!reportService.resolve(report.id(), p.getUniqueId(), p.getName(), resolution)) {
                 p.sendMessage(MythicHex.colorize("&#FF8A8AThat report is no longer active."));
                 return;
             }
-            current.markResolved(p.getUniqueId(), p.getName(), resolution, System.currentTimeMillis());
             p.sendMessage(MythicHex.colorize(
-                    "&#9CFF9CReport &#FFFFFF#" + current.id() + " &#9CFF9Cmarked resolved."));
+                    "&#9CFF9CReport &#FFFFFF#" + report.id() + " &#9CFF9Cmarked resolved."));
         });
     }
 
