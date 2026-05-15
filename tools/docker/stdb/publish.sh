@@ -21,7 +21,7 @@ until wget -S -O- "${STDB_HOST}" 2>&1 | grep -Eq 'HTTP/[0-9.]+ (200|400|404)'; d
     sleep 1
 done
 
-spacetime server add local "${STDB_HOST}" >/dev/null 2>&1 || true
+spacetime server add --url "${STDB_HOST}" --default --no-fingerprint local >/dev/null 2>&1 || true
 spacetime server set-default local
-spacetime publish --bin-path "${WASM}" "${STDB_MODULE}"
+spacetime publish --server local --bin-path "${WASM}" "${STDB_MODULE}"
 echo "[publish] ok"
