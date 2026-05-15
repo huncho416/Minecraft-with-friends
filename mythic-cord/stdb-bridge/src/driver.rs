@@ -129,8 +129,10 @@ async fn run_session(
 
     for table in state.subscriptions.keys().copied().collect::<Vec<_>>() {
         let msg = json!({
-            "type": "subscribe",
-            "queryStrings": [format!("SELECT * FROM {table}")],
+            "Subscribe": {
+                "query_strings": [format!("SELECT * FROM {table}")],
+                "request_id": 1
+            }
         })
         .to_string();
         if let Err(e) = sink.send(Message::Text(msg)).await {
@@ -186,10 +188,12 @@ async fn handle_command(
     match cmd {
         Command::CallReducer { request_id, reducer, args, reply } => {
             let envelope = json!({
-                "type": "call",
-                "requestId": request_id.to_string(),
-                "reducer": reducer,
-                "args": args,
+                "CallReducer": {
+                    "reducer": reducer,
+                    "args": args.to_string(),
+                    "request_id": request_id.to_string(),
+                    "flags": 0
+                }
             });
             if let Err(e) = sink.send(Message::Text(envelope.to_string())).await {
                 let _ = reply.send(Err(StdbError::ResponseDropped));
@@ -200,8 +204,10 @@ async fn handle_command(
         }
         Command::Subscribe { table, events, reply } => {
             let envelope = json!({
-                "type": "subscribe",
-                "queryStrings": [format!("SELECT * FROM {table}")],
+                "Subscribe": {
+                    "query_strings": [format!("SELECT * FROM {table}")],
+                    "request_id": 1
+                }
             });
             if let Err(e) = sink.send(Message::Text(envelope.to_string())).await {
                 let _ = reply.send(Err(StdbError::SubscriptionFailed {
