@@ -9,6 +9,25 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, warn};
 
+use serde::Deserializer;
+
+fn deserialize_stdb_timestamp<'de, D>(deserializer: D) -> Result<i64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum TimestampRaw {
+        Int(i64),
+        Map { __timestamp_micros_since_unix_epoch__: i64 },
+    }
+
+    match TimestampRaw::deserialize(deserializer)? {
+        TimestampRaw::Int(i) => Ok(i),
+        TimestampRaw::Map { __timestamp_micros_since_unix_epoch__ } => Ok(__timestamp_micros_since_unix_epoch__),
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct ServerEntry {
     pub shard_id: String,
@@ -21,7 +40,9 @@ pub struct ServerEntry {
     pub tps: f32,
     pub heap_load: f32,
     pub schema_version: u32,
+    #[serde(deserialize_with = "deserialize_stdb_timestamp")]
     pub started_at: i64,
+    #[serde(deserialize_with = "deserialize_stdb_timestamp")]
     pub last_heartbeat: i64,
 }
 
