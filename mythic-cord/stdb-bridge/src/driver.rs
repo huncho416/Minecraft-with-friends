@@ -189,10 +189,9 @@ async fn handle_command(
         Command::CallReducer { request_id, reducer, args, reply } => {
             let envelope = json!({
                 "CallReducer": {
+                    "call_id": request_id.into_bytes(),
                     "reducer": reducer,
-                    "args": args,
-                    "request_id": request_id.to_string(),
-                    "flags": 0
+                    "args": args
                 }
             });
             if let Err(e) = sink.send(Message::Text(envelope.to_string())).await {
@@ -236,11 +235,12 @@ fn handle_incoming(text: &str, state: &mut InFlight) -> Result<(), String> {
 
     // Handle v1 CallReducerResponse if present
     if let Some(call_res) = obj.get("CallReducerResponse") {
-        if let Some(req_id) = call_res.get("request_id").and_then(Value::as_str) {
-            let id = match Uuid::parse_str(req_id) {
-                Ok(u) => u,
-                Err(_) => return Ok(()),
-            };
+        if let Some(call_id_val) = call_res.get("call_id").and_then(Value::as_array) {
+            let mut bytes = [0u8; 16];
+            for (i, v) in call_id_val.iter().take(16).enumerate() {
+                bytes[i] = v.as_u64().unwrap_or(0) as u8;
+            }
+            let id = Uuid::from_bytes(bytes);
             if let Some(reply) = state.pending_calls.remove(&id) {
                 let result = if let Some(err) = call_res.get("error").and_then(Value::as_str) {
                     Err(StdbError::ReducerRejected {
