@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class NametagManager {
 
     private static final NametagManager INSTANCE = new NametagManager();
+    private static final boolean FOLIA = detectFolia();
     private final Map<UUID, NametagData> nametags = new ConcurrentHashMap<>();
 
     private NametagManager() {}
@@ -78,16 +79,18 @@ public final class NametagManager {
     }
 
     private void applyFor(@NotNull Player viewer, @NotNull Player target, @NotNull NametagData data) {
-        Scoreboard board = viewer.getScoreboard();
-        String teamName = teamName(data.sortWeight(), target.getUniqueId());
-        Team team = board.getTeam(teamName);
-        if (team == null) {
-            team = board.registerNewTeam(teamName);
-        }
-        team.prefix(MythicHex.colorize(data.prefix()));
-        team.suffix(MythicHex.colorize(data.suffix()));
-        if (!team.hasEntry(target.getName())) {
-            team.addEntry(target.getName());
+        if (!FOLIA) {
+            Scoreboard board = viewer.getScoreboard();
+            String teamName = teamName(data.sortWeight(), target.getUniqueId());
+            Team team = board.getTeam(teamName);
+            if (team == null) {
+                team = board.registerNewTeam(teamName);
+            }
+            team.prefix(MythicHex.colorize(data.prefix()));
+            team.suffix(MythicHex.colorize(data.suffix()));
+            if (!team.hasEntry(target.getName())) {
+                team.addEntry(target.getName());
+            }
         }
         String displayName = DisguiseManager.getInstance().getVisibleName(viewer.getUniqueId(), target.getUniqueId(), target.getName());
         PacketAction.send(viewer, new PacketAction.NametagState(
@@ -108,6 +111,9 @@ public final class NametagManager {
 
     public void remove(@NotNull Player player) {
         nametags.remove(player.getUniqueId());
+        if (FOLIA) {
+            return;
+        }
         for (Player viewer : player.getServer().getOnlinePlayers()) {
             Scoreboard board = viewer.getScoreboard();
             for (Team team : board.getTeams()) {
@@ -129,6 +135,15 @@ public final class NametagManager {
 
     public void clear() {
         nametags.clear();
+    }
+
+    private static boolean detectFolia() {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     public record NametagData(@NotNull String prefix, @NotNull String suffix, int sortWeight, @Nullable String glowColor) {

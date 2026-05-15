@@ -38,7 +38,7 @@ public final class SpawnService {
 
     public void teleportToSpawn(@NotNull Player player) {
         if (spawnLocation == null) return;
-        MythicScheduler.runOnEntity(plugin, player, () -> player.teleport(spawnLocation));
+        MythicScheduler.runOnEntity(plugin, player, () -> player.teleportAsync(spawnLocation));
     }
 
     public boolean isBelowVoid(@NotNull Player player) {
