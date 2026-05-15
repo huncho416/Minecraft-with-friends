@@ -226,6 +226,7 @@ async fn handle_command(
 }
 
 fn handle_incoming(text: &str, state: &mut InFlight) -> Result<(), String> {
+    tracing::info!("STDB INCOMING: {}", text);
     let value: Value = serde_json::from_str(text).map_err(|e| format!("json: {e}"))?;
     let obj = value.as_object().ok_or("expected object")?;
 
