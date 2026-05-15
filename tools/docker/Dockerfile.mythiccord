@@ -67,5 +67,11 @@ ENV STDB_URI=http://spacetimedb:3000 \
     MYTHIC_LOG_FORMAT=json \
     RUST_LOG=info,mythiccord=debug
 
-RUN echo '#!/bin/sh\neval "$*"' > /entrypoint.sh && chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+RUN cat <<'EOF' > /start.sh
+#!/bin/sh
+/usr/local/bin/mythiccord ./mythiccord.toml &
+exec /usr/local/bin/infrarust --config ./infrarust.toml
+EOF
+RUN chmod +x /start.sh
+
+ENTRYPOINT ["/start.sh"]
