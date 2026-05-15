@@ -12,7 +12,7 @@ echo "[publish] target host=${STDB_HOST} module=${STDB_MODULE}"
 # Wait for STDB to be reachable. Compose's `depends_on: healthy` should make
 # this immediate, but networks lie — give it 30s before giving up.
 i=0
-until wget -qO- "${STDB_HOST}/health" >/dev/null 2>&1; do
+until wget -S -O- "${STDB_HOST}" 2>&1 | grep -Eq 'HTTP/[0-9.]+ (200|400|404)'; do
     i=$((i + 1))
     if [ "$i" -ge 30 ]; then
         echo "[publish] STDB never became reachable at ${STDB_HOST}" >&2

@@ -17,6 +17,5 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 FROM clockworklabs/spacetime:latest
 COPY --from=build /tmp/mythic_stdb.wasm /tmp/mythic_stdb.wasm
-COPY tools/docker/stdb/publish.sh /usr/local/bin/publish.sh
-RUN chmod +x /usr/local/bin/publish.sh
+COPY --chmod=755 tools/docker/stdb/publish.sh /usr/local/bin/publish.sh
 ENTRYPOINT ["/usr/local/bin/publish.sh"]
