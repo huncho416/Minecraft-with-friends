@@ -9,17 +9,19 @@ spawn:
   void-teleport-y: -10.0
 
 # Server selector groups displayed in /servers menu.
+# Each `role` is matched (case-insensitive) against the STDB
+# `server_registry.role` column populated by mythic-core's
+# registry heartbeat. Servers in the registry are auto-discovered
+# and grouped by role; the entries below define the icon + label
+# shown for each group.
 selector:
   groups:
-    - role: "survival"
-      display-name: "&#F529BESurvival"
+    - role: "HUB"
+      display-name: "&#F529BEHub"
+      material: "BEACON"
+    - role: "SKYBLOCK"
+      display-name: "&#F529BESkyblock"
       material: "GRASS_BLOCK"
-    - role: "practice"
-      display-name: "&#F529BEPractice"
-      material: "DIAMOND_SWORD"
-    - role: "creative"
-      display-name: "&#F529BECreative"
-      material: "PAINTING"
 
 # Hub activities.
 activities:

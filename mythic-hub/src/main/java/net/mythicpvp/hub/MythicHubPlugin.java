@@ -4,6 +4,7 @@ import net.mythicpvp.hub.activity.HubActivityListener;
 import net.mythicpvp.hub.activity.HubActivityService;
 import net.mythicpvp.hub.command.ServerSelectorCommand;
 import net.mythicpvp.hub.selector.HubItemListener;
+import net.mythicpvp.hub.selector.RegistrySubscriber;
 import net.mythicpvp.hub.selector.ServerSelectorMenu;
 import net.mythicpvp.hub.selector.ServerSelectorService;
 import net.mythicpvp.hub.spawn.SpawnListener;
@@ -44,6 +45,7 @@ public class MythicHubPlugin extends JavaPlugin implements MythicPlugin {
 
         selectorService = new ServerSelectorService();
         selectorService.loadGroups(hubConfig);
+        new RegistrySubscriber(this, selectorService).start();
 
         activityService = new HubActivityService();
         activityService.load(hubConfig);
