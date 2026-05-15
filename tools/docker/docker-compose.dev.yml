@@ -4,6 +4,7 @@ services:
   spacetimedb:
     image: clockworklabs/spacetime:latest
     container_name: mythic-stdb-dev
+    user: "0:0"
     command: ["--root-dir", "/stdb", "start", "--listen-addr", "0.0.0.0:3000"]
     restart: unless-stopped
     ports: ["3000:3000"]
