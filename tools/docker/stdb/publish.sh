@@ -22,5 +22,5 @@ until wget -S -O- "${STDB_HOST}" 2>&1 | grep -Eq 'HTTP/[0-9.]+ (200|400|404)'; d
 done
 
 spacetime server set-default "${STDB_HOST}" >/dev/null 2>&1 || true
-spacetime publish --bin-path "${WASM}" --host "${STDB_HOST}" "${STDB_MODULE}"
+spacetime publish --bin-path "${WASM}" "${STDB_MODULE}"
 echo "[publish] ok"
