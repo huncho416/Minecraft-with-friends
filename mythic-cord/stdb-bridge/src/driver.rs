@@ -103,7 +103,7 @@ async fn connect(config: &DriverConfig) -> Result<WsStream, String> {
         .stdb_uri
         .replacen("http://", "ws://", 1)
         .replacen("https://", "wss://", 1);
-    let url = format!("{url}/database/subscribe/{}", config.module_name);
+    let url = format!("{url}/v1/database/{}/subscribe", config.module_name);
     let (ws, _) = tokio_tungstenite::connect_async(&url)
         .await
         .map_err(|e| format!("ws connect to {url}: {e}"))?;
