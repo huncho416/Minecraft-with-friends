@@ -37,7 +37,12 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
             --target x86_64-unknown-linux-musl \
             -p mythiccord; \
     fi; \
-    cp target/x86_64-unknown-linux-musl/release/mythiccord /tmp/mythiccord
+    cargo build --release \
+        --target x86_64-unknown-linux-musl \
+        --manifest-path infrarust/Cargo.toml \
+        -p infrarust; \
+    cp target/x86_64-unknown-linux-musl/release/mythiccord /tmp/mythiccord; \
+    cp infrarust/target/x86_64-unknown-linux-musl/release/infrarust /tmp/infrarust
 
 FROM gcr.io/distroless/static-debian12:nonroot
 LABEL org.opencontainers.image.title="MythicCord"
@@ -45,6 +50,7 @@ LABEL org.opencontainers.image.source="https://github.com/mythicpvp/mythic-cord"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
 
 COPY --from=build /tmp/mythiccord /usr/local/bin/mythiccord
+COPY --from=build /tmp/infrarust /usr/local/bin/infrarust
 
 EXPOSE 25565 8080
 
