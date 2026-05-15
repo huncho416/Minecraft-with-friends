@@ -52,6 +52,28 @@ find "${DATA_DIR}/plugins" -maxdepth 1 -type f \( \
     -name 'simplevoice-geyser.jar' \
 \) -delete
 
+SERVER_TYPE_LOWER="$(printf '%s' "${SERVER_TYPE:-hub}" | tr '[:upper:]' '[:lower:]')"
+
+is_plugin_allowed() {
+    local name_lower
+    name_lower="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+    case "${name_lower}" in
+        mythic-hub*)        [ "${SERVER_TYPE_LOWER}" = "hub" ];      return $? ;;
+        mythic-skyblock*)   [ "${SERVER_TYPE_LOWER}" = "skyblock" ]; return $? ;;
+        mythic-pvp*)        [ "${SERVER_TYPE_LOWER}" = "pvp" ];      return $? ;;
+        mythic-event*)      [ "${SERVER_TYPE_LOWER}" = "event" ];    return $? ;;
+        *) return 0 ;;
+    esac
+}
+
+remove_disallowed_plugin() {
+    local name="$1"
+    if [ -f "${DATA_DIR}/plugins/${name}" ]; then
+        rm -f "${DATA_DIR}/plugins/${name}"
+        echo "[entrypoint] removed disallowed plugin ${name} (SERVER_TYPE=${SERVER_TYPE_LOWER})"
+    fi
+}
+
 install_jars() {
     local source_dir="$1"
     if compgen -G "${source_dir}/*.jar" > /dev/null; then
@@ -60,6 +82,10 @@ install_jars() {
             case "${name}" in
                 *-tests.jar|*-sources.jar|*-javadoc.jar) continue ;;
             esac
+            if ! is_plugin_allowed "${name}"; then
+                remove_disallowed_plugin "${name}"
+                continue
+            fi
             if [ ! -f "${DATA_DIR}/plugins/${name}" ] || ! cmp -s "${jar}" "${DATA_DIR}/plugins/${name}"; then
                 cp "${jar}" "${DATA_DIR}/plugins/${name}"
                 echo "[entrypoint] installed plugin ${name}"
