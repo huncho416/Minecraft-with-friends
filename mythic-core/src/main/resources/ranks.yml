@@ -12,6 +12,8 @@ ranks:
     permissions:
       - "mythic.join"
       - "mythic.core.chatcolor"
+      - "mythic.core.report"
+      - "mythic.core.helpop"
     chat-prefix: "&#D2D8E0"
     chat-format: "&#D2D8E0%player% &8» &7%message%"
     tab-prefix: "&#D2D8E0"

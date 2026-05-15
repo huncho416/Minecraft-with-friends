@@ -141,6 +141,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         saveResourceIfMissing("command-blocker.yml");
         saveResourceIfMissing("announcements.yml");
         saveResourceIfMissing("staff-mode.yml");
+        saveResourceIfMissing("reports.yml");
         serverIdentity = ServerIdentity.fromEnvironment();
         configManager = new ConfigManager(this);
         messages = new CoreMessages(new ConfigText(configManager.getOrCreate("messages"), "messages"));
@@ -321,6 +322,25 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new net.mythicpvp.core.command.CcCommand(chatColorMenuService));
         commandManager.register(new ChatCommand(chatControlService, messages));
         commandManager.register(new net.mythicpvp.core.command.UnmuteCommand(chatControlService, messages));
+
+        net.mythicpvp.core.report.ReportService reportService =
+                new net.mythicpvp.core.report.ReportService();
+        net.mythicpvp.core.report.ReportMenuService reportMenuService =
+                new net.mythicpvp.core.report.ReportMenuService(reportService, chatPromptService, serverIdentity.id());
+        net.mythicpvp.core.command.ReportConfig reportConfig =
+                new net.mythicpvp.core.command.ReportConfig(configManager.getOrCreate("reports"));
+        commandManager.register(new net.mythicpvp.core.command.ReportCommand(
+                reportService, reportMenuService, reportConfig, serverIdentity.id()));
+        commandManager.register(new net.mythicpvp.core.command.ReportsCommand(reportMenuService));
+        commandManager.register(new net.mythicpvp.core.command.HelpopCommand(reportConfig, serverIdentity.id()));
+        commandManager.register(new net.mythicpvp.core.command.RequestCommand(reportConfig, serverIdentity.id()));
+
+        net.mythicpvp.core.note.NoteService noteService = new net.mythicpvp.core.note.NoteService();
+        net.mythicpvp.core.note.NoteMenuService noteMenuService =
+                new net.mythicpvp.core.note.NoteMenuService(noteService);
+        commandManager.register(new net.mythicpvp.core.command.NotesCommand(noteService, noteMenuService));
+        commandManager.register(new net.mythicpvp.core.command.NoteCommand(
+                noteService, chatPromptService, serverIdentity.id()));
 
         broadcastService = new BroadcastService(protocolManager, serverIdentity.id());
         broadcastService.load(configManager.getOrCreate("announcements"));
