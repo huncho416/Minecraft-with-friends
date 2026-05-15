@@ -10,6 +10,7 @@ import net.mythicpvp.suite.command.Optional;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
+@net.mythicpvp.suite.command.Usage("&#FF8A8AUsage: &#FFFFFF/gamemode <survival|creative|adventure|spectator> [player]")
 @CommandAlias("gamemode|gm")
 @CommandPermission("mythic.core.gamemode")
 public final class GamemodeCommand extends MythicCommand {

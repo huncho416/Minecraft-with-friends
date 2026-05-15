@@ -8,6 +8,7 @@ import net.mythicpvp.suite.command.MythicCommand;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
+@net.mythicpvp.suite.command.Usage("&#FF8A8AUsage: &#FFFFFF/broadcast <message>&#888888 - send a network-wide announcement.")
 @CommandAlias("broadcast")
 @CommandPermission("mythic.core.broadcast")
 public final class BroadcastCommand extends MythicCommand {

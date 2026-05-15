@@ -17,10 +17,10 @@ messages:
     teleport: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CTeleported &#FFFFFF%target% &#9CFF9Cto &#FFFFFF%destination%&#9CFF9C."
     tphere: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CTeleported &#FFFFFF%target% &#9CFF9Cto you."
   staff:
-    format: "&#D2D8E0[%server%] %rank_color%%rank%%sender% &8» &#FFFFFF%message%"
-    join: "&#D2D8E0[%server%] %rank_color%%sender% &#9CFF9Cjoined."
-    quit: "&#D2D8E0[%server%] %rank_color%%sender% &#FF8A8Adisconnected."
-    switch: "&#D2D8E0[%from% -> %to%] %rank_color%%sender% &#FFFFFFswitched servers."
+    format: "&#D2D8E0[%server%] %channel_tag% %chat_prefix%%sender% &8» &#FFFFFF%message%"
+    join: "&#D2D8E0[%server%] &#888888[&#FFEC8A%rank%&#888888] %rank_color%%sender% &#9CFF9Cjoined."
+    quit: "&#D2D8E0[%server%] &#888888[&#FFEC8A%rank%&#888888] %rank_color%%sender% &#FF8A8Adisconnected."
+    switch: "&#D2D8E0[%from% -> %to%] &#888888[&#FFEC8A%rank%&#888888] %rank_color%%sender% &#FFFFFFswitched servers."
   punishment:
     executed: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9C%type% issued for &#FFFFFF%target%&#9CFF9C."
     silent-executed: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CSilent %type% issued for &#FFFFFF%target%&#9CFF9C."

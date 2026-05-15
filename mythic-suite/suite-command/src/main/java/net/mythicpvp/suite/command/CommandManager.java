@@ -177,7 +177,7 @@ public final class CommandManager {
                     resolved[i] = null;
                     continue;
                 }
-                sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFMissing argument: " + params[i].getName()));
+                sender.sendMessage(MythicHex.colorize(usageHint(method, command)));
                 return;
             }
 
@@ -186,7 +186,7 @@ public final class CommandManager {
                 try {
                     resolved[i] = resolver.apply(args[argIndex++]);
                 } catch (Exception e) {
-                    sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFInvalid argument: " + args[argIndex - 1]));
+                    sender.sendMessage(MythicHex.colorize("&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8AInvalid argument: &#FFFFFF" + args[argIndex - 1]));
                     return;
                 }
             } else {
@@ -200,6 +200,72 @@ public final class CommandManager {
             sender.sendMessage(MythicHex.colorize("&#FF00F8✘ &#FFFFFFAn error occurred."));
             e.printStackTrace();
         }
+    }
+
+    @NotNull
+    private String usageHint(@NotNull Method method, @NotNull MythicCommand command) {
+        Usage methodUsage = method.getAnnotation(Usage.class);
+        if (methodUsage != null && !methodUsage.value().isBlank()) {
+            return prefixed(methodUsage.value());
+        }
+        Usage classUsage = command.getClass().getAnnotation(Usage.class);
+        if (classUsage != null && !classUsage.value().isBlank()) {
+            return prefixed(classUsage.value());
+        }
+        return prefixed(autoUsage(method, command));
+    }
+
+    @NotNull
+    private static String autoUsage(@NotNull Method method, @NotNull MythicCommand command) {
+        StringBuilder sb = new StringBuilder("&#FF8A8AUsage: &#FFFFFF/").append(commandLabel(command));
+        Subcommand sub = method.getAnnotation(Subcommand.class);
+        if (sub != null) {
+            sb.append(' ').append(sub.value());
+        }
+        for (Parameter param : method.getParameters()) {
+            Class<?> type = param.getType();
+            if (CommandSender.class.isAssignableFrom(type)) {
+                continue;
+            }
+            if (Player.class.isAssignableFrom(type) && param.isAnnotationPresent(Default.class)) {
+                continue;
+            }
+            if (CommandSender.class.isAssignableFrom(type) || type.equals(org.bukkit.entity.Player.class)) {
+                continue;
+            }
+            boolean optional = param.isAnnotationPresent(net.mythicpvp.suite.command.Optional.class);
+            String name = paramLabel(param);
+            sb.append(' ').append(optional ? "[" : "<").append(name).append(optional ? "]" : ">");
+        }
+        return sb.toString();
+    }
+
+    @NotNull
+    private static String paramLabel(@NotNull Parameter param) {
+        if (param.getType().equals(String[].class)) {
+            return "args...";
+        }
+        String raw = param.getName();
+        if (raw == null || raw.startsWith("arg")) {
+            String type = param.getType().getSimpleName().toLowerCase(Locale.ROOT);
+            return type;
+        }
+        return raw;
+    }
+
+    @NotNull
+    private static String commandLabel(@NotNull MythicCommand command) {
+        CommandAlias alias = command.getClass().getAnnotation(CommandAlias.class);
+        if (alias == null) {
+            return command.getClass().getSimpleName().toLowerCase(Locale.ROOT);
+        }
+        String[] aliases = alias.value().split("\\|");
+        return aliases[0].toLowerCase(Locale.ROOT);
+    }
+
+    @NotNull
+    private static String prefixed(@NotNull String body) {
+        return "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» " + body;
     }
 
     @NotNull

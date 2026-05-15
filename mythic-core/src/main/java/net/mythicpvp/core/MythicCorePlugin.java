@@ -184,6 +184,12 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         CoreCompletions.register(commandManager, rankService, punishmentService);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(chatPromptService, this);
+        getServer().getPluginManager().registerEvents(new net.mythicpvp.core.security.OpCommandGuard(), this);
+        net.mythicpvp.core.transfer.ProxyTransferService transferService =
+                new net.mythicpvp.core.transfer.ProxyTransferService(this);
+        commandManager.register(new net.mythicpvp.core.command.ServerCommand(transferService, messages));
+        commandManager.register(new net.mythicpvp.core.command.HubCommand(
+                transferService, messages, serverIdentity.id(), serverIdentity.type(), getLogger()));
         commandManager.register(new GrantCommand(grantFlowService));
         commandManager.register(new GrantsCommand(grantService, rankService));
         commandManager.register(new CGrantCommand(grantService));
@@ -237,7 +243,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new StaffChatToggleListener(staffChannelService, rankService, grantService), this);
         staffPresenceService = new StaffPresenceService(protocolManager, serverIdentity.id());
 
-        staffPresenceService.addAudience(new BukkitStaffPresenceAudience(
+        staffPresenceService.addAudience(new BukkitStaffPresenceAudience(this,
                 new net.mythicpvp.suite.config.ConfigText(
                         configManager.getOrCreate("messages"), "messages")));
         getServer().getPluginManager().registerEvents(

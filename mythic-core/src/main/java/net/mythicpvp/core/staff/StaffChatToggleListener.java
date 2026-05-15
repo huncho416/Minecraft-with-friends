@@ -39,7 +39,11 @@ public final class StaffChatToggleListener implements Listener {
         UUID uuid = player.getUniqueId();
         String rankId = grants.activeRank(uuid);
         var rank = ranks.get(rankId);
-        staffChat.send(channel, uuid, player.getName(), rank == null ? "" : rank.name(), rank == null ? "&7" : rank.color(), message);
+        staffChat.send(channel, uuid, player.getName(),
+                rank == null ? "" : rank.name(),
+                rank == null ? "&7" : rank.color(),
+                rank == null ? "" : rank.chatPrefix(),
+                message);
     }
 
     @EventHandler

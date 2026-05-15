@@ -12,6 +12,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+@net.mythicpvp.suite.command.Usage("&#FF8A8AUsage: &#FFFFFF/history <player>&#888888 - opens punishment history menu.")
 @CommandAlias("history")
 @CommandPermission("mythic.core.punish.history")
 public final class HistoryCommand extends MythicCommand {

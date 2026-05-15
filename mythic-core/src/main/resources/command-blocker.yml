@@ -98,4 +98,7 @@ required-permissions:
   cosmetics: "mythic.core.cosmetics"
   credits: "mythic.core.credits"
   creditshop: "mythic.core.creditshop"
+  server: "mythic.core.server.transfer"
   # /appeal is intentionally NOT permission-gated — anyone can file.
+  # /hub /lobby /serverselector /servers /selector are intentionally
+  # NOT permission-gated — anyone can use them.

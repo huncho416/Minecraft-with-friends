@@ -34,10 +34,18 @@ public abstract class StaffChatCommand extends MythicCommand {
     @Default
     public void execute(@NotNull Player sender, @NotNull String[] words) {
         if (words.length == 0) {
+            StaffChannel previous = staffChat.toggledChannel(sender.getUniqueId());
             boolean enabled = staffChat.toggle(sender.getUniqueId(), channel);
-            sender.sendMessage(enabled
-                    ? "Staff chat toggled: " + channel.id()
-                    : "Staff chat toggled off.");
+            String tag = "[" + channel.tag() + "]";
+            if (enabled) {
+                if (previous != null && previous != channel) {
+                    sender.sendMessage("Switched staff chat: [" + previous.tag() + "] -> " + tag);
+                } else {
+                    sender.sendMessage("Staff chat enabled: " + tag);
+                }
+            } else {
+                sender.sendMessage("Staff chat disabled: " + tag);
+            }
             return;
         }
         String message = String.join(" ", words);
@@ -47,7 +55,8 @@ public abstract class StaffChatCommand extends MythicCommand {
         var rank = ranks.get(rankId);
         String rankName = rank == null ? "" : rank.name();
         String rankColor = rank == null ? "&7" : rank.color();
-        staffChat.send(channel, uuid, sender.getName(), rankName, rankColor, message);
+        String chatPrefix = rank == null ? "" : rank.chatPrefix();
+        staffChat.send(channel, uuid, sender.getName(), rankName, rankColor, chatPrefix, message);
     }
 
     @CommandAlias("staffchat|sc")

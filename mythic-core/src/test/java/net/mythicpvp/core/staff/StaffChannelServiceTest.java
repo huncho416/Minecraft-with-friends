@@ -25,7 +25,7 @@ class StaffChannelServiceTest {
         StaffChannelService hub = new StaffChannelService(protocolManager, "hub");
         List<StaffMessage> received = new ArrayList<>();
         hub.addAudience(received::add);
-        skyblock.send(StaffChannel.STAFF, UUID.randomUUID(), "AdminName", "Admin", "&#FF5555", "Hello staff");
+        skyblock.send(StaffChannel.STAFF, UUID.randomUUID(), "AdminName", "Admin", "&#FF5555", "&#FF5555&lAdmin ", "Hello staff");
         assertEquals(1, received.size());
         StaffMessage message = received.getFirst();
         assertEquals("skyblock", message.server());

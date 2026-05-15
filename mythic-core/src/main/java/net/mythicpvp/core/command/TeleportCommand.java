@@ -10,6 +10,7 @@ import net.mythicpvp.suite.command.Optional;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
+@net.mythicpvp.suite.command.Usage("&#FF8A8AUsage: &#FFFFFF/tp <player> [destination]&#888888 - teleport to a player, or move them to another player.")
 @CommandAlias("tp|teleport")
 @CommandPermission("mythic.core.teleport")
 public final class TeleportCommand extends MythicCommand {

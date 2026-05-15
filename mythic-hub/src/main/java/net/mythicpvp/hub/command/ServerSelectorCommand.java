@@ -7,7 +7,7 @@ import net.mythicpvp.suite.command.MythicCommand;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-@CommandAlias("servers|server")
+@CommandAlias("serverselector|servers|selector")
 public final class ServerSelectorCommand extends MythicCommand {
 
     private final ServerSelectorMenu selectorMenu;
