@@ -2,7 +2,6 @@ package net.mythicpvp.hub;
 
 import net.mythicpvp.hub.activity.HubActivityService;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.junit.jupiter.api.BeforeEach;
