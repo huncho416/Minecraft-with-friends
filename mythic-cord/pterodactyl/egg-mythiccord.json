@@ -137,6 +137,26 @@
       "user_editable": true,
       "rules": "required|string",
       "field_type": "text"
+    },
+    {
+      "name": "Config export domain suffix",
+      "description": "Domain suffix appended to each generated server config (e.g. 'node.mythicpvp.net' becomes hub-1.node.mythicpvp.net).",
+      "env_variable": "MYTHIC_CONFIG_DOMAIN_SUFFIX",
+      "default_value": "node.mythicpvp.net",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string",
+      "field_type": "text"
+    },
+    {
+      "name": "Config export proxy mode",
+      "description": "Infrarust proxy mode written to each generated server config. Use 'client_only' for Velocity modern forwarding (required if you want online-mode authentication via the proxy). 'passthrough' is faster but disables packet inspection; Velocity forwarding silently falls back to BungeeCord legacy in passthrough mode.",
+      "env_variable": "MYTHIC_CONFIG_PROXY_MODE",
+      "default_value": "client_only",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|in:passthrough,client_only,offline,server_only,zero_copy",
+      "field_type": "text"
     }
   ]
 }
