@@ -4,6 +4,7 @@ WORKDIR /build
 COPY pom.xml ./
 COPY mythic-suite/ ./mythic-suite/
 COPY mythic-core/ ./mythic-core/
+COPY mythic-hub/ ./mythic-hub/
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -ntp -pl mythic-core -am -DskipTests package
 
