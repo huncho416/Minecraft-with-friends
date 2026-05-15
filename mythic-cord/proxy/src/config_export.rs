@@ -13,7 +13,8 @@ use tracing::{debug, info, warn};
 #[derive(Debug, Serialize)]
 struct ExportedServerConfig<'a> {
     name: &'a str,
-    network: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    network: Option<&'a str>,
     addresses: Vec<&'a str>,
     domains: Vec<String>,
     proxy_mode: &'static str,
@@ -29,6 +30,7 @@ pub struct ConfigExporter {
     debounce: Duration,
     proxy_mode: String,
     send_proxy_protocol: bool,
+    proxy_shard_id: String,
 }
 
 impl ConfigExporter {
@@ -41,6 +43,7 @@ impl ConfigExporter {
             debounce: Duration::from_millis(exp.debounce_ms),
             proxy_mode: exp.proxy_mode.clone(),
             send_proxy_protocol: exp.send_proxy_protocol,
+            proxy_shard_id: cfg.identity.shard_id.clone(),
         }
     }
 
@@ -74,6 +77,9 @@ impl ConfigExporter {
             if entry.status != ServerStatus::Healthy.wire() {
                 continue;
             }
+            if entry.shard_id == self.proxy_shard_id {
+                continue;
+            }
             keep.insert(entry.shard_id.clone());
             self.write_one(entry).await?;
         }
@@ -81,12 +87,18 @@ impl ConfigExporter {
     }
 
     async fn write_one(&self, entry: &ServerEntry) -> std::io::Result<()> {
+        let proxy_mode = proxy_mode_str(&self.proxy_mode);
+        let network = if proxy_mode_supports_network(proxy_mode) {
+            Some(entry.role.as_str())
+        } else {
+            None
+        };
         let cfg = ExportedServerConfig {
             name: &entry.shard_id,
-            network: &entry.role,
+            network,
             addresses: vec![entry.address.as_str()],
-            domains: vec![format!("{}.{}", entry.shard_id, self.domain_suffix)],
-            proxy_mode: proxy_mode_str(&self.proxy_mode),
+            domains: self.domains_for(entry),
+            proxy_mode,
             max_players: entry.max_players,
             send_proxy_protocol: self.send_proxy_protocol,
         };
@@ -121,6 +133,18 @@ impl ConfigExporter {
         }
         Ok(())
     }
+
+    fn domains_for(&self, entry: &ServerEntry) -> Vec<String> {
+        let suffix = self.domain_suffix.trim().trim_end_matches('.');
+        if suffix.is_empty() {
+            return vec![entry.shard_id.clone()];
+        }
+        let mut domains = vec![format!("{}.{}", entry.shard_id, suffix)];
+        if entry.role.eq_ignore_ascii_case("HUB") {
+            domains.insert(0, suffix.to_string());
+        }
+        domains
+    }
 }
 
 fn snapshot_fingerprint(entries: &[ServerEntry]) -> String {
@@ -147,6 +171,10 @@ fn proxy_mode_str(input: &str) -> &'static str {
         "serveronly" | "server_only" | "server-only" => "server_only",
         _ => "passthrough",
     }
+}
+
+fn proxy_mode_supports_network(proxy_mode: &str) -> bool {
+    matches!(proxy_mode, "client_only" | "offline")
 }
 
 #[cfg(test)]
@@ -178,6 +206,7 @@ mod tests {
             debounce: Duration::from_millis(10),
             proxy_mode: "passthrough".into(),
             send_proxy_protocol: false,
+            proxy_shard_id: "proxy-1".into(),
         }
     }
 
@@ -199,9 +228,13 @@ mod tests {
         assert_eq!(listing, vec!["hub-1.toml", "sb-1.toml"]);
         let body = std::fs::read_to_string(tmp.path().join("hub-1.toml")).unwrap();
         assert!(body.contains("name = \"hub-1\""));
-        assert!(body.contains("network = \"HUB\""));
+        assert!(!body.contains("network = "));
         assert!(body.contains("addresses = [\"hub-1.svc.local:25565\"]"));
+        assert!(body.contains("\"mythic.test\""));
         assert!(body.contains("\"hub-1.mythic.test\""));
+        let skyblock_body = std::fs::read_to_string(tmp.path().join("sb-1.toml")).unwrap();
+        assert!(!skyblock_body.contains("\"mythic.test\""));
+        assert!(skyblock_body.contains("\"sb-1.mythic.test\""));
     }
 
     #[tokio::test]

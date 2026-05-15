@@ -71,6 +71,9 @@ import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.database.DatabaseManager;
 import net.mythicpvp.suite.database.SpacetimeConnection;
 import net.mythicpvp.suite.database.schema.MythicSchema;
+import net.mythicpvp.suite.database.schema.SchemaVersion;
+import net.mythicpvp.suite.database.schema.ServerRole;
+import net.mythicpvp.suite.database.schema.ServerStatus;
 import net.mythicpvp.suite.menu.MenuListener;
 import net.mythicpvp.suite.protocol.ProtocolManager;
 import org.bukkit.configuration.ConfigurationSection;
@@ -97,6 +100,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private CoreMessages messages;
     private CoreEssentialsService essentialsService;
     private PersistenceGateway persistenceGateway;
+    private MythicSchema persistenceSchema;
     private DisplayService displayService;
     private CoreHydrationSink hydrationSink;
     private BroadcastService broadcastService;
@@ -159,6 +163,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
         hydrationSink = new CoreHydrationSink(getLogger(), rankService, grantService, punishmentService, socialService);
         persistenceGateway.hydrate(new MainThreadHydrationSink(this, hydrationSink));
+        announceServerRegistry();
 
         getServer().getPluginManager().registerEvents(
                 new PunishmentLoginGuard(punishmentService, hydrationSink, messages), this);
@@ -424,12 +429,79 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
             connection.connect().get(10, TimeUnit.SECONDS);
             MythicSchema schema = new MythicSchema(connection);
+            persistenceSchema = schema;
             getLogger().info("STDB persistence active: uri=" + uri + " module=" + module);
             return new StdbPersistenceGateway(getLogger(), schema, connection);
         } catch (Exception failure) {
             getLogger().warning("Failed to construct STDB connection (" + failure.getMessage()
                     + "); falling back to no-op persistence");
             return NoopPersistenceGateway.INSTANCE;
+        }
+    }
+
+    private void announceServerRegistry() {
+        if (persistenceSchema == null) {
+            return;
+        }
+        ServerRole role = ServerRole.fromWire(serverIdentity.type().toUpperCase(java.util.Locale.ROOT));
+        if (role == null) {
+            getLogger().warning("[stdb] registry announce skipped: unknown server type " + serverIdentity.type());
+            return;
+        }
+        String address = firstPresent("MYTHIC_ADDRESS", "SERVER_ADDRESS", "PUBLIC_ADDRESS");
+        if (address == null || address.isBlank()) {
+            String host = firstPresent("SERVER_IP", "P_SERVER_IP");
+            String port = firstPresent("SERVER_PORT", "P_SERVER_PORT");
+            if (host != null && !host.isBlank() && port != null && !port.isBlank()) {
+                address = host + ":" + port;
+            }
+        }
+        if (address == null || address.isBlank()) {
+            address = serverIdentity.id() + ":25565";
+        }
+        int maxPlayers = parseInt(firstPresent("MAX_PLAYERS", "SERVER_MAX_PLAYERS"), 100);
+        String region = java.util.Optional.ofNullable(firstPresent("MYTHIC_REGION", "SERVER_REGION"))
+                .filter(s -> !s.isBlank())
+                .orElse("vps");
+
+        persistenceSchema.registryAnnounce(
+                serverIdentity.id(),
+                role,
+                region,
+                address,
+                maxPlayers,
+                SchemaVersion.CURRENT);
+        persistenceSchema.registryHeartbeat(
+                serverIdentity.id(),
+                ServerStatus.HEALTHY,
+                getServer().getOnlinePlayers().size(),
+                20.0f,
+                0.0f);
+        getLogger().info("[stdb] registry announced shard=" + serverIdentity.id()
+                + " role=" + role.wireValue() + " address=" + address);
+    }
+
+    private static String firstPresent(@NotNull String... keys) {
+        for (String key : keys) {
+            String value = System.getenv(key);
+            if (value == null || value.isBlank()) {
+                value = System.getProperty(key);
+            }
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private static int parseInt(String value, int fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ignored) {
+            return fallback;
         }
     }
 }
