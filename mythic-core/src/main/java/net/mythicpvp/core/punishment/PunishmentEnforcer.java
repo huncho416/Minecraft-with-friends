@@ -2,6 +2,7 @@ package net.mythicpvp.core.punishment;
 
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
+import net.mythicpvp.core.rank.PlayerNameColor;
 import net.mythicpvp.suite.hex.MythicHex;
 import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.Bukkit;
@@ -22,10 +23,12 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
 
     private final JavaPlugin plugin;
     private final CoreMessages messages;
+    private final PlayerNameColor nameColor;
 
-    public PunishmentEnforcer(@NotNull JavaPlugin plugin, @NotNull CoreMessages messages) {
+    public PunishmentEnforcer(@NotNull JavaPlugin plugin, @NotNull CoreMessages messages, @NotNull PlayerNameColor nameColor) {
         this.plugin = plugin;
         this.messages = messages;
+        this.nameColor = nameColor;
     }
 
     @Override
@@ -54,23 +57,45 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
     }
 
     private void notifyStaffSilent(@NotNull PunishmentRecord record) {
-        String typeLabel = displayType(record.type());
-        String reasonText = record.reason().isEmpty() ? "No reason given" : record.reason();
-        String duration = record.expiresAtMillis() <= 0
-                ? "permanent"
-                : formatRemaining(record.expiresAtMillis() - record.createdAtMillis());
-        Component line = MythicHex.colorize(
-                "&#FFEC8A[Silent] &#FFFFFF" + record.targetName()
-                        + " &7was &#FF8A8A" + typeLabel
-                        + " &7by &#FFFFFF" + record.staffName()
-                        + " &7for &#FFFFFF" + reasonText
-                        + " &7(&f" + duration + "&7)");
+        Component line = messages.codeOwned(buildPunishmentLine(record, true));
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             if (viewer.hasPermission(net.mythicpvp.core.staff.StaffPresenceListener.STAFF_PERMISSION)) {
                 viewer.sendMessage(line);
             }
         }
         Bukkit.getConsoleSender().sendMessage(line);
+    }
+
+    @NotNull
+    private String buildPunishmentLine(@NotNull PunishmentRecord record, boolean silent) {
+        String typeLabel = displayType(record.type());
+        String reasonText = record.reason().isEmpty() ? "No reason given" : record.reason();
+        String duration = record.expiresAtMillis() <= 0
+                ? "permanent"
+                : formatRemaining(record.expiresAtMillis() - record.createdAtMillis());
+        String targetColor = nameColor.colorTag(record.targetUuid());
+        String staffColor = nameColor.colorTag(record.staffUuid());
+        String prefix = silent
+                ? "<#FFEC8A>[Silent]</#FFEC8A> "
+                : "<#F529BE>[Punishment]</#F529BE> ";
+        return prefix
+                + targetColor + escape(record.targetName()) + "</" + tagName(targetColor) + "> "
+                + "<#D2D8E0>was <#FF8A8A>" + typeLabel + "</#FF8A8A> by </#D2D8E0>"
+                + staffColor + escape(record.staffName()) + "</" + tagName(staffColor) + "> "
+                + "<#D2D8E0>for <white>" + escape(reasonText) + "</white> (<white>" + duration + "</white>)</#D2D8E0>";
+    }
+
+    @NotNull
+    private static String escape(@NotNull String text) {
+        return text.replace("<", "\\<").replace(">", "\\>");
+    }
+
+    @NotNull
+    private static String tagName(@NotNull String openTag) {
+        if (openTag.length() >= 2 && openTag.startsWith("<") && openTag.endsWith(">")) {
+            return openTag.substring(1, openTag.length() - 1);
+        }
+        return "gray";
     }
 
     private void kick(@NotNull Player target, @NotNull PunishmentRecord record) {
@@ -101,7 +126,7 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
                     + "<white>Expires: <gray>%expiry%\n"
                     + "<white>Unbanned in: <gray>%remaining%\n\n"
                     + "<white>You can appeal this punishment by joining our Discord:\n"
-                    + "<#9CC3FF><hover:show_text:'<#9CC3FF>Click to open Discord'><click:open_url:'https://discord.gg/mythicpvp'><underlined>discord.gg/mythicpvp</underlined></click></hover>",
+                    + "<#9CC3FF><underlined>discord.gg/mythicpvp</underlined>",
                     Map.of(
                             "type", typeLabel.toUpperCase(java.util.Locale.ROOT),
                             "reason", reasonText,
@@ -147,28 +172,29 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
         MythicScheduler.runSync(plugin, () -> {
             PunishmentRecord record = notice.record();
             String actionLabel = pardonActionLabel(record.type());
-            Component line;
+            String targetColor = nameColor.colorTag(record.targetUuid());
+            String staffColor = nameColor.colorTag(record.staffUuid());
+            String prefix = notice.silent()
+                    ? "<#FFEC8A>[Silent]</#FFEC8A> "
+                    : "<#F529BE>[Punishment]</#F529BE> ";
+            String body = prefix
+                    + targetColor + escape(record.targetName()) + "</" + tagName(targetColor) + "> "
+                    + "<#D2D8E0>was <#9CFF9C>" + actionLabel + "</#9CFF9C> by </#D2D8E0>"
+                    + staffColor + escape(notice.staffName()) + "</" + tagName(staffColor) + ">"
+                    + "<#D2D8E0>.</#D2D8E0>";
+            Component line = messages.codeOwned(body);
             if (notice.silent()) {
-                line = MythicHex.colorize(
-                        "&#FFEC8A[Silent] &#FFFFFF" + record.targetName()
-                                + " &7was &#9CFF9C" + actionLabel
-                                + " &7by &#FFFFFF" + notice.staffName() + "&7.");
                 for (Player viewer : Bukkit.getOnlinePlayers()) {
                     if (viewer.hasPermission(net.mythicpvp.core.staff.StaffPresenceListener.STAFF_PERMISSION)) {
                         viewer.sendMessage(line);
                     }
                 }
-                Bukkit.getConsoleSender().sendMessage(line);
             } else {
-                line = MythicHex.colorize(
-                        "&#F529BE[Punishment] &#FFFFFF" + record.targetName()
-                                + " &#D2D8E0was &#9CFF9C" + actionLabel
-                                + " &#D2D8E0by &#FFFFFF" + notice.staffName() + "&#D2D8E0.");
                 for (Player viewer : Bukkit.getOnlinePlayers()) {
                     viewer.sendMessage(line);
                 }
-                Bukkit.getConsoleSender().sendMessage(line);
             }
+            Bukkit.getConsoleSender().sendMessage(line);
         });
     }
 
@@ -207,21 +233,12 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
     }
 
     private void broadcast(@NotNull PunishmentRecord record) {
+        Component message = messages.codeOwned(buildPunishmentLine(record, false));
         String typeLabel = displayType(record.type());
         String reasonText = record.reason().isEmpty() ? "No reason given" : record.reason();
         String duration = record.expiresAtMillis() <= 0
                 ? "permanent"
                 : formatRemaining(record.expiresAtMillis() - record.createdAtMillis());
-        Map<String, String> placeholders = new HashMap<>();
-        placeholders.put("type", typeLabel);
-        placeholders.put("target", record.targetName());
-        placeholders.put("staff", record.staffName());
-        placeholders.put("reason", reasonText);
-        placeholders.put("duration", duration);
-        Component message = messages.component(
-                "messages.punishment.broadcast",
-                "&#F529BE[Punishment] &#FFFFFF%target% &#D2D8E0was &#FF8A8A%type% &#D2D8E0by &#FFFFFF%staff% &#D2D8E0for &#FFFFFF%reason% &#D2D8E0(%duration%)",
-                placeholders);
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             viewer.sendMessage(message);
         }

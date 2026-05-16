@@ -169,8 +169,10 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         ProtocolManager protocolManager = ProtocolManager.getInstance();
         punishmentService = new PunishmentService(protocolManager, Clock.systemUTC());
         punishmentService.setPersistence(persistenceGateway);
+        net.mythicpvp.core.rank.PlayerNameColor playerNameColor =
+                new net.mythicpvp.core.rank.PlayerNameColor(rankService, grantService);
         net.mythicpvp.core.punishment.PunishmentEnforcer punishmentEnforcer =
-                new net.mythicpvp.core.punishment.PunishmentEnforcer(this, messages);
+                new net.mythicpvp.core.punishment.PunishmentEnforcer(this, messages, playerNameColor);
         punishmentService.setEnforcer(punishmentEnforcer);
         punishmentService.setPardonListener(punishmentEnforcer::onPardon);
         punishmentService.setPardonNoticeListener(punishmentEnforcer::onPardonNotice);
