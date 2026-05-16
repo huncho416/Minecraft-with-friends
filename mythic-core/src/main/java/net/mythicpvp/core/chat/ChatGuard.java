@@ -3,6 +3,7 @@ package net.mythicpvp.core.chat;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
+import net.mythicpvp.core.punishment.PunishmentRecord;
 import net.mythicpvp.core.punishment.PunishmentService;
 import net.mythicpvp.core.punishment.PunishmentType;
 import net.mythicpvp.suite.scheduler.MythicScheduler;
@@ -14,6 +15,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public final class ChatGuard implements Listener {
@@ -42,13 +44,23 @@ public final class ChatGuard implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onChat(@NotNull AsyncChatEvent event) {
         Player player = event.getPlayer();
-        boolean punishedMuted = punishments.active(player.getUniqueId()).stream()
-                .anyMatch(record -> record.type() == PunishmentType.MUTE || record.type() == PunishmentType.TEMP_MUTE);
-        if (punishedMuted) {
+        PunishmentRecord activeMute = punishments.active(player.getUniqueId()).stream()
+                .filter(record -> record.type() == PunishmentType.MUTE || record.type() == PunishmentType.TEMP_MUTE)
+                .findFirst()
+                .orElse(null);
+        if (activeMute != null) {
             event.setCancelled(true);
+            String reason = activeMute.reason().isEmpty() ? "No reason given" : activeMute.reason();
+            String remaining = activeMute.expiresAtMillis() <= 0
+                    ? "permanent"
+                    : formatRemaining(activeMute.expiresAtMillis() - System.currentTimeMillis());
+            Map<String, String> placeholders = new HashMap<>();
+            placeholders.put("reason", reason);
+            placeholders.put("remaining", remaining);
             player.sendMessage(messages.component(
                     "messages.punishments.muted",
-                    "&#FF8A8AYou are muted."));
+                    "&#FF8A8AYou are muted: &#FFFFFF%reason% &#D2D8E0(%remaining%)",
+                    placeholders));
             return;
         }
         if (player.hasPermission(BYPASS_PERMISSION)) {
@@ -80,6 +92,22 @@ public final class ChatGuard implements Listener {
     private void scheduleClear() {
 
         MythicScheduler.runSync(plugin, this::clearNow);
+    }
+
+    @NotNull
+    private static String formatRemaining(long millis) {
+        if (millis <= 0) return "expiring";
+        long totalSeconds = millis / 1000L;
+        long days = totalSeconds / 86400L;
+        long hours = (totalSeconds % 86400L) / 3600L;
+        long minutes = (totalSeconds % 3600L) / 60L;
+        long seconds = totalSeconds % 60L;
+        StringBuilder sb = new StringBuilder();
+        if (days > 0) sb.append(days).append("d ");
+        if (hours > 0) sb.append(hours).append("h ");
+        if (minutes > 0) sb.append(minutes).append("m ");
+        if (sb.length() == 0 || seconds > 0) sb.append(seconds).append("s");
+        return sb.toString().trim();
     }
 
     private void clearNow() {

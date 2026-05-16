@@ -8,7 +8,8 @@ public enum PunishmentType {
     MUTE("mute", false, false),
     TEMP_MUTE("tempmute", false, true),
     BLACKLIST("blacklist", true, false),
-    WARN("warn", false, false);
+    WARN("warn", false, false),
+    KICK("kick", false, false);
 
     private final String command;
     private final boolean loginBlocking;

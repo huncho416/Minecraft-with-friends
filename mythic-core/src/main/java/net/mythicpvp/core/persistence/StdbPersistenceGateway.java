@@ -286,6 +286,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
             case BAN -> PunishmentKind.BAN;
             case TEMP_BAN -> PunishmentKind.TEMP_BAN;
             case BLACKLIST -> PunishmentKind.BLACKLIST;
+            case KICK -> PunishmentKind.KICK;
         };
     }
 
@@ -564,6 +565,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
             case "BAN" -> PunishmentType.BAN;
             case "TEMP_BAN" -> PunishmentType.TEMP_BAN;
             case "BLACKLIST" -> PunishmentType.BLACKLIST;
+            case "KICK" -> PunishmentType.KICK;
 
             default -> PunishmentType.BAN;
         };

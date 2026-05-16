@@ -6,6 +6,7 @@ import net.mythicpvp.core.punishment.PunishmentService;
 import net.mythicpvp.core.punishment.PunishmentType;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.CommandPermission;
+import net.mythicpvp.suite.command.Complete;
 import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
 import net.mythicpvp.suite.hex.MythicHex;
@@ -39,8 +40,7 @@ public abstract class PunishmentDirectCommand extends MythicCommand {
         this.clock = clock;
     }
 
-    @Default
-    public void execute(@NotNull CommandSender sender, @NotNull String[] args) {
+    protected final void run(@NotNull CommandSender sender, @NotNull String[] args) {
         try {
             PunishmentCommand parsed = PunishmentCommand.parse(args, durationRequired, "No reason specified");
             OfflinePlayer target = Bukkit.getOfflinePlayer(parsed.targetName());
@@ -75,6 +75,9 @@ public abstract class PunishmentDirectCommand extends MythicCommand {
         public Ban(@NotNull PunishmentService p, @NotNull String s, @NotNull Clock c) {
             super(p, PunishmentType.BAN, false, s, c);
         }
+        @Default
+        @Complete({"players", "punishment-reasons"})
+        public void execute(@NotNull CommandSender sender, @NotNull String[] args) { run(sender, args); }
     }
 
     @CommandAlias("tempban")
@@ -83,6 +86,9 @@ public abstract class PunishmentDirectCommand extends MythicCommand {
         public TempBan(@NotNull PunishmentService p, @NotNull String s, @NotNull Clock c) {
             super(p, PunishmentType.TEMP_BAN, true, s, c);
         }
+        @Default
+        @Complete({"players", "punishment-durations", "punishment-reasons"})
+        public void execute(@NotNull CommandSender sender, @NotNull String[] args) { run(sender, args); }
     }
 
     @CommandAlias("mute")
@@ -91,6 +97,9 @@ public abstract class PunishmentDirectCommand extends MythicCommand {
         public Mute(@NotNull PunishmentService p, @NotNull String s, @NotNull Clock c) {
             super(p, PunishmentType.MUTE, false, s, c);
         }
+        @Default
+        @Complete({"players", "punishment-reasons"})
+        public void execute(@NotNull CommandSender sender, @NotNull String[] args) { run(sender, args); }
     }
 
     @CommandAlias("tempmute")
@@ -99,6 +108,9 @@ public abstract class PunishmentDirectCommand extends MythicCommand {
         public TempMute(@NotNull PunishmentService p, @NotNull String s, @NotNull Clock c) {
             super(p, PunishmentType.TEMP_MUTE, true, s, c);
         }
+        @Default
+        @Complete({"players", "punishment-durations", "punishment-reasons"})
+        public void execute(@NotNull CommandSender sender, @NotNull String[] args) { run(sender, args); }
     }
 
     @CommandAlias("blacklist")
@@ -107,6 +119,9 @@ public abstract class PunishmentDirectCommand extends MythicCommand {
         public Blacklist(@NotNull PunishmentService p, @NotNull String s, @NotNull Clock c) {
             super(p, PunishmentType.BLACKLIST, false, s, c);
         }
+        @Default
+        @Complete({"players", "punishment-reasons"})
+        public void execute(@NotNull CommandSender sender, @NotNull String[] args) { run(sender, args); }
     }
 
     @CommandAlias("warn")
@@ -115,6 +130,20 @@ public abstract class PunishmentDirectCommand extends MythicCommand {
         public Warn(@NotNull PunishmentService p, @NotNull String s, @NotNull Clock c) {
             super(p, PunishmentType.WARN, false, s, c);
         }
+        @Default
+        @Complete({"players", "punishment-reasons"})
+        public void execute(@NotNull CommandSender sender, @NotNull String[] args) { run(sender, args); }
+    }
+
+    @CommandAlias("kick")
+    @CommandPermission("mythic.core.punish.kick")
+    public static final class Kick extends PunishmentDirectCommand {
+        public Kick(@NotNull PunishmentService p, @NotNull String s, @NotNull Clock c) {
+            super(p, PunishmentType.KICK, false, s, c);
+        }
+        @Default
+        @Complete({"players", "punishment-reasons"})
+        public void execute(@NotNull CommandSender sender, @NotNull String[] args) { run(sender, args); }
     }
 
     @CommandAlias("unban|pardon")
@@ -127,6 +156,7 @@ public abstract class PunishmentDirectCommand extends MythicCommand {
         }
 
         @Default
+        @Complete({"players"})
         public void execute(@NotNull CommandSender sender, @NotNull String targetName) {
             OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
             UUID staffUuid = sender instanceof Player player ? player.getUniqueId() : PunishmentService.SYSTEM_STAFF;

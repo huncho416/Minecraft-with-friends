@@ -117,9 +117,13 @@ public final class CreditShopService {
     }
 
     public void openCategory(@NotNull Player player, @NotNull ShopCategory category) {
+        openCategory(player, category, 0);
+    }
+
+    public void openCategory(@NotNull Player player, @NotNull ShopCategory category, int page) {
         UUID uuid = player.getUniqueId();
         long balance = creditService.getBalance(uuid);
-        PaginatedMenu menu = PaginatedMenu.create(4, text.categoryTitle(category.displayName()));
+        PaginatedMenu menu = PaginatedMenu.create(6, text.categoryTitle(category.displayName()));
 
         for (ShopItem item : category.items()) {
             boolean canAfford = balance >= item.cost();
@@ -134,7 +138,12 @@ public final class CreditShopService {
                     .build(), event -> openConfirm(player, category, item));
         }
 
-        menu.open(player);
+        menu.staticSlot(49, MythicItem.create(Material.BARRIER)
+                        .name("&#FF8A8ABack")
+                        .lore(List.of("&7Return to the shop main menu."))
+                        .build(),
+                event -> openMain(player));
+        menu.open(player, page);
     }
 
     public void openConfirm(@NotNull Player player, @NotNull ShopCategory category, @NotNull ShopItem item) {

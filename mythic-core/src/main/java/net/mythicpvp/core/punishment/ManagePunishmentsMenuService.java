@@ -157,6 +157,7 @@ public final class ManagePunishmentsMenuService {
             case TEMP_MUTE -> Material.YELLOW_WOOL;
             case BLACKLIST -> Material.BLACK_WOOL;
             case WARN -> Material.WHITE_WOOL;
+            case KICK -> Material.IRON_BOOTS;
         };
     }
 
@@ -169,6 +170,7 @@ public final class ManagePunishmentsMenuService {
             case TEMP_MUTE -> "&#FFEC8A";
             case BLACKLIST -> "&#666666";
             case WARN -> "&#FFFFFF";
+            case KICK -> "&#9CC3FF";
         };
     }
 
@@ -181,6 +183,7 @@ public final class ManagePunishmentsMenuService {
             case TEMP_MUTE -> "Temp Mute";
             case BLACKLIST -> "Blacklist";
             case WARN -> "Warn";
+            case KICK -> "Kick";
         };
     }
 }
