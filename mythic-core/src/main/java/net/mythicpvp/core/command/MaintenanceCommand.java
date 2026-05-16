@@ -74,7 +74,7 @@ public final class MaintenanceCommand extends MythicCommand {
         sender.sendMessage(MythicHex.colorize(
                 "&#9CFF9CMaintenance mode is now " + label + "&#9CFF9C."));
         net.kyori.adventure.text.Component notice = MythicHex.colorize(
-                "&#FFEC8A&l[Maintenance] &#FFFFFFMaintenance mode " + label + " &#FFFFFF(by " + sender.getName() + ").");
+                "&#C53030&l[Maintenance] &#FFFFFFMaintenance mode " + label + " &#FFFFFF(by " + sender.getName() + ").");
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             viewer.sendMessage(notice);
         }

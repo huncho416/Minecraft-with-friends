@@ -16,7 +16,7 @@ import net.mythicpvp.suite.database.schema.dto.PunishmentRow;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 
-@SuppressWarnings("deprecation")
 public final class PunishmentLoginGuard implements Listener {
 
     public static final String BYPASS_PERMISSION = "mythic.core.punish.bypass";
@@ -53,15 +52,12 @@ public final class PunishmentLoginGuard implements Listener {
         this.messages = messages;
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onLogin(@NotNull PlayerLoginEvent event) {
-        if (event.getPlayer().hasPermission(BYPASS_PERMISSION)) {
-            return;
-        }
-        UUID uuid = event.getPlayer().getUniqueId();
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
+        UUID uuid = event.getUniqueId();
         Component reason = resolveKickReason(uuid);
         if (reason != null) {
-            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, reason);
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, reason);
         }
     }
 
