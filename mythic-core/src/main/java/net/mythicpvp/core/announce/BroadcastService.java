@@ -11,6 +11,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class BroadcastService {
 
@@ -83,12 +85,43 @@ public final class BroadcastService {
     }
 
     private void renderLocally(@NotNull String formatted) {
-        Component component = MythicHex.colorize(formatted);
+        Component component = renderWithLinks(formatted);
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendMessage(component);
         }
 
         Bukkit.getConsoleSender().sendMessage(component);
+    }
+
+    @NotNull
+    private static Component renderWithLinks(@NotNull String formatted) {
+        return MythicHex.colorize(injectClickableLinks(formatted));
+    }
+
+    private static final Pattern URL_PATTERN = Pattern.compile(
+            "(?i)\\b((?:https?://[^\\s<>\"']+)|(?:(?:www\\.|discord\\.gg/|[a-z0-9-]+\\.)" +
+                    "[a-z0-9-]+(?:\\.[a-z]{2,})+(?:/[^\\s<>\"']*)?))");
+
+    @NotNull
+    static String injectClickableLinks(@NotNull String input) {
+        Matcher m = URL_PATTERN.matcher(input);
+        if (!m.find()) {
+            return input;
+        }
+        m.reset();
+        StringBuilder out = new StringBuilder(input.length() + 32);
+        int last = 0;
+        while (m.find()) {
+            out.append(input, last, m.start());
+            String match = m.group(1);
+            String url = match.startsWith("http") ? match : "https://" + match;
+            out.append("<click:open_url:'").append(url).append("'>")
+                    .append(match)
+                    .append("</click>");
+            last = m.end();
+        }
+        out.append(input, last, input.length());
+        return out.toString();
     }
 
     @NotNull

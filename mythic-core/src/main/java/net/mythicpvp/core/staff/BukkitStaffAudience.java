@@ -28,7 +28,7 @@ public final class BukkitStaffAudience implements StaffAudience {
                 "rank_color", coerceColor(message.rankColor()),
                 "chat_prefix", message.chatPrefix(),
                 "channel_tag", channelTag,
-                "message", message.message(),
+                "message", stripColorCodes(message.message()),
                 "channel", channel.id()));
         Component component = MythicHex.colorize(rendered);
 
@@ -40,6 +40,15 @@ public final class BukkitStaffAudience implements StaffAudience {
 
         CommandSender console = Bukkit.getConsoleSender();
         console.sendMessage(component);
+    }
+
+    @NotNull
+    private static String stripColorCodes(@NotNull String input) {
+        return input
+                .replaceAll("(?i)&#[0-9a-f]{6}", "")
+                .replaceAll("(?i)&[0-9a-fk-or]", "")
+                .replaceAll("(?i)§#[0-9a-f]{6}", "")
+                .replaceAll("(?i)§[0-9a-fk-or]", "");
     }
 
     @NotNull

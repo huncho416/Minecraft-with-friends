@@ -31,7 +31,17 @@ public final class ServerSelectorService {
             } catch (IllegalArgumentException e) {
                 material = Material.CHEST;
             }
-            groups.add(new ServerGroup(role, displayName, material));
+            String tagline = String.valueOf(map.getOrDefault("tagline", ""));
+            String releaseDate = String.valueOf(map.getOrDefault("release-date", "TBA"));
+            String age = String.valueOf(map.getOrDefault("age", ""));
+            List<String> lore = new ArrayList<>();
+            Object loreObj = map.get("lore");
+            if (loreObj instanceof List<?> raw) {
+                for (Object line : raw) {
+                    lore.add(String.valueOf(line));
+                }
+            }
+            groups.add(new ServerGroup(role, displayName, material, tagline, releaseDate, age, lore));
         }
     }
 
@@ -63,7 +73,14 @@ public final class ServerSelectorService {
                 .toList();
     }
 
-    public record ServerGroup(@NotNull String role, @NotNull String displayName, @NotNull Material material) {}
+    public record ServerGroup(
+            @NotNull String role,
+            @NotNull String displayName,
+            @NotNull Material material,
+            @NotNull String tagline,
+            @NotNull String releaseDate,
+            @NotNull String age,
+            @NotNull List<String> lore) {}
 
     public record ServerInfo(@NotNull String serverId, @NotNull String role, int playerCount, double tps, boolean healthy) {}
 }

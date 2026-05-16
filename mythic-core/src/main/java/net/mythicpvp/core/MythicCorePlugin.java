@@ -206,6 +206,13 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 transferService, messages, serverIdentity.id(), serverIdentity.type(), getLogger()));
         commandManager.register(new net.mythicpvp.core.command.QueueCommand(transferQueueService));
         displayService.setQueuePositionLookup(transferQueueService::position);
+        displayService.setQueueStatusLookup(transferQueueService::statusFor);
+        transferQueueService.setOnQueueChange(uuid -> {
+            org.bukkit.entity.Player p = getServer().getPlayer(uuid);
+            if (p != null && p.isOnline()) {
+                net.mythicpvp.suite.scheduler.MythicScheduler.runSync(this, () -> displayService.apply(p));
+            }
+        });
         commandManager.register(new GrantCommand(grantFlowService));
         commandManager.register(new GrantsCommand(grantService, rankService));
         commandManager.register(new CGrantCommand(grantService));

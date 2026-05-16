@@ -19,8 +19,23 @@ spawn:
 selector:
   groups:
     - role: "SKYBLOCK"
-      display-name: "&#F529BESkyblock"
+      display-name: "&#9CFF9CSkyblock Realms"
       material: "GRASS_BLOCK"
+      tagline: "&#9CFF9CIslands, economies, and endless progression."
+      release-date: "May 2026"
+      age: "Brand new"
+      lore:
+        - "&7Carve out your own floating island, automate"
+        - "&7crops and minions, raid bosses, and trade with"
+        - "&7the player-run market. Co-op friendly with a"
+        - "&7full party + warp system."
+        - ""
+        - "&7Released: &f%release_date%"
+        - "&7Age: &f%age%"
+        - "&7Online servers: &f%servers%"
+        - "&7Players online: &f%players%"
+        - ""
+        - "&#9CFF9CClick to join the queue"
 
 # Hub activities.
 activities:

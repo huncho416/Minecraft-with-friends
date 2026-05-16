@@ -32,6 +32,18 @@ public final class TransferQueueService {
     private volatile boolean paused;
     private volatile boolean enabled = true;
     private volatile int drainPerTick = 1;
+    private volatile java.util.function.Consumer<UUID> onQueueChange = uuid -> {};
+
+    public void setOnQueueChange(@NotNull java.util.function.Consumer<UUID> handler) {
+        this.onQueueChange = handler;
+    }
+
+    private void fireChange(@NotNull UUID player) {
+        try {
+            onQueueChange.accept(player);
+        } catch (RuntimeException ignored) {
+        }
+    }
 
     public TransferQueueService(@NotNull JavaPlugin plugin,
                                 @NotNull ProxyTransferService transferService,
@@ -55,11 +67,14 @@ public final class TransferQueueService {
                 "&#D2D8E0Queued for &#FFFFFF" + targetShard
                         + "&#D2D8E0 — position &#FFFFFF#" + (pos == null ? "?" : pos)
                         + "&#D2D8E0 of &#FFFFFF" + entries.size()));
+        fireChange(id);
         return true;
     }
 
     public void cancel(@NotNull UUID player) {
-        entries.remove(player);
+        if (entries.remove(player) != null) {
+            fireChange(player);
+        }
     }
 
     @Nullable
@@ -74,6 +89,24 @@ public final class TransferQueueService {
             }
         }
         return null;
+    }
+
+    @Nullable
+    public QueueStatus statusFor(@NotNull UUID player) {
+        if (!entries.containsKey(player)) {
+            return null;
+        }
+        List<QueueEntry> ordered = sortedSnapshot();
+        for (int i = 0; i < ordered.size(); i++) {
+            QueueEntry e = ordered.get(i);
+            if (e.player.equals(player)) {
+                return new QueueStatus(i + 1, ordered.size(), e.shard);
+            }
+        }
+        return null;
+    }
+
+    public record QueueStatus(int position, int total, @NotNull String shard) {
     }
 
     public int size() {
@@ -118,6 +151,7 @@ public final class TransferQueueService {
         if (p != null && p.isOnline()) {
             transferService.transfer(p, next.shard);
         }
+        fireChange(next.player);
         return true;
     }
 
@@ -157,12 +191,14 @@ public final class TransferQueueService {
             Player p = Bukkit.getPlayer(entry.player);
             if (p == null || !p.isOnline()) {
                 entries.remove(entry.player);
+                fireChange(entry.player);
                 continue;
             }
             entries.remove(entry.player);
             if (transferService.transfer(p, entry.shard)) {
                 sent++;
             }
+            fireChange(entry.player);
         }
     }
 

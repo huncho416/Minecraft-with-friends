@@ -42,18 +42,48 @@ public final class ChatFormatListener implements Listener {
         Player sender = event.getPlayer();
         UUID uuid = sender.getUniqueId();
         CoreRank rank = activeRank(uuid);
-        String template = templateFor(rank);
+        String template = defaultTemplate();
         String message = PlainTextComponentSerializer.plainText().serialize(event.message());
         String chosenColor = chatColors == null ? null : chatColors.colorFor(uuid);
         String messageColor = effectiveMessageColor(sender, rank, chosenColor);
+        String prefix = rankPrefix(rank);
+        String playerColor = playerNameColor(rank);
         String rendered = template
-                .replace("%player%", sender.getName())
-                .replace("%message%", messageColor + sanitize(message))
-                .replace("%chat_prefix%", rank == null ? "" : sanitize(rank.chatPrefix()))
+                .replace("%player%", prefix + playerColor + sender.getName())
+                .replace("%message%", messageColor + stripColorCodes(sanitize(message)))
+                .replace("%chat_prefix%", sanitize(prefix))
                 .replace("%rank%", rank == null ? "" : rank.name())
-                .replace("%rank_color%", rank == null ? "&7" : ampHex(rank.color()));
+                .replace("%rank_color%", playerColor);
         Component component = MythicHex.colorize(rendered);
         event.renderer((source, displayName, msg, viewer) -> component);
+    }
+
+    @NotNull
+    private String defaultTemplate() {
+        return coreConfig.getString(
+                "chat.format.default",
+                "&#D2D8E0%player% &8» &7%message%");
+    }
+
+    @NotNull
+    private String rankPrefix(@Nullable CoreRank rank) {
+        if (rank == null || rank.id().equalsIgnoreCase("default")) {
+            return "";
+        }
+        String prefix = rank.chatPrefix();
+        if (prefix == null || prefix.isBlank()) {
+            prefix = rank.prefix();
+        }
+        return prefix == null || prefix.isBlank() ? "" : prefix + " ";
+    }
+
+    @NotNull
+    private String playerNameColor(@Nullable CoreRank rank) {
+        if (rank == null || rank.id().equalsIgnoreCase("default")) {
+            return "&#D2D8E0";
+        }
+        String color = rank.color();
+        return color == null || color.isBlank() ? "&#D2D8E0" : ampHex(color);
     }
 
     @Nullable
@@ -67,21 +97,12 @@ public final class ChatFormatListener implements Listener {
     }
 
     @NotNull
-    private String templateFor(@Nullable CoreRank rank) {
-        String defaultTemplate = coreConfig.getString(
-                "chat.format.default",
-                "&#D2D8E0%player% &8» &7%message%");
-        if (rank == null) {
-            return defaultTemplate;
-        }
-        if (rank.id().equalsIgnoreCase("default")) {
-            return defaultTemplate;
-        }
-        String fromRank = rank.chatFormat();
-        if (fromRank == null || fromRank.isBlank() || fromRank.contains("&f<%player%>")) {
-            return defaultTemplate;
-        }
-        return fromRank;
+    private static String stripColorCodes(@NotNull String input) {
+        return input
+                .replaceAll("(?i)&#[0-9a-f]{6}", "")
+                .replaceAll("(?i)&[0-9a-fk-or]", "")
+                .replaceAll("(?i)§#[0-9a-f]{6}", "")
+                .replaceAll("(?i)§[0-9a-fk-or]", "");
     }
 
     @NotNull
