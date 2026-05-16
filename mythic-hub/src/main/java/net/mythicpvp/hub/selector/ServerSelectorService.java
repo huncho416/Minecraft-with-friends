@@ -31,9 +31,12 @@ public final class ServerSelectorService {
             } catch (IllegalArgumentException e) {
                 material = Material.CHEST;
             }
-            String tagline = String.valueOf(map.getOrDefault("tagline", ""));
-            String releaseDate = String.valueOf(map.getOrDefault("release-date", "TBA"));
-            String age = String.valueOf(map.getOrDefault("age", ""));
+            Object taglineObj = map.get("tagline");
+            String tagline = taglineObj == null ? "" : String.valueOf(taglineObj);
+            Object releaseDateObj = map.get("release-date");
+            String releaseDate = releaseDateObj == null ? "TBA" : String.valueOf(releaseDateObj);
+            Object ageObj = map.get("age");
+            String age = ageObj == null ? "" : String.valueOf(ageObj);
             List<String> lore = new ArrayList<>();
             Object loreObj = map.get("lore");
             if (loreObj instanceof List<?> raw) {
