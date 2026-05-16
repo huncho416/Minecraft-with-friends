@@ -10,8 +10,6 @@ use std::time::Duration;
 use tokio::fs;
 use tracing::{debug, info, warn};
 
-const HEARTBEAT_STALE_AFTER_SECS: i64 = 60;
-
 #[derive(Debug, Serialize)]
 struct ExportedServerConfig<'a> {
     name: &'a str,
@@ -74,26 +72,12 @@ impl ConfigExporter {
     }
 
     async fn write_all(&self, entries: &[ServerEntry]) -> std::io::Result<()> {
-        let now_micros = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_micros() as i64)
-            .unwrap_or(0);
-        let stale_after_micros: i64 = HEARTBEAT_STALE_AFTER_SECS * 1_000_000;
         let mut keep: HashSet<String> = HashSet::new();
         for entry in entries {
             if entry.status != ServerStatus::Healthy.wire() {
                 continue;
             }
             if entry.shard_id == self.proxy_shard_id {
-                continue;
-            }
-            let age_micros = now_micros.saturating_sub(entry.last_heartbeat);
-            if age_micros > stale_after_micros {
-                debug!(
-                    shard = %entry.shard_id,
-                    age_secs = age_micros / 1_000_000,
-                    "skipping stale heartbeat shard"
-                );
                 continue;
             }
             keep.insert(entry.shard_id.clone());
@@ -195,7 +179,7 @@ fn snapshot_fingerprint_with_now(entries: &[ServerEntry]) -> String {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs() as i64)
         .unwrap_or(0);
-    let bucket = now_secs / (HEARTBEAT_STALE_AFTER_SECS / 2);
+    let bucket = now_secs / 30;
     format!("{}\n#now-bucket:{}", snapshot_fingerprint(entries), bucket)
 }
 
