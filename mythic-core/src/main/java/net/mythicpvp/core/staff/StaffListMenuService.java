@@ -97,7 +97,7 @@ public final class StaffListMenuService {
                     sessionTracker.loginTime(online)));
         }
         entries.sort(Comparator
-                .comparingInt((StaffEntry e) -> e.rank == null ? Integer.MAX_VALUE : e.rank.weight())
+                .comparingInt((StaffEntry e) -> e.rank == null ? Integer.MIN_VALUE : e.rank.weight()).reversed()
                 .thenComparing(e -> e.name.toLowerCase()));
         return entries;
     }

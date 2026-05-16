@@ -147,7 +147,7 @@ public final class GrantService {
         return active(targetUuid).stream()
                 .map(grant -> rankService.get(grant.rankId()))
                 .filter(rank -> rank != null)
-                .min(Comparator.comparingInt(CoreRank::weight))
+                .max(Comparator.comparingInt(CoreRank::weight))
                 .map(CoreRank::id)
                 .orElse("default");
     }

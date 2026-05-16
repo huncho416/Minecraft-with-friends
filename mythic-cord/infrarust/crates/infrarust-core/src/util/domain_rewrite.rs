@@ -28,16 +28,21 @@ pub fn rewrite_handshake(
     server_config: &ServerConfig,
 ) -> Result<Vec<u8>, CoreError> {
     match &server_config.domain_rewrite {
-        DomainRewrite::None => Ok(first_raw_packet(handshake_data)),
+        DomainRewrite::None => normalize_intent_or_raw(handshake_data),
         DomainRewrite::Explicit(domain) => encode_handshake_with_domain(handshake_data, domain),
         DomainRewrite::FromBackend => server_config.addresses.first().map_or_else(
-            || Ok(first_raw_packet(handshake_data)),
+            || normalize_intent_or_raw(handshake_data),
             |addr| encode_handshake_with_domain(handshake_data, &addr.host),
         ),
-        _ => {
-            // Future non-exhaustive variants: pass through
-            Ok(first_raw_packet(handshake_data))
-        }
+        _ => normalize_intent_or_raw(handshake_data),
+    }
+}
+
+fn normalize_intent_or_raw(handshake_data: &HandshakeData) -> Result<Vec<u8>, CoreError> {
+    if matches!(handshake_data.intent, ConnectionIntent::Transfer) {
+        encode_handshake_with_domain(handshake_data, &handshake_data.domain)
+    } else {
+        Ok(first_raw_packet(handshake_data))
     }
 }
 
