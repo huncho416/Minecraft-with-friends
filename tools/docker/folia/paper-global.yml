@@ -1,5 +1,8 @@
 _version: 29
 proxies:
+  # Allow Player.transfer(host, port) to send the client to another server.
+  # Required for /server <shard> and the hub server selector to work.
+  accepts-transfers: true
   velocity:
     # Modern forwarding: Infrarust authenticates with Mojang and signs the
     # player handshake with this secret. The hub stays online-mode=false in

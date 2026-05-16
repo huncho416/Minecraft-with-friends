@@ -36,6 +36,19 @@ apply_property() {
         echo "${key}=${value}" >> "${file}"
     fi
 }
+apply_paper_accepts_transfers() {
+    local target="${DATA_DIR}/config/paper-global.yml"
+    [ -f "${target}" ] || return 0
+    if grep -qE "^  accepts-transfers:" "${target}"; then
+        sed -i "s|^  accepts-transfers:.*|  accepts-transfers: true|" "${target}"
+    else
+        # Insert directly after "proxies:" line
+        sed -i "/^proxies:/a\\  accepts-transfers: true" "${target}"
+    fi
+    echo "[entrypoint] ensured proxies.accepts-transfers: true in paper-global.yml"
+}
+apply_paper_accepts_transfers
+
 apply_velocity_secret() {
     local target="${DATA_DIR}/config/paper-global.yml"
     if [ ! -f "${target}" ]; then
