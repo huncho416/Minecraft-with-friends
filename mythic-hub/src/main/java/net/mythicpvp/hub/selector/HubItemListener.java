@@ -24,24 +24,27 @@ import java.util.List;
 
 public final class HubItemListener implements Listener {
 
-    private static final int SELECTOR_SLOT = 4;
+    private static final int SELECTOR_SLOT = 0;
+    private static final int HUB_SLOT = 8;
 
     private final ServerSelectorMenu selectorMenu;
     private final NamespacedKey selectorKey;
+    private final NamespacedKey hubKey;
 
     public HubItemListener(@NotNull JavaPlugin plugin, @NotNull ServerSelectorMenu selectorMenu) {
         this.selectorMenu = selectorMenu;
         this.selectorKey = new NamespacedKey(plugin, "server_selector");
+        this.hubKey = new NamespacedKey(plugin, "hub_selector");
     }
 
     @EventHandler
     public void onJoin(@NotNull PlayerJoinEvent event) {
-        giveSelector(event.getPlayer());
+        giveItems(event.getPlayer());
     }
 
     @EventHandler
     public void onRespawn(@NotNull PlayerRespawnEvent event) {
-        giveSelector(event.getPlayer());
+        giveItems(event.getPlayer());
     }
 
     @EventHandler
@@ -49,16 +52,22 @@ public final class HubItemListener implements Listener {
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
-        if (!isSelector(event.getItem())) {
+        ItemStack item = event.getItem();
+        if (isSelector(item)) {
+            event.setCancelled(true);
+            selectorMenu.openGroupMenu(event.getPlayer());
             return;
         }
-        event.setCancelled(true);
-        selectorMenu.openGroupMenu(event.getPlayer());
+        if (isHubItem(item)) {
+            event.setCancelled(true);
+            event.getPlayer().performCommand("hub");
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onDrop(@NotNull PlayerDropItemEvent event) {
-        if (isSelector(event.getItemDrop().getItemStack())) {
+        ItemStack stack = event.getItemDrop().getItemStack();
+        if (isSelector(stack) || isHubItem(stack)) {
             event.setCancelled(true);
         }
     }
@@ -70,35 +79,40 @@ public final class HubItemListener implements Listener {
         }
         ItemStack current = event.getCurrentItem();
         ItemStack cursor = event.getCursor();
-        if (isSelector(current) || isSelector(cursor)) {
+        if (isSelector(current) || isSelector(cursor) || isHubItem(current) || isHubItem(cursor)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryDrag(@NotNull InventoryDragEvent event) {
-        if (isSelector(event.getOldCursor())) {
+        ItemStack cursor = event.getOldCursor();
+        if (isSelector(cursor) || isHubItem(cursor)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSwapHands(@NotNull PlayerSwapHandItemsEvent event) {
-        if (isSelector(event.getMainHandItem()) || isSelector(event.getOffHandItem())) {
+        ItemStack main = event.getMainHandItem();
+        ItemStack off = event.getOffHandItem();
+        if (isSelector(main) || isSelector(off) || isHubItem(main) || isHubItem(off)) {
             event.setCancelled(true);
         }
     }
 
-    private void giveSelector(@NotNull Player player) {
+    private void giveItems(@NotNull Player player) {
         for (int i = 0; i < player.getInventory().getSize(); i++) {
-            if (i == SELECTOR_SLOT) {
+            if (i == SELECTOR_SLOT || i == HUB_SLOT) {
                 continue;
             }
-            if (isSelector(player.getInventory().getItem(i))) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (isSelector(stack) || isHubItem(stack)) {
                 player.getInventory().setItem(i, null);
             }
         }
         player.getInventory().setItem(SELECTOR_SLOT, selectorItem());
+        player.getInventory().setItem(HUB_SLOT, hubItem());
     }
 
     private boolean isSelector(ItemStack item) {
@@ -109,14 +123,34 @@ public final class HubItemListener implements Listener {
         return marker != null && marker == (byte) 1;
     }
 
+    private boolean isHubItem(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) {
+            return false;
+        }
+        Byte marker = item.getItemMeta().getPersistentDataContainer().get(hubKey, PersistentDataType.BYTE);
+        return marker != null && marker == (byte) 1;
+    }
+
     @NotNull
     private ItemStack selectorItem() {
         ItemStack item = MythicItem.create(Material.COMPASS)
                 .name("&#F529BEServer Selector")
-                .lore(List.of("&#D2D8E0Right click to browse servers"))
+                .lore(List.of("&#D2D8E0Right click to browse gamemodes"))
                 .build();
         var meta = item.getItemMeta();
         meta.getPersistentDataContainer().set(selectorKey, PersistentDataType.BYTE, (byte) 1);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    @NotNull
+    private ItemStack hubItem() {
+        ItemStack item = MythicItem.create(Material.BEACON)
+                .name("&#F529BEHub Selector")
+                .lore(List.of("&#D2D8E0Right click to return to a hub"))
+                .build();
+        var meta = item.getItemMeta();
+        meta.getPersistentDataContainer().set(hubKey, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
         return item;
     }

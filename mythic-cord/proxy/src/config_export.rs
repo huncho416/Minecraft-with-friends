@@ -139,7 +139,10 @@ impl ConfigExporter {
         if suffix.is_empty() {
             return vec![entry.shard_id.clone()];
         }
-        let mut domains = vec![format!("{}.{}", entry.shard_id, suffix)];
+        let mut domains = vec![
+            entry.shard_id.clone(),
+            format!("{}.{}", entry.shard_id, suffix),
+        ];
         if entry.role.eq_ignore_ascii_case("HUB") {
             domains.insert(0, suffix.to_string());
         }
@@ -237,9 +240,11 @@ mod tests {
         assert!(!body.contains("network = "));
         assert!(body.contains("addresses = [\"hub-1.svc.local:25565\"]"));
         assert!(body.contains("\"mythic.test\""));
+        assert!(body.contains("\"hub-1\""));
         assert!(body.contains("\"hub-1.mythic.test\""));
         let skyblock_body = std::fs::read_to_string(tmp.path().join("sb-1.toml")).unwrap();
         assert!(!skyblock_body.contains("\"mythic.test\""));
+        assert!(skyblock_body.contains("\"sb-1\""));
         assert!(skyblock_body.contains("\"sb-1.mythic.test\""));
     }
 

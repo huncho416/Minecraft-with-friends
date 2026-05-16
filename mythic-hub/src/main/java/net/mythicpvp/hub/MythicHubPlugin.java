@@ -2,7 +2,10 @@ package net.mythicpvp.hub;
 
 import net.mythicpvp.hub.activity.HubActivityListener;
 import net.mythicpvp.hub.activity.HubActivityService;
+import net.mythicpvp.hub.command.BuildModeCommand;
 import net.mythicpvp.hub.command.ServerSelectorCommand;
+import net.mythicpvp.hub.safety.BuildModeService;
+import net.mythicpvp.hub.safety.HubSafetyListener;
 import net.mythicpvp.hub.selector.HubItemListener;
 import net.mythicpvp.hub.selector.RegistrySubscriber;
 import net.mythicpvp.hub.selector.ServerSelectorMenu;
@@ -54,10 +57,14 @@ public class MythicHubPlugin extends JavaPlugin implements MythicPlugin {
         ServerSelectorMenu selectorMenu = new ServerSelectorMenu(selectorService);
         commandManager.register(new ServerSelectorCommand(selectorMenu));
 
+        BuildModeService buildModeService = new BuildModeService();
+        commandManager.register(new BuildModeCommand(buildModeService));
+
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(new SpawnListener(spawnService), this);
         getServer().getPluginManager().registerEvents(new HubItemListener(this, selectorMenu), this);
         getServer().getPluginManager().registerEvents(new HubActivityListener(activityService), this);
+        getServer().getPluginManager().registerEvents(new HubSafetyListener(buildModeService), this);
     }
 
     @Override
