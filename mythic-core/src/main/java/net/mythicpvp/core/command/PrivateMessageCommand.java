@@ -60,11 +60,12 @@ public final class PrivateMessageCommand extends MythicCommand {
         if (rank == null) {
             return "&#D2D8E0" + player.getName();
         }
-        return rank.chatFormat()
+        String raw = rank.chatFormat()
                 .replace("%chat_prefix%", rank.chatPrefix())
                 .replace("%prefix%", rank.prefix())
                 .replace("%player%", player.getName())
                 .replace("%message%", "");
+        return MythicHex.normalizeBareHex(raw);
     }
 
     @CommandAlias("reply|r")

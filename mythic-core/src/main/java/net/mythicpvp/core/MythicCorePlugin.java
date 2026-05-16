@@ -167,7 +167,11 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         ProtocolManager protocolManager = ProtocolManager.getInstance();
         punishmentService = new PunishmentService(protocolManager, Clock.systemUTC());
         punishmentService.setPersistence(persistenceGateway);
-        punishmentService.setEnforcer(new net.mythicpvp.core.punishment.PunishmentEnforcer(this, messages));
+        net.mythicpvp.core.punishment.PunishmentEnforcer punishmentEnforcer =
+                new net.mythicpvp.core.punishment.PunishmentEnforcer(this, messages);
+        punishmentService.setEnforcer(punishmentEnforcer);
+        punishmentService.setPardonListener(punishmentEnforcer::onPardon);
+        punishmentService.setExpiryListener(punishmentEnforcer::onExpiry);
         new net.mythicpvp.core.punishment.PunishmentSqlRefresher(punishmentService, getLogger()).start();
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
                 new net.mythicpvp.core.punishment.PunishmentMenuText(menusConfig);
@@ -181,6 +185,11 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
         getServer().getPluginManager().registerEvents(
                 new PunishmentLoginGuard(punishmentService, hydrationSink, messages), this);
+        net.mythicpvp.core.maintenance.MaintenanceService maintenanceService =
+                new net.mythicpvp.core.maintenance.MaintenanceService(getLogger(), getDataFolder());
+        getServer().getPluginManager().registerEvents(
+                new net.mythicpvp.core.maintenance.MaintenanceLoginGuard(maintenanceService, messages), this);
+        commandManager.register(new net.mythicpvp.core.command.MaintenanceCommand(maintenanceService));
 
         displayService = new DisplayService(this, rankService, grantService, serverIdentity.id());
         displayService.loadTemplates(
@@ -213,6 +222,11 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         transferService.setProxyDomain(proxyDomain, proxyPort);
         getLogger().info("[transfer] using proxy domain " + proxyDomain + ":" + proxyPort
                 + " for cross-shard transfers");
+        getServer().getServicesManager().register(
+                net.mythicpvp.core.transfer.ProxyTransferService.class,
+                transferService,
+                this,
+                org.bukkit.plugin.ServicePriority.Normal);
         net.mythicpvp.core.transfer.TransferQueueService transferQueueService =
                 new net.mythicpvp.core.transfer.TransferQueueService(
                         this, transferService, rankService, grantService);

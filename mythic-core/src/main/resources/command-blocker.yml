@@ -100,6 +100,8 @@ required-permissions:
   unban: "mythic.core.punish.unban"
   filter: "mythic.core.chatfilter.manage"
   filters: "mythic.core.chatfilter.manage"
+  maintenance: "mythic.core.maintenance"
+  maintenancemode: "mythic.core.maintenance"
   pardon: "mythic.core.punish.unban"
   punishmentadd: "mythic.core.punish.template"
   punishmentedit: "mythic.core.punish.template"

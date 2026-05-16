@@ -1,9 +1,14 @@
 # Chat-filter definitions used by the in-game public chat.
 # Each filter has:
 #   id      (numeric key)
-#   title   (human-readable label shown in /history and staff notifications)
+#   title   (human-readable label shown in /history and staff notifications;
+#            also shown to the offender in escalation messages, so prefer
+#            generic category names like "Slurs" over the actual slur)
 #   type    LITERAL or REGEX
-#   pattern the word to match (literal) or a Java regex
+#   patterns list of patterns (any matching pattern triggers the filter);
+#            for LITERAL, each pattern is one root word and is compiled
+#            into a bypass-resistant regex (tolerates spaces, punctuation,
+#            digit/letter substitution, etc.)
 #   auto-punish  when false, every match only warns + warns the player;
 #                when true, repeated matches escalate per the ladder below:
 #                  1st  : silent warn + history entry
@@ -15,10 +20,6 @@
 #                  7th  : 365-day mute (final warning shown beforehand)
 #                  8th+ : permanent mute
 #
-# Literal matches are made case-insensitive AND tolerate spaces, punctuation,
-# digit-substitution attempts, etc. between letters (so "b a d" or "b@d"
-# still matches "bad"). For more precise control, use REGEX.
-#
 # Operators with the permission mythic.core.chatfilter.bypass skip filtering.
 # Operators with mythic.core.chatfilter.manage can use /filter and /filters.
 #
@@ -27,17 +28,21 @@
 
 filters:
   1:
-    title: "Slur (n-word)"
+    title: "Slurs"
     type: LITERAL
-    pattern: "nigger"
+    patterns:
+      - "nigger"
+      - "nigga"
+      - "faggot"
+      - "fag"
+      - "retard"
+      - "kike"
+      - "tranny"
     auto-punish: true
   2:
-    title: "Slur (f-word)"
-    type: LITERAL
-    pattern: "faggot"
-    auto-punish: true
-  3:
     title: "Advertising"
     type: REGEX
-    pattern: "\\b(?:join|play|come\\s+to)\\s+(?:my|our)?\\s*(?:server|ip)\\b"
+    patterns:
+      - "\\b(?:join|play|come\\s+to)\\s+(?:my|our)?\\s*(?:server|ip)\\b"
+      - "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(?::\\d+)?\\b"
     auto-punish: false

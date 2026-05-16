@@ -31,6 +31,8 @@ public final class PunishmentService {
 
     private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
     private volatile Consumer<PunishmentNotice> enforcer = notice -> {};
+    private volatile Consumer<PunishmentRecord> pardonListener = record -> {};
+    private volatile Consumer<PunishmentRecord> expiryListener = record -> {};
 
     public PunishmentService(@NotNull ProtocolManager protocolManager, @NotNull Clock clock) {
         this.protocolManager = protocolManager;
@@ -44,6 +46,18 @@ public final class PunishmentService {
 
     public void setEnforcer(@NotNull Consumer<PunishmentNotice> enforcer) {
         this.enforcer = enforcer;
+    }
+
+    public void setPardonListener(@NotNull Consumer<PunishmentRecord> listener) {
+        this.pardonListener = listener;
+    }
+
+    public void setExpiryListener(@NotNull Consumer<PunishmentRecord> listener) {
+        this.expiryListener = listener;
+    }
+
+    public void fireExpiry(@NotNull PunishmentRecord record) {
+        expiryListener.accept(record);
     }
 
     @NotNull
@@ -67,8 +81,10 @@ public final class PunishmentService {
         for (PunishmentRecord record : records) {
             if (record.id() == id && !record.pardoned()) {
                 records.remove(record);
-                records.add(new PunishmentRecord(record.id(), record.targetUuid(), record.targetName(), record.staffUuid(), record.staffName(), record.type(), record.reason(), record.proof(), record.createdAtMillis(), record.expiresAtMillis(), record.silent(), record.clearInventory(), true, record.server()));
+                PunishmentRecord pardoned = new PunishmentRecord(record.id(), record.targetUuid(), record.targetName(), record.staffUuid(), record.staffName(), record.type(), record.reason(), record.proof(), record.createdAtMillis(), record.expiresAtMillis(), record.silent(), record.clearInventory(), true, record.server());
+                records.add(pardoned);
                 persistence.punishPardon(id, staff, reason);
+                pardonListener.accept(pardoned);
                 return true;
             }
         }

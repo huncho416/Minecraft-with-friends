@@ -12,6 +12,8 @@ import net.mythicpvp.suite.database.schema.TableNames;
 import net.mythicpvp.suite.database.schema.dto.PunishmentRow;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +24,7 @@ public final class PunishmentSqlRefresher {
 
     private final PunishmentService punishments;
     private final Logger logger;
+    private final Map<Long, Boolean> wasActive = new HashMap<>();
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = new Thread(r, "mythic-punishment-refresh");
         t.setDaemon(true);
@@ -69,12 +72,18 @@ public final class PunishmentSqlRefresher {
             return;
         }
         JsonArray rows = table.getAsJsonArray("rows");
+        long now = System.currentTimeMillis();
         for (JsonElement rowElement : rows) {
             if (!rowElement.isJsonArray()) continue;
             PunishmentRow row = StdbRowParser.parse(rowElement.toString(), PunishmentRow.class);
             if (row == null) continue;
             PunishmentRecord record = StdbPersistenceGateway.toPunishmentRecord(row);
             punishments.applyRecord(record);
+            boolean isActive = record.active(now);
+            Boolean previously = wasActive.put(record.id(), isActive);
+            if (previously != null && previously && !isActive && !record.pardoned()) {
+                punishments.fireExpiry(record);
+            }
         }
     }
 }

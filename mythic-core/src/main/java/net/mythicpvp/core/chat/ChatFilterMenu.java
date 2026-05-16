@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class ChatFilterMenu {
@@ -24,16 +25,17 @@ public final class ChatFilterMenu {
     public void openOverview(@NotNull Player viewer) {
         PaginatedMenu menu = PaginatedMenu.create(6, "&#F529BEChat Filters");
         for (ChatFilterEntry entry : service.all()) {
+            List<String> lore = new ArrayList<>();
+            lore.add("&7Id: &f#" + entry.id());
+            lore.add("&7Type: &f" + entry.type().name());
+            lore.add("&7Patterns: &f" + entry.patterns().size());
+            lore.add("&7Auto-punish: " + (entry.autoPunish() ? "&aon" : "&cwarn-only"));
+            lore.add("");
+            lore.add("&#9CFF9CLeft-click&7 to edit");
+            lore.add("&#FF8A8AShift-Right-click&7 to delete");
             menu.addItem(MythicItem.create(entry.autoPunish() ? Material.RED_WOOL : Material.YELLOW_WOOL)
                     .name("&#FFFFFF" + entry.title())
-                    .lore(
-                            "&7Id: &f#" + entry.id(),
-                            "&7Type: &f" + entry.type().name(),
-                            "&7Pattern: &f" + truncate(entry.pattern(), 40),
-                            "&7Auto-punish: " + (entry.autoPunish() ? "&aon" : "&cwarn-only"),
-                            "",
-                            "&#9CFF9CLeft-click&7 to edit",
-                            "&#FF8A8AShift-Right-click&7 to delete")
+                    .lore(lore)
                     .build(), event -> {
                 if (event.getClick().isShiftClick() && event.getClick().isRightClick()) {
                     service.remove(entry.id());
@@ -54,7 +56,7 @@ public final class ChatFilterMenu {
     }
 
     private void openEdit(@NotNull Player viewer, @NotNull ChatFilterEntry entry) {
-        MythicMenu menu = MythicMenu.create(3, "&#F529BEFilter &7— &#FFFFFF" + entry.title());
+        MythicMenu menu = MythicMenu.create(3, "&#F529BEFilter — &#FFFFFF" + entry.title());
         menu.slot(10, MythicItem.create(Material.NAME_TAG)
                 .name("&#FFFFFFTitle: &7" + entry.title())
                 .lore("&7Click to change.")
@@ -77,16 +79,16 @@ public final class ChatFilterMenu {
             openEdit(viewer, entry);
         });
         menu.slot(14, MythicItem.create(Material.WRITABLE_BOOK)
-                .name("&#FFFFFFPattern: &7" + truncate(entry.pattern(), 24))
-                .lore("&7Click and enter a new pattern in chat.")
+                .name("&#FFFFFFPatterns: &7" + entry.patterns().size())
+                .lore(
+                        "&#9CFF9CLeft-click&7 to add a pattern.",
+                        "&#FF8A8ARight-click&7 to view/remove patterns.")
                 .build(), event -> {
-            viewer.closeInventory();
-            viewer.sendMessage(MythicHex.colorize("&#D2D8E0Enter the new pattern in chat:"));
-            prompts.await(viewer, (p, input) -> {
-                entry.setPattern(input.trim());
-                service.save();
-                openEdit(p, entry);
-            });
+            if (event.getClick().isRightClick()) {
+                openPatternList(viewer, entry);
+            } else {
+                promptAddPattern(viewer, entry);
+            }
         });
         menu.slot(16, MythicItem.create(entry.autoPunish() ? Material.LIME_DYE : Material.GRAY_DYE)
                 .name("&#FFFFFFAuto-punish: " + (entry.autoPunish() ? "&aon" : "&cwarn-only"))
@@ -99,6 +101,56 @@ public final class ChatFilterMenu {
         menu.slot(22, MythicItem.create(Material.BARRIER).name("&#FF8A8ABack").build(),
                 event -> openOverview(viewer));
         menu.open(viewer);
+    }
+
+    private void openPatternList(@NotNull Player viewer, @NotNull ChatFilterEntry entry) {
+        PaginatedMenu menu = PaginatedMenu.create(6, "&#F529BEPatterns — &#FFFFFF" + entry.title());
+        List<String> patterns = entry.patterns();
+        for (int i = 0; i < patterns.size(); i++) {
+            String pattern = patterns.get(i);
+            final int index = i;
+            menu.addItem(MythicItem.create(Material.PAPER)
+                    .name("&#FFFFFF" + truncate(pattern, 36))
+                    .lore(
+                            "&7Index: &f" + (i + 1),
+                            "",
+                            "&#FF8A8AShift-Right-click&7 to remove")
+                    .build(), event -> {
+                if (event.getClick().isShiftClick() && event.getClick().isRightClick()) {
+                    entry.removePatternAt(index);
+                    service.save();
+                    openPatternList(viewer, entry);
+                }
+            });
+        }
+        menu.staticSlot(45, MythicItem.create(Material.EMERALD)
+                        .name("&#9CFF9CAdd pattern")
+                        .build(),
+                event -> promptAddPattern(viewer, entry));
+        menu.staticSlot(49, MythicItem.create(Material.BARRIER).name("&#FF8A8ABack").build(),
+                event -> openEdit(viewer, entry));
+        menu.open(viewer);
+    }
+
+    private void promptAddPattern(@NotNull Player viewer, @NotNull ChatFilterEntry entry) {
+        viewer.closeInventory();
+        viewer.sendMessage(MythicHex.colorize(
+                "&#D2D8E0Enter one or more patterns in chat (separate with &#FFFFFF| &#D2D8E0for multiple):"));
+        prompts.await(viewer, (p, input) -> {
+            List<String> next = ChatFilterEntry.splitPatterns(input);
+            if (next.isEmpty()) {
+                p.sendMessage(MythicHex.colorize("&#FF8A8ANo non-empty patterns supplied."));
+                openPatternList(p, entry);
+                return;
+            }
+            for (String pattern : next) {
+                entry.addPattern(pattern);
+            }
+            service.save();
+            p.sendMessage(MythicHex.colorize(
+                    "&#9CFF9CAdded &f" + next.size() + " &#9CFF9Cpattern(s) to &f" + entry.title() + "&#9CFF9C."));
+            openPatternList(p, entry);
+        });
     }
 
     private void promptAdd(@NotNull Player viewer) {
@@ -114,12 +166,18 @@ public final class ChatFilterMenu {
                     p2.sendMessage(MythicHex.colorize("&#FF8A8AInvalid type. Cancelled."));
                     return;
                 }
-                p2.sendMessage(MythicHex.colorize("&#D2D8E0Enter the pattern:"));
+                p2.sendMessage(MythicHex.colorize(
+                        "&#D2D8E0Enter one or more patterns (separate with &#FFFFFF| &#D2D8E0for multiple):"));
                 prompts.await(p2, (p3, pattern) -> {
-                    ChatFilterEntry entry = service.add(title.trim(), type, pattern.trim(), true);
+                    List<String> patterns = ChatFilterEntry.splitPatterns(pattern);
+                    if (patterns.isEmpty()) {
+                        p3.sendMessage(MythicHex.colorize("&#FF8A8ANo non-empty patterns supplied. Cancelled."));
+                        return;
+                    }
+                    ChatFilterEntry entry = service.add(title.trim(), type, patterns, true);
                     p3.sendMessage(MythicHex.colorize(
                             "&#9CFF9CAdded filter &f" + entry.title() + " &#9CFF9C(#"
-                                    + entry.id() + ")."));
+                                    + entry.id() + ", " + entry.patterns().size() + " pattern(s))."));
                     openOverview(p3);
                 });
             });
