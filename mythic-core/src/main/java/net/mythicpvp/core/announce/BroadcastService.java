@@ -115,9 +115,10 @@ public final class BroadcastService {
             out.append(input, last, m.start());
             String match = m.group(1);
             String url = match.startsWith("http") ? match : "https://" + match;
-            out.append("<click:open_url:'").append(url).append("'>")
-                    .append(match)
-                    .append("</click>");
+            out.append("<hover:show_text:'<#9CFF9C>Click to open <#FFFFFF>").append(url).append("'>")
+                    .append("<click:open_url:'").append(url).append("'>")
+                    .append("<u>").append(match).append("</u>")
+                    .append("</click></hover>");
             last = m.end();
         }
         out.append(input, last, input.length());

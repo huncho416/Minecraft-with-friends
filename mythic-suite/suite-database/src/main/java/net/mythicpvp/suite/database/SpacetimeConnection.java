@@ -113,6 +113,18 @@ public final class SpacetimeConnection implements WebSocket.Listener {
         return callReducer(reducerName, GSON.fromJson(argsJson, Object.class));
     }
 
+    @NotNull
+    public CompletableFuture<String> sql(@NotNull String query) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(httpBaseUri() + "/v1/database/" + path(moduleName) + "/sql"))
+                .timeout(Duration.ofSeconds(10))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(query))
+                .build();
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body);
+    }
+
     public void subscribe(@NotNull String tableName, @NotNull Consumer<String> handler) {
         subscribeTable(tableName, event -> handler.accept(event.payload()));
     }

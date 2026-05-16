@@ -1,5 +1,9 @@
 package net.mythicpvp.core.transfer;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.mythicpvp.suite.database.DatabaseManager;
 import net.mythicpvp.suite.database.SpacetimeConnection;
 import net.mythicpvp.suite.database.StdbRowParser;
@@ -10,8 +14,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -57,11 +63,51 @@ public final class ShardRegistry {
         logger.info("[shard-registry] subscribed to " + TableNames.SERVER_REGISTRY);
         refreshExecutor.scheduleAtFixedRate(() -> {
             try {
-                connection.subscribeTable(TableNames.SERVER_REGISTRY, this::handleEvent);
+                pollViaSql(connection);
             } catch (RuntimeException e) {
-                logger.log(Level.FINE, "[shard-registry] re-subscribe failed", e);
+                logger.log(Level.FINE, "[shard-registry] poll failed", e);
             }
-        }, 30, 30, TimeUnit.SECONDS);
+        }, 2, 5, TimeUnit.SECONDS);
+    }
+
+    private void pollViaSql(@NotNull SpacetimeConnection connection) {
+        connection.sql("SELECT * FROM " + TableNames.SERVER_REGISTRY).thenAccept(body -> {
+            try {
+                applySqlSnapshot(body);
+            } catch (RuntimeException e) {
+                logger.log(Level.FINE, "[shard-registry] snapshot parse failed", e);
+            }
+        });
+    }
+
+    private void applySqlSnapshot(@NotNull String body) {
+        JsonElement root;
+        try {
+            root = JsonParser.parseString(body);
+        } catch (RuntimeException e) {
+            return;
+        }
+        if (!root.isJsonArray() || root.getAsJsonArray().isEmpty()) {
+            return;
+        }
+        JsonObject table = root.getAsJsonArray().get(0).getAsJsonObject();
+        if (!table.has("rows")) {
+            return;
+        }
+        JsonArray rows = table.getAsJsonArray("rows");
+        Set<String> seen = new HashSet<>();
+        for (JsonElement rowElement : rows) {
+            if (!rowElement.isJsonArray()) continue;
+            ServerEntryRow row = StdbRowParser.parse(rowElement.toString(), ServerEntryRow.class);
+            if (row == null || row.shard_id() == null) continue;
+            seen.add(row.shard_id());
+            if (!HEALTHY.equalsIgnoreCase(row.status())) {
+                shards.remove(row.shard_id());
+            } else {
+                shards.put(row.shard_id(), row);
+            }
+        }
+        shards.keySet().removeIf(id -> !seen.contains(id));
     }
 
     private void handleEvent(@NotNull TableEvent event) {

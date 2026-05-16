@@ -48,17 +48,25 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
 
     private void kick(@NotNull Player target, @NotNull PunishmentRecord record) {
         String reasonText = record.reason().isEmpty() ? "No reason given" : record.reason();
-        String expiry = record.expiresAtMillis() <= 0
-                ? "permanent"
-                : "expires " + java.time.Instant.ofEpochMilli(record.expiresAtMillis());
         String typeLabel = displayType(record.type());
-        Component kickReason = messages.component(
-                "messages.punishment.kicked",
-                "&#FF8A8AYou were %type%: &#FFFFFF%reason% &#D2D8E0(%expiry%)",
-                Map.of(
-                        "type", typeLabel,
-                        "reason", reasonText,
-                        "expiry", expiry));
+        Component kickReason;
+        if (record.type() == PunishmentType.KICK) {
+            kickReason = messages.component(
+                    "messages.punishment.kicked",
+                    "&#FF8A8AYou were kicked: &#FFFFFF%reason%",
+                    Map.of("reason", reasonText));
+        } else {
+            String expiry = record.expiresAtMillis() <= 0
+                    ? "permanent"
+                    : "until " + java.time.Instant.ofEpochMilli(record.expiresAtMillis());
+            kickReason = messages.component(
+                    "messages.punishment.banned-kick",
+                    "&#FF8A8AYou were %type%: &#FFFFFF%reason% &#D2D8E0(%expiry%)",
+                    Map.of(
+                            "type", typeLabel,
+                            "reason", reasonText,
+                            "expiry", expiry));
+        }
         target.kick(kickReason);
     }
 

@@ -5,7 +5,6 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.mythicpvp.core.social.Party;
 import net.mythicpvp.core.social.SocialService;
-import net.mythicpvp.core.transfer.TransferQueueService;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.Complete;
 import net.mythicpvp.suite.command.Default;
@@ -15,7 +14,6 @@ import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -179,24 +177,24 @@ public final class PartyCommand extends MythicCommand {
             player.sendMessage(MythicHex.colorize("&#FF8A8AOnly the party leader can warp."));
             return;
         }
-        TransferQueueService queue = lookupQueue();
         Set<UUID> members = social.membersOf(party.id());
-        int warped = 0;
+        int alreadyHere = 0;
+        int notReachable = 0;
         for (UUID memberUuid : members) {
             if (memberUuid.equals(player.getUniqueId())) continue;
             Player m = Bukkit.getPlayer(memberUuid);
-            if (m == null || !m.isOnline()) continue;
-            if (queue != null) {
-                queue.enqueue(m, localShardId);
-            } else {
-                m.transfer(localShardId, 25565);
+            if (m != null && m.isOnline()) {
+                alreadyHere++;
+                m.sendMessage(MythicHex.colorize(
+                        "&#9CFF9C" + player.getName() + " &#9CFF9Cwarped the party — you are already on &#FFFFFF" + localShardId + "&#9CFF9C."));
+                continue;
             }
-            m.sendMessage(MythicHex.colorize(
-                    "&#9CFF9C" + player.getName() + " &#9CFF9Cis warping the party to &#FFFFFF" + localShardId + "&#9CFF9C."));
-            warped++;
+            notReachable++;
         }
         player.sendMessage(MythicHex.colorize(
-                "&#9CFF9CWarped &#FFFFFF" + warped + " &#9CFF9Cparty member(s) to this shard."));
+                "&#9CFF9CParty warp: &f" + alreadyHere + " &7already here"
+                + (notReachable > 0 ? "&7, &f" + notReachable + " &7on another shard (cross-shard warp not yet supported)" : "")
+                + "&7."));
     }
 
     @Subcommand("chat")
@@ -239,13 +237,6 @@ public final class PartyCommand extends MythicCommand {
         if (online != null) return online.getName();
         String fallback = Bukkit.getOfflinePlayer(uuid).getName();
         return fallback == null ? uuid.toString().substring(0, 8) : fallback;
-    }
-
-    @Nullable
-    private static TransferQueueService lookupQueue() {
-        RegisteredServiceProvider<TransferQueueService> rsp =
-                Bukkit.getServicesManager().getRegistration(TransferQueueService.class);
-        return rsp == null ? null : rsp.getProvider();
     }
 
 }

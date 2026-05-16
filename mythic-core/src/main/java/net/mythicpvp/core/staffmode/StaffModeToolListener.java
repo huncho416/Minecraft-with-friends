@@ -195,6 +195,7 @@ public final class StaffModeToolListener implements Listener {
                         ? "&#9CFF9CFroze &#FFFFFF%target%&#9CFF9C."
                         : "&#9CFF9CUnfroze &#FFFFFF%target%&#9CFF9C.",
                 Map.of("target", target.getName())));
+        net.mythicpvp.core.command.FreezeCommand.sendFreezeNotification(target, nowFrozen);
     }
 
     private void handleRandomTeleport(@NotNull Player staffPlayer) {

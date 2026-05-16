@@ -168,6 +168,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         punishmentService = new PunishmentService(protocolManager, Clock.systemUTC());
         punishmentService.setPersistence(persistenceGateway);
         punishmentService.setEnforcer(new net.mythicpvp.core.punishment.PunishmentEnforcer(this, messages));
+        new net.mythicpvp.core.punishment.PunishmentSqlRefresher(punishmentService, getLogger()).start();
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
                 new net.mythicpvp.core.punishment.PunishmentMenuText(menusConfig);
         punishmentMenuService = new PunishmentMenuService(
@@ -341,7 +342,16 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new net.mythicpvp.core.command.CreditShopCommand(creditShopService));
 
         chatControlService = new ChatControlService(protocolManager, serverIdentity.id());
-        ChatGuard chatGuard = new ChatGuard(this, chatControlService, punishmentService, messages);
+        saveResourceIfMissing("chat-filters.yml");
+        net.mythicpvp.core.chat.ChatFilterService chatFilterService = new net.mythicpvp.core.chat.ChatFilterService(
+                configManager.getOrCreate("chat-filters"), punishmentService, Clock.systemUTC(), serverIdentity.id());
+        chatFilterService.load();
+        net.mythicpvp.core.chat.ChatFilterMenu chatFilterMenu =
+                new net.mythicpvp.core.chat.ChatFilterMenu(chatFilterService, chatPromptService);
+        commandManager.register(new net.mythicpvp.core.chat.ChatFilterCommand(chatFilterService, chatFilterMenu));
+        commandManager.register(new net.mythicpvp.core.chat.ChatFilterCommand.FiltersCommand(chatFilterMenu));
+        ChatGuard chatGuard = new ChatGuard(this, chatControlService, punishmentService, messages,
+                serverIdentity.id(), chatFilterService);
         getServer().getPluginManager().registerEvents(chatGuard, this);
         chatColorService = new ChatColorService();
         getServer().getPluginManager().registerEvents(
@@ -351,7 +361,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new net.mythicpvp.core.command.ChatColorCommand(chatColorMenuService));
         commandManager.register(new net.mythicpvp.core.command.CcCommand(chatColorMenuService));
         commandManager.register(new ChatCommand(chatControlService, messages));
-        commandManager.register(new net.mythicpvp.core.command.UnmuteCommand(chatControlService, messages));
+        commandManager.register(new net.mythicpvp.core.command.UnmuteCommand(punishmentService));
 
         net.mythicpvp.core.report.ReportService reportService =
                 new net.mythicpvp.core.report.ReportService();
