@@ -64,6 +64,7 @@ public final class PunishmentService {
                             @NotNull String reason,
                             boolean silent) {
         int pardoned = 0;
+        PunishmentRecord firstPardoned = null;
         long nowMillis = clock.instant().toEpochMilli();
         for (PunishmentRecord record : List.copyOf(records)) {
             if (record.targetUuid().equals(targetUuid)
@@ -71,12 +72,16 @@ public final class PunishmentService {
                     && record.active(nowMillis)
                     && pardon(record.id(), staff, reason)) {
                 pardoned++;
-                PunishmentRecord pardonedRecord = records.stream()
-                        .filter(r -> r.id() == record.id())
-                        .findFirst()
-                        .orElse(record);
-                pardonNoticeListener.accept(new PardonNotice(pardonedRecord, staffName, silent));
+                if (firstPardoned == null) {
+                    firstPardoned = records.stream()
+                            .filter(r -> r.id() == record.id())
+                            .findFirst()
+                            .orElse(record);
+                }
             }
+        }
+        if (firstPardoned != null) {
+            pardonNoticeListener.accept(new PardonNotice(firstPardoned, staffName, silent));
         }
         return pardoned;
     }

@@ -52,9 +52,9 @@ struct NbtComponent {
     insertion: Option<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     extra: Vec<NbtComponent>,
-    #[serde(rename = "clickEvent", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "click_event", skip_serializing_if = "Option::is_none")]
     click_event: Option<NbtClickEvent>,
-    #[serde(rename = "hoverEvent", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "hover_event", skip_serializing_if = "Option::is_none")]
     hover_event: Option<NbtHoverEvent>,
 }
 
@@ -190,12 +190,12 @@ fn parse_click(value: &Value) -> Option<NbtClickEvent> {
 fn parse_hover(value: &Value) -> Option<NbtHoverEvent> {
     let obj = value.as_object()?;
     let action = obj.get("action").and_then(Value::as_str).unwrap_or("show_text").to_string();
-    let contents = obj.get("contents").map(|v| Box::new(value_to_nbt(v)));
-    let legacy_value = obj.get("value").map(|v| Box::new(value_to_nbt(v)));
+    let value_field = obj.get("value").or_else(|| obj.get("contents"));
+    let nested = value_field.map(|v| Box::new(value_to_nbt(v)));
     Some(NbtHoverEvent {
         action,
-        contents,
-        value: legacy_value,
+        contents: None,
+        value: nested,
     })
 }
 

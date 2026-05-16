@@ -24,7 +24,7 @@ public final class CoreCompletions {
         commandManager.registerCompletion("rank-fields", context -> List.of("name", "color", "dye", "prefix", "suffix", "weight", "staff", "donator", "parent", "chat-prefix", "chat-format", "tab-prefix", "tab-format", "nametag-prefix", "nametag-format"));
         commandManager.registerCompletion("booleans", context -> List.of("true", "false"));
         commandManager.registerCompletion("punishment-categories", context -> java.util.Arrays.stream(PunishmentCategory.values()).map(Enum::name).toList());
-        commandManager.registerCompletion("punishment-durations", context -> List.of("1d", "3d", "7d", "30d", "90d", "365d", "permanent"));
+        commandManager.registerCompletion("punishment-durations", context -> List.of("15m", "30m", "1h", "3h", "6h", "12h", "1d", "3d", "7d", "14d", "30d", "90d", "365d", "permanent"));
         commandManager.registerCompletion("punishment-reasons", context -> List.of("Cheating", "Bug-Abuse", "Toxicity", "Spam", "Advertising", "Harassment", "Inappropriate", "Hate-Speech", "Doxxing", "Threats", "Other"));
         commandManager.registerCompletion("punishment-templates", context -> punishmentService.templates().stream().map(template -> template.title()).toList());
         commandManager.registerCompletion("gamemodes", context -> CoreCompletionValues.gamemodes());
