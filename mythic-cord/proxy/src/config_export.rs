@@ -10,6 +10,8 @@ use std::time::Duration;
 use tokio::fs;
 use tracing::{debug, info, warn};
 
+const HEARTBEAT_STALE_AFTER_SECS: i64 = 60;
+
 #[derive(Debug, Serialize)]
 struct ExportedServerConfig<'a> {
     name: &'a str,
@@ -59,7 +61,7 @@ impl ConfigExporter {
         let mut last_snapshot = String::new();
         loop {
             let entries = self.registry.snapshot();
-            let snapshot_key = snapshot_fingerprint(&entries);
+            let snapshot_key = snapshot_fingerprint_with_now(&entries);
             if snapshot_key != last_snapshot {
                 if let Err(e) = self.write_all(&entries).await {
                     warn!(?e, "config export write failed");
@@ -72,12 +74,26 @@ impl ConfigExporter {
     }
 
     async fn write_all(&self, entries: &[ServerEntry]) -> std::io::Result<()> {
+        let now_micros = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_micros() as i64)
+            .unwrap_or(0);
+        let stale_after_micros: i64 = HEARTBEAT_STALE_AFTER_SECS * 1_000_000;
         let mut keep: HashSet<String> = HashSet::new();
         for entry in entries {
             if entry.status != ServerStatus::Healthy.wire() {
                 continue;
             }
             if entry.shard_id == self.proxy_shard_id {
+                continue;
+            }
+            let age_micros = now_micros.saturating_sub(entry.last_heartbeat);
+            if age_micros > stale_after_micros {
+                debug!(
+                    shard = %entry.shard_id,
+                    age_secs = age_micros / 1_000_000,
+                    "skipping stale heartbeat shard"
+                );
                 continue;
             }
             keep.insert(entry.shard_id.clone());
@@ -163,6 +179,15 @@ fn snapshot_fingerprint(entries: &[ServerEntry]) -> String {
         .collect();
     keys.sort();
     keys.join("\n")
+}
+
+fn snapshot_fingerprint_with_now(entries: &[ServerEntry]) -> String {
+    let now_secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    let bucket = now_secs / (HEARTBEAT_STALE_AFTER_SECS / 2);
+    format!("{}\n#now-bucket:{}", snapshot_fingerprint(entries), bucket)
 }
 
 fn proxy_mode_str(input: &str) -> &'static str {

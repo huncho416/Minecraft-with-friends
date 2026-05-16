@@ -119,6 +119,16 @@
             "user_editable": true,
             "rules": "required|string|max:512",
             "field_type": "text"
+        },
+        {
+            "name": "Velocity Forwarding Secret",
+            "description": "Shared secret used by Velocity-modern forwarding. MUST match the proxy's forwarding.secret. The entrypoint writes this into proxies.velocity.secret in paper-global.yml on every boot. Leave empty to keep the value already in paper-global.yml.",
+            "env_variable": "VELOCITY_SECRET",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "nullable|string|max:128",
+            "field_type": "text"
         }
     ]
 }
