@@ -214,8 +214,8 @@ impl ClientBridge {
                     buf.write_string(&json)?;
                     buf
                 } else {
-                    // 1.20.3+: Network NBT text component (fallback wraps json as plain text)
-                    Component::text(json.clone()).to_nbt_network()
+                    // 1.20.3+: Network NBT text component (parsed from the JSON)
+                    infrarust_protocol::nbt_text::json_text_to_network_nbt(&json)
                 };
                 let pkt = CConfigDisconnect {
                     reason: reason_bytes,
@@ -227,8 +227,8 @@ impl ClientBridge {
                     // JSON bytes — CDisconnect.encode() adds the VarInt length prefix
                     json.clone().into_bytes()
                 } else {
-                    // 1.20.3+: Network NBT text component (fallback wraps json as plain text)
-                    Component::text(json.clone()).to_nbt_network()
+                    // 1.20.3+: Network NBT text component (parsed from the JSON)
+                    infrarust_protocol::nbt_text::json_text_to_network_nbt(&json)
                 };
                 let pkt = CDisconnect {
                     reason: reason_bytes,

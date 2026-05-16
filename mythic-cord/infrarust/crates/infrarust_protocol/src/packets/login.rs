@@ -528,16 +528,9 @@ impl Packet for CLoginDisconnect {
     fn encode(
         &self,
         mut w: &mut (impl std::io::Write + ?Sized),
-        version: ProtocolVersion,
+        _version: ProtocolVersion,
     ) -> ProtocolResult<()> {
-        // Minecraft 1.20.5+ (protocol 766+) switched LOGIN-state disconnect
-        // from a JSON-string chat component to a Network-NBT text component.
-        if version.no_less_than(ProtocolVersion::V1_20_5) {
-            let nbt = crate::nbt_text::json_text_to_network_nbt(&self.reason);
-            std::io::Write::write_all(w, &nbt)?;
-        } else {
-            w.write_string(&self.reason)?;
-        }
+        w.write_string(&self.reason)?;
         Ok(())
     }
 }
