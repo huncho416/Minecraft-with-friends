@@ -253,8 +253,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new TpHereCommand(essentialsService));
         commandManager.register(new HelpCommand(essentialsService));
         commandManager.register(new DiscordCommand(essentialsService));
-        commandManager.register(new FriendCommand(socialService, messages));
-        commandManager.register(new PartyCommand(socialService, messages));
+        commandManager.register(new FriendCommand(socialService));
+        commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
         commandManager.register(new MailCommand(socialService, messages));
         PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
         commandManager.register(privateMessages);

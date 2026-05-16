@@ -19,7 +19,7 @@ public final class ChatColorMenuService {
 
     public void open(@NotNull Player player) {
         List<ChatColorService.ChatColorOption> options = chatColors.options();
-        int rows = Math.max(3, (options.size() + 8) / 9 + 2);
+        int rows = Math.max(3, (options.size() + 8) / 9 + 3);
         MythicMenu menu = MythicMenu.create(rows, "&8Chat Color");
 
         String activeCode = chatColors.colorFor(player.getUniqueId());

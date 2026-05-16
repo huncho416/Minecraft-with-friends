@@ -251,24 +251,32 @@ public final class SpacetimeConnection implements WebSocket.Listener {
             dbUpdate = root.getAsJsonObject("InitialSubscription").getAsJsonObject("database_update");
         } else if (root.has("SubscriptionUpdate")) {
             dbUpdate = root.getAsJsonObject("SubscriptionUpdate").getAsJsonObject("database_update");
+        } else if (root.has("TransactionUpdate")) {
+            JsonObject txn = root.getAsJsonObject("TransactionUpdate");
+            if (txn.has("status")) {
+                JsonObject status = txn.getAsJsonObject("status");
+                if (status.has("Committed")) {
+                    dbUpdate = status.getAsJsonObject("Committed");
+                }
+            }
         }
 
         if (dbUpdate != null && dbUpdate.has("tables")) {
             dbUpdate.getAsJsonArray("tables").forEach(tableElement -> {
                 JsonObject tableObj = tableElement.getAsJsonObject();
                 String table = tableObj.get("table_name").getAsString();
-                
+
                 if (tableObj.has("updates")) {
                     tableObj.getAsJsonArray("updates").forEach(updateElement -> {
                         JsonObject update = updateElement.getAsJsonObject();
-                        
+
                         if (update.has("inserts")) {
                             update.getAsJsonArray("inserts").forEach(insertElement -> {
                                 TableEvent event = new TableEvent(table, insertElement.getAsString(), "insert");
                                 subscriptions.getOrDefault(table, List.of()).forEach(handler -> handler.accept(event));
                             });
                         }
-                        
+
                         if (update.has("deletes")) {
                             update.getAsJsonArray("deletes").forEach(deleteElement -> {
                                 TableEvent event = new TableEvent(table, deleteElement.getAsString(), "delete");

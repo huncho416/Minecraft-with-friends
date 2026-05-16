@@ -18,6 +18,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +40,12 @@ public final class ShardRegistry {
 
     private final Map<String, ServerEntryRow> shards = new ConcurrentHashMap<>();
     private final Logger logger;
+    private final ScheduledExecutorService refreshExecutor =
+            Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "mythic-shard-registry-refresh");
+                t.setDaemon(true);
+                return t;
+            });
 
     public ShardRegistry(@NotNull Logger logger) {
         this.logger = logger;
@@ -52,6 +61,13 @@ public final class ShardRegistry {
         }
         connection.subscribeTable(TableNames.SERVER_REGISTRY, this::handleEvent);
         logger.info("[shard-registry] subscribed to " + TableNames.SERVER_REGISTRY);
+        refreshExecutor.scheduleAtFixedRate(() -> {
+            try {
+                connection.subscribeTable(TableNames.SERVER_REGISTRY, this::handleEvent);
+            } catch (RuntimeException e) {
+                logger.log(Level.FINE, "[shard-registry] re-subscribe failed", e);
+            }
+        }, 30, 30, TimeUnit.SECONDS);
     }
 
     private void handleEvent(@NotNull TableEvent event) {
