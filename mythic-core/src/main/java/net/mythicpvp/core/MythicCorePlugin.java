@@ -404,6 +404,19 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     @Override
     public void disable() {
 
+        if (persistenceSchema != null && serverIdentity != null) {
+            try {
+                persistenceSchema.registryHeartbeat(
+                        serverIdentity.id(),
+                        ServerStatus.OFFLINE,
+                        0,
+                        0.0f,
+                        0.0f);
+            } catch (RuntimeException e) {
+                getLogger().warning("[stdb] final OFFLINE heartbeat failed: " + e.getMessage());
+            }
+        }
+
         if (configManager != null) {
             try {
                 configManager.saveAll();
@@ -585,14 +598,34 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 address,
                 maxPlayers,
                 SchemaVersion.CURRENT);
+        sendHeartbeat();
+        getLogger().info("[stdb] registry announced shard=" + serverIdentity.id()
+                + " role=" + role.wireValue() + " address=" + address);
+
+        long heartbeatPeriodTicks = 15L * 20L;
+        net.mythicpvp.suite.scheduler.MythicScheduler.runTimer(
+                this,
+                () -> {
+                    try {
+                        sendHeartbeat();
+                    } catch (RuntimeException e) {
+                        getLogger().warning("[stdb] heartbeat tick failed: " + e.getMessage());
+                    }
+                },
+                heartbeatPeriodTicks,
+                heartbeatPeriodTicks);
+    }
+
+    private void sendHeartbeat() {
+        if (persistenceSchema == null) {
+            return;
+        }
         persistenceSchema.registryHeartbeat(
                 serverIdentity.id(),
                 ServerStatus.HEALTHY,
                 getServer().getOnlinePlayers().size(),
                 20.0f,
                 0.0f);
-        getLogger().info("[stdb] registry announced shard=" + serverIdentity.id()
-                + " role=" + role.wireValue() + " address=" + address);
     }
 
     private static String firstPresent(@NotNull String... keys) {
