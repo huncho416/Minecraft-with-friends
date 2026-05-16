@@ -1,4 +1,4 @@
-﻿package net.mythicpvp.core.punishment;
+package net.mythicpvp.core.punishment;
 
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;

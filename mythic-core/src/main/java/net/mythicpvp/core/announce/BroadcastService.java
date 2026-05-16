@@ -1,4 +1,4 @@
-﻿package net.mythicpvp.core.announce;
+package net.mythicpvp.core.announce;
 
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.suite.config.MythicConfig;

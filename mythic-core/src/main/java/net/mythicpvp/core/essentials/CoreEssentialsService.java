@@ -1,4 +1,4 @@
-﻿package net.mythicpvp.core.essentials;
+package net.mythicpvp.core.essentials;
 
 import net.mythicpvp.core.audit.CoreAuditLog;
 import net.mythicpvp.core.config.CoreMessages;

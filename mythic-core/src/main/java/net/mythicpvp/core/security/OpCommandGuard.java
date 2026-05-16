@@ -1,4 +1,4 @@
-﻿package net.mythicpvp.core.security;
+package net.mythicpvp.core.security;
 
 import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.entity.Player;
