@@ -1,11 +1,6 @@
 package net.mythicpvp.core.persistence;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import net.mythicpvp.core.punishment.PunishmentCategory;
 import net.mythicpvp.core.punishment.PunishmentRecord;
 import net.mythicpvp.core.punishment.PunishmentTemplate;
@@ -20,6 +15,7 @@ import net.mythicpvp.core.social.Party;
 import net.mythicpvp.core.social.PartyMember;
 import net.mythicpvp.suite.database.ReducerResult;
 import net.mythicpvp.suite.database.SpacetimeConnection;
+import net.mythicpvp.suite.database.StdbRowParser;
 import net.mythicpvp.suite.database.TableEvent;
 import net.mythicpvp.suite.database.schema.GrantSource;
 import net.mythicpvp.suite.database.schema.MythicSchema;
@@ -48,31 +44,7 @@ import java.util.logging.Logger;
 
 public final class StdbPersistenceGateway implements PersistenceGateway {
 
-    private static final Gson GSON = buildGson();
-
-    private static Gson buildGson() {
-        JsonDeserializer<Long> stdbLong = (json, type, ctx) -> {
-            if (json.isJsonPrimitive()) {
-                JsonPrimitive p = json.getAsJsonPrimitive();
-                return p.isNumber() ? p.getAsLong() : Long.parseLong(p.getAsString());
-            }
-            if (json.isJsonObject()) {
-                JsonObject obj = json.getAsJsonObject();
-                JsonElement micros = obj.get("__timestamp_micros_since_unix_epoch__");
-                if (micros == null) {
-                    micros = obj.get("__time_duration_micros__");
-                }
-                if (micros != null && micros.isJsonPrimitive()) {
-                    return micros.getAsLong();
-                }
-            }
-            return 0L;
-        };
-        return new GsonBuilder()
-                .registerTypeAdapter(Long.class, stdbLong)
-                .registerTypeAdapter(long.class, stdbLong)
-                .create();
-    }
+    private static final Gson GSON = new Gson();
 
     private final Logger logger;
     private final MythicSchema schema;
@@ -410,14 +382,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
             @NotNull TableEvent event,
             @NotNull Consumer<D> onUpsert,
             @NotNull Consumer<D> onDelete) {
-        D row;
-        try {
-            row = GSON.fromJson(event.payload(), dtoType);
-        } catch (Exception parseError) {
-            logger.warning("[hydration] " + table + " bad row "
-                    + event.payload() + ": " + parseError.getMessage());
-            return;
-        }
+        D row = StdbRowParser.parse(event.payload(), dtoType);
         if (row == null) {
             return;
         }

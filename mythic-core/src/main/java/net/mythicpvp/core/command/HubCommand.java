@@ -1,11 +1,5 @@
 package net.mythicpvp.core.command;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.transfer.ProxyTransferService;
 import net.mythicpvp.suite.command.CommandAlias;
@@ -13,6 +7,7 @@ import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
 import net.mythicpvp.suite.database.DatabaseManager;
 import net.mythicpvp.suite.database.SpacetimeConnection;
+import net.mythicpvp.suite.database.StdbRowParser;
 import net.mythicpvp.suite.database.TableEvent;
 import net.mythicpvp.suite.database.schema.TableNames;
 import net.mythicpvp.suite.database.schema.dto.ServerEntryRow;
@@ -24,7 +19,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @CommandAlias("hub|lobby")
@@ -32,7 +26,6 @@ public final class HubCommand extends MythicCommand {
 
     private static final String HUB_ROLE = "HUB";
     private static final String HEALTHY_STATUS = "HEALTHY";
-    private static final Gson GSON = buildGson();
 
     private final ProxyTransferService transferService;
     private final CoreMessages messages;
@@ -92,21 +85,17 @@ public final class HubCommand extends MythicCommand {
     }
 
     private void handleEvent(@NotNull TableEvent event) {
-        try {
-            ServerEntryRow row = GSON.fromJson(event.payload(), ServerEntryRow.class);
-            if (row == null || row.shard_id() == null) {
-                return;
-            }
-            if ("delete".equalsIgnoreCase(event.operation())
-                    || !HUB_ROLE.equalsIgnoreCase(row.role())
-                    || !HEALTHY_STATUS.equalsIgnoreCase(row.status())) {
-                hubs.remove(row.shard_id());
-                return;
-            }
-            hubs.put(row.shard_id(), row);
-        } catch (RuntimeException e) {
-            logger.log(Level.WARNING, "[hub] bad registry row " + event.payload(), e);
+        ServerEntryRow row = StdbRowParser.parse(event.payload(), ServerEntryRow.class);
+        if (row == null || row.shard_id() == null) {
+            return;
         }
+        if ("delete".equalsIgnoreCase(event.operation())
+                || !HUB_ROLE.equalsIgnoreCase(row.role())
+                || !HEALTHY_STATUS.equalsIgnoreCase(row.status())) {
+            hubs.remove(row.shard_id());
+            return;
+        }
+        hubs.put(row.shard_id(), row);
     }
 
     private ServerEntryRow pickHub() {
@@ -121,27 +110,4 @@ public final class HubCommand extends MythicCommand {
         return candidates.get(0);
     }
 
-    private static Gson buildGson() {
-        JsonDeserializer<Long> stdbLong = (json, type, ctx) -> {
-            if (json.isJsonPrimitive()) {
-                JsonPrimitive p = json.getAsJsonPrimitive();
-                return p.isNumber() ? p.getAsLong() : Long.parseLong(p.getAsString());
-            }
-            if (json.isJsonObject()) {
-                JsonObject obj = json.getAsJsonObject();
-                JsonElement micros = obj.get("__timestamp_micros_since_unix_epoch__");
-                if (micros == null) {
-                    micros = obj.get("__time_duration_micros__");
-                }
-                if (micros != null && micros.isJsonPrimitive()) {
-                    return micros.getAsLong();
-                }
-            }
-            return 0L;
-        };
-        return new GsonBuilder()
-                .registerTypeAdapter(Long.class, stdbLong)
-                .registerTypeAdapter(long.class, stdbLong)
-                .create();
-    }
 }

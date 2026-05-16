@@ -1,13 +1,8 @@
 package net.mythicpvp.hub.selector;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import net.mythicpvp.suite.database.DatabaseManager;
 import net.mythicpvp.suite.database.SpacetimeConnection;
+import net.mythicpvp.suite.database.StdbRowParser;
 import net.mythicpvp.suite.database.TableEvent;
 import net.mythicpvp.suite.database.schema.TableNames;
 import net.mythicpvp.suite.database.schema.dto.ServerEntryRow;
@@ -22,8 +17,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class RegistrySubscriber {
-
-    private static final Gson GSON = buildGson();
 
     private final JavaPlugin plugin;
     private final ServerSelectorService selectorService;
@@ -61,45 +54,17 @@ public final class RegistrySubscriber {
     }
 
     private void handleEvent(@NotNull TableEvent event) {
-        try {
-            ServerEntryRow row = GSON.fromJson(event.payload(), ServerEntryRow.class);
-            if (row == null || row.shard_id() == null) {
-                return;
-            }
-            if ("delete".equalsIgnoreCase(event.operation())) {
-                MythicScheduler.runSync(plugin,
-                        () -> selectorService.removeServer(row.shard_id()));
-                return;
-            }
-            boolean healthy = "HEALTHY".equalsIgnoreCase(row.status());
-            MythicScheduler.runSync(plugin, () ->
-                    selectorService.updateServer(row.shard_id(), row.role(), row.player_count(), row.tps(), healthy));
-        } catch (RuntimeException e) {
-            logger.log(Level.WARNING, "[selector] bad registry row " + event.payload(), e);
+        ServerEntryRow row = StdbRowParser.parse(event.payload(), ServerEntryRow.class);
+        if (row == null || row.shard_id() == null) {
+            return;
         }
-    }
-
-    private static Gson buildGson() {
-        JsonDeserializer<Long> stdbLong = (json, type, ctx) -> {
-            if (json.isJsonPrimitive()) {
-                JsonPrimitive p = json.getAsJsonPrimitive();
-                return p.isNumber() ? p.getAsLong() : Long.parseLong(p.getAsString());
-            }
-            if (json.isJsonObject()) {
-                JsonObject obj = json.getAsJsonObject();
-                JsonElement micros = obj.get("__timestamp_micros_since_unix_epoch__");
-                if (micros == null) {
-                    micros = obj.get("__time_duration_micros__");
-                }
-                if (micros != null && micros.isJsonPrimitive()) {
-                    return micros.getAsLong();
-                }
-            }
-            return 0L;
-        };
-        return new GsonBuilder()
-                .registerTypeAdapter(Long.class, stdbLong)
-                .registerTypeAdapter(long.class, stdbLong)
-                .create();
+        if ("delete".equalsIgnoreCase(event.operation())) {
+            MythicScheduler.runSync(plugin,
+                    () -> selectorService.removeServer(row.shard_id()));
+            return;
+        }
+        boolean healthy = "HEALTHY".equalsIgnoreCase(row.status());
+        MythicScheduler.runSync(plugin, () ->
+                selectorService.updateServer(row.shard_id(), row.role(), row.player_count(), row.tps(), healthy));
     }
 }
