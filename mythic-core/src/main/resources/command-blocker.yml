@@ -119,7 +119,12 @@ required-permissions:
   server: "mythic.core.server.transfer"
   buildmode: "mythic.hub.buildmode"
   queue: "mythic.core.queue.admin"
+  reports: "mythic.core.report.review"
+  notes: "mythic.core.notes"
+  note: "mythic.core.notes"
   # /appeal is intentionally NOT permission-gated — anyone can file.
+  # /report /helpop /request are intentionally NOT permission-gated —
+  # anyone can use them. Cooldowns + staff visibility live in reports.yml.
   # /hub /lobby /serverselector /servers /selector are intentionally
   # NOT permission-gated — anyone can use them.
   # /chatcolor /cc are intentionally NOT permission-gated — anyone can

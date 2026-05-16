@@ -1,0 +1,13 @@
+# Reports / helpop configuration.
+#
+# `reports.cooldown-seconds` is the per-target cooldown — a player can only
+# report the same target once per this window. Reports against different
+# targets are independent (no global cooldown).
+# `helpop.cooldown-seconds` is the per-player cooldown for /helpop and
+# /request — a single bucket shared between both commands.
+
+reports:
+  cooldown-seconds: 600
+
+helpop:
+  cooldown-seconds: 600
