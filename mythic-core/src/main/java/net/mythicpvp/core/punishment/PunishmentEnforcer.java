@@ -34,6 +34,8 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
 
         if (notice.publicBroadcast()) {
             broadcast(record);
+        } else {
+            notifyStaffSilent(record);
         }
 
         if (target != null && target.isOnline()) {
@@ -44,6 +46,26 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
                 case WARN -> notifyWarned(target, record);
             }
         }
+    }
+
+    private void notifyStaffSilent(@NotNull PunishmentRecord record) {
+        String typeLabel = displayType(record.type());
+        String reasonText = record.reason().isEmpty() ? "No reason given" : record.reason();
+        String duration = record.expiresAtMillis() <= 0
+                ? "permanent"
+                : formatRemaining(record.expiresAtMillis() - record.createdAtMillis());
+        Component line = MythicHex.colorize(
+                "&#FFEC8A[Silent] &#FFFFFF" + record.targetName()
+                        + " &7was &#FF8A8A" + typeLabel
+                        + " &7by &#FFFFFF" + record.staffName()
+                        + " &7for &#FFFFFF" + reasonText
+                        + " &7(&f" + duration + "&7)");
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            if (viewer.hasPermission(net.mythicpvp.core.staff.StaffPresenceListener.STAFF_PERMISSION)) {
+                viewer.sendMessage(line);
+            }
+        }
+        Bukkit.getConsoleSender().sendMessage(line);
     }
 
     private void kick(@NotNull Player target, @NotNull PunishmentRecord record) {

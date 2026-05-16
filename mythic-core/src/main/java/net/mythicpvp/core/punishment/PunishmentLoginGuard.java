@@ -1,14 +1,27 @@
 package net.mythicpvp.core.punishment;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.persistence.CoreHydrationSink;
+import net.mythicpvp.core.persistence.StdbPersistenceGateway;
+import net.mythicpvp.suite.database.DatabaseManager;
+import net.mythicpvp.suite.database.SpacetimeConnection;
+import net.mythicpvp.suite.database.StdbRowParser;
+import net.mythicpvp.suite.database.schema.TableNames;
+import net.mythicpvp.suite.database.schema.dto.PunishmentRow;
+import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -16,6 +29,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public final class PunishmentLoginGuard implements Listener {
 
@@ -24,14 +38,17 @@ public final class PunishmentLoginGuard implements Listener {
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'").withZone(ZoneId.of("UTC"));
 
+    private final JavaPlugin plugin;
     private final PunishmentService punishments;
     private final CoreHydrationSink hydrationSink;
     private final CoreMessages messages;
 
     public PunishmentLoginGuard(
+            @NotNull JavaPlugin plugin,
             @NotNull PunishmentService punishments,
             @NotNull CoreHydrationSink hydrationSink,
             @NotNull CoreMessages messages) {
+        this.plugin = plugin;
         this.punishments = punishments;
         this.hydrationSink = hydrationSink;
         this.messages = messages;
@@ -44,21 +61,78 @@ public final class PunishmentLoginGuard implements Listener {
             return;
         }
         UUID uuid = player.getUniqueId();
-
-        if (hydrationSink.isBlacklisted(uuid)) {
-            player.kick(messages.component(
-                    "messages.punishment.login-blacklisted",
-                    "<red>You are blacklisted from this network.\n\n<gray>Appeal at <#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>"));
+        Component kickReason = resolveKickReason(uuid);
+        if (kickReason == null) {
             return;
         }
+        scheduleKick(player, kickReason);
+    }
 
-        for (PunishmentRecord record : punishments.active(uuid)) {
-            if (!record.type().loginBlocking()) {
-                continue;
+    private void scheduleKick(@NotNull Player player, @NotNull Component reason) {
+        MythicScheduler.runOnEntityLater(plugin, player, () -> {
+            if (player.isOnline()) {
+                player.kick(reason);
             }
-            player.kick(formatBan(record));
-            return;
+        }, 1L);
+    }
+
+    @Nullable
+    private Component resolveKickReason(@NotNull UUID uuid) {
+        if (hydrationSink.isBlacklisted(uuid)) {
+            return messages.component(
+                    "messages.punishment.login-blacklisted",
+                    "<red>You are blacklisted from this network.\n\n<gray>Appeal at <#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>");
         }
+        for (PunishmentRecord record : punishments.active(uuid)) {
+            if (record.type().loginBlocking()) {
+                return formatBan(record);
+            }
+        }
+        PunishmentRecord stdb = fetchActiveBanFromStdb(uuid);
+        if (stdb != null) {
+            punishments.applyRecord(stdb);
+            return formatBan(stdb);
+        }
+        return null;
+    }
+
+    @Nullable
+    private PunishmentRecord fetchActiveBanFromStdb(@NotNull UUID uuid) {
+        SpacetimeConnection connection;
+        try {
+            connection = DatabaseManager.getInstance().getPrimary();
+        } catch (IllegalStateException e) {
+            return null;
+        }
+        String body;
+        try {
+            body = connection.sql(
+                    "SELECT * FROM " + TableNames.PUNISHMENTS
+                            + " WHERE target_uuid = '" + uuid + "' AND active = true").get(3, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.FINE, "[login-guard] STDB lookup failed", e);
+            return null;
+        }
+        JsonElement root;
+        try {
+            root = JsonParser.parseString(body);
+        } catch (RuntimeException e) {
+            return null;
+        }
+        if (!root.isJsonArray() || root.getAsJsonArray().isEmpty()) return null;
+        JsonObject table = root.getAsJsonArray().get(0).getAsJsonObject();
+        if (!table.has("rows")) return null;
+        JsonArray rows = table.getAsJsonArray("rows");
+        for (JsonElement rowElement : rows) {
+            if (!rowElement.isJsonArray()) continue;
+            PunishmentRow row = StdbRowParser.parse(rowElement.toString(), PunishmentRow.class);
+            if (row == null) continue;
+            PunishmentRecord record = StdbPersistenceGateway.toPunishmentRecord(row);
+            if (record.type().loginBlocking() && record.active(System.currentTimeMillis())) {
+                return record;
+            }
+        }
+        return null;
     }
 
     @NotNull

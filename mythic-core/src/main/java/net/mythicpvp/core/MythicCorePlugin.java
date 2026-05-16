@@ -140,6 +140,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         saveResourceIfMissing("ranks.yml");
         saveResourceIfMissing("command-blocker.yml");
         saveResourceIfMissing("announcements.yml");
+        saveResourceIfMissing("motd.yml");
+        saveResourceIfMissing("spawn.yml");
         saveResourceIfMissing("staff-mode.yml");
         saveResourceIfMissing("reports.yml");
         saveResourceIfMissing("welcome.yml");
@@ -184,12 +186,18 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         announceServerRegistry();
 
         getServer().getPluginManager().registerEvents(
-                new PunishmentLoginGuard(punishmentService, hydrationSink, messages), this);
+                new PunishmentLoginGuard(this, punishmentService, hydrationSink, messages), this);
+        net.mythicpvp.core.motd.MotdListener.MotdService motdService =
+                new net.mythicpvp.core.motd.MotdListener.MotdService();
+        motdService.load(configManager.getOrCreate("motd"));
+        getServer().getPluginManager().registerEvents(
+                new net.mythicpvp.core.motd.MotdListener(motdService), this);
         net.mythicpvp.core.maintenance.MaintenanceService maintenanceService =
                 new net.mythicpvp.core.maintenance.MaintenanceService(getLogger(), getDataFolder());
         getServer().getPluginManager().registerEvents(
-                new net.mythicpvp.core.maintenance.MaintenanceLoginGuard(maintenanceService, messages), this);
+                new net.mythicpvp.core.maintenance.MaintenanceLoginGuard(this, maintenanceService, messages), this);
         commandManager.register(new net.mythicpvp.core.command.MaintenanceCommand(maintenanceService));
+        commandManager.register(new net.mythicpvp.core.command.SetSpawnCommand(configManager.getOrCreate("spawn")));
 
         displayService = new DisplayService(this, rankService, grantService, serverIdentity.id());
         displayService.loadTemplates(
