@@ -34,7 +34,6 @@ pub fn json_text_to_network_nbt(json: &str) -> Vec<u8> {
 
 #[derive(Debug, Serialize)]
 struct NbtComponent {
-    #[serde(skip_serializing_if = "String::is_empty")]
     text: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     color: Option<String>,
