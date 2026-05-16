@@ -38,6 +38,7 @@ public final class DisplayService {
     private List<String> scoreboardLines = List.of();
     private StaffModeService staffModeService;
     private Function<UUID, Integer> queuePositionLookup;
+    private Function<UUID, net.mythicpvp.core.transfer.TransferQueueService.QueueStatus> queueStatusLookup;
 
     public DisplayService(
             @NotNull JavaPlugin plugin,
@@ -52,6 +53,10 @@ public final class DisplayService {
 
     public void setQueuePositionLookup(@NotNull Function<UUID, Integer> lookup) {
         this.queuePositionLookup = lookup;
+    }
+
+    public void setQueueStatusLookup(@NotNull Function<UUID, net.mythicpvp.core.transfer.TransferQueueService.QueueStatus> lookup) {
+        this.queueStatusLookup = lookup;
     }
 
     public void setStaffModeService(@NotNull StaffModeService staffModeService) {
@@ -156,7 +161,22 @@ public final class DisplayService {
 
                 .set("cosmetic_chat_tag", cosmeticDisplay(player.getUniqueId(), CosmeticType.CHAT_TAG))
                 .set("cosmetic_title", cosmeticDisplay(player.getUniqueId(), CosmeticType.TITLE))
-                .set("queue_position", queuePositionDisplay(player.getUniqueId()));
+                .set("queue_position", queuePositionDisplay(player.getUniqueId()))
+                .set("queue_section", queueSectionDisplay(player.getUniqueId()));
+    }
+
+    @NotNull
+    private String queueSectionDisplay(@NotNull UUID playerUuid) {
+        if (queueStatusLookup == null) {
+            return "";
+        }
+        net.mythicpvp.core.transfer.TransferQueueService.QueueStatus status = queueStatusLookup.apply(playerUuid);
+        if (status == null) {
+            return "";
+        }
+        return "  \n&#F529BEQueue&8: &#FFFFFF#" + status.position()
+                + "&7/&#FFFFFF" + status.total()
+                + "&8 → &#D2D8E0" + status.shard();
     }
 
     @NotNull
@@ -230,7 +250,16 @@ public final class DisplayService {
         java.util.List<String> resolved = ctx.resolveAll(scoreboardLines);
         java.util.List<String> withPapi = new java.util.ArrayList<>(resolved.size());
         for (String line : resolved) {
-            withPapi.add(PapiBridge.apply(player, line));
+            String papi = PapiBridge.apply(player, line);
+            if (papi.contains("\n")) {
+                for (String split : papi.split("\n", -1)) {
+                    withPapi.add(split);
+                }
+            } else if (line.contains("%queue_section%") && papi.isEmpty()) {
+                // drop empty conditional section
+            } else {
+                withPapi.add(papi);
+            }
         }
         board.setLines(withPapi);
     }

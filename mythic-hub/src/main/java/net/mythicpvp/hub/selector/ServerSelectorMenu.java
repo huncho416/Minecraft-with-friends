@@ -28,24 +28,67 @@ public final class ServerSelectorMenu {
         MythicMenu menu = MythicMenu.create(3, "&#F529BEServer Selector");
 
         List<ServerSelectorService.ServerGroup> groups = visibleGroups();
-        int[] slots = {10, 11, 12, 13, 14, 15, 16};
-        int count = Math.min(groups.size(), slots.length);
+        int[] slots = centeredSlots(groups.size());
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < groups.size() && i < slots.length; i++) {
             ServerSelectorService.ServerGroup group = groups.get(i);
             List<ServerSelectorService.ServerInfo> servers = selectorService.getServersForRole(group.role());
             int totalPlayers = servers.stream().mapToInt(ServerSelectorService.ServerInfo::playerCount).sum();
 
-            menu.slot(slots[i], MythicItem.create(group.material())
-                    .name(group.displayName())
-                    .lore(List.of(
-                            "&7Servers: &f" + servers.size(),
-                            "&7Players: &f" + totalPlayers,
-                            "&#D2D8E0Click to join"))
-                    .build(), event -> joinRandomShard(player, group));
+            menu.slot(slots[i], buildGroupItem(group, servers.size(), totalPlayers),
+                    event -> joinRandomShard(player, group));
         }
 
         menu.open(player);
+    }
+
+    @NotNull
+    private static int[] centeredSlots(int count) {
+        // 3-row chest, content row = 9..17, center = 13
+        return switch (count) {
+            case 0, 1 -> new int[]{13};
+            case 2 -> new int[]{12, 14};
+            case 3 -> new int[]{12, 13, 14};
+            case 4 -> new int[]{11, 12, 14, 15};
+            case 5 -> new int[]{11, 12, 13, 14, 15};
+            case 6 -> new int[]{10, 11, 12, 14, 15, 16};
+            default -> new int[]{10, 11, 12, 13, 14, 15, 16};
+        };
+    }
+
+    @NotNull
+    private static org.bukkit.inventory.ItemStack buildGroupItem(
+            @NotNull ServerSelectorService.ServerGroup group,
+            int serverCount,
+            int totalPlayers) {
+        java.util.Map<String, String> placeholders = java.util.Map.of(
+                "release_date", group.releaseDate(),
+                "age", group.age(),
+                "servers", Integer.toString(serverCount),
+                "players", Integer.toString(totalPlayers));
+        java.util.List<String> lore = new java.util.ArrayList<>();
+        if (!group.tagline().isEmpty()) {
+            lore.add(group.tagline());
+            lore.add("");
+        }
+        if (group.lore().isEmpty()) {
+            lore.add("&7Servers: &f" + serverCount);
+            lore.add("&7Players: &f" + totalPlayers);
+            lore.add("");
+            lore.add("&#9CFF9CClick to join");
+        } else {
+            for (String line : group.lore()) {
+                String resolved = line;
+                for (var e : placeholders.entrySet()) {
+                    resolved = resolved.replace("%" + e.getKey() + "%", e.getValue());
+                }
+                lore.add(resolved);
+            }
+        }
+        return MythicItem.create(group.material())
+                .name(group.displayName())
+                .lore(lore)
+                .build();
     }
 
     private void joinRandomShard(@NotNull Player player, @NotNull ServerSelectorService.ServerGroup group) {

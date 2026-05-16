@@ -57,12 +57,16 @@ public class MythicHubPlugin extends JavaPlugin implements MythicPlugin {
         ServerSelectorMenu selectorMenu = new ServerSelectorMenu(selectorService);
         commandManager.register(new ServerSelectorCommand(selectorMenu));
 
+        String localShardId = System.getenv().getOrDefault("SHARD_ID", "hub");
+        net.mythicpvp.hub.selector.HubListMenuService hubListMenu =
+                new net.mythicpvp.hub.selector.HubListMenuService(selectorService, localShardId);
+
         BuildModeService buildModeService = new BuildModeService();
         commandManager.register(new BuildModeCommand(buildModeService));
 
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(new SpawnListener(spawnService), this);
-        getServer().getPluginManager().registerEvents(new HubItemListener(this, selectorMenu), this);
+        getServer().getPluginManager().registerEvents(new HubItemListener(this, selectorMenu, hubListMenu), this);
         getServer().getPluginManager().registerEvents(new HubActivityListener(activityService), this);
         getServer().getPluginManager().registerEvents(new HubSafetyListener(buildModeService), this);
     }

@@ -28,11 +28,15 @@ public final class HubItemListener implements Listener {
     private static final int HUB_SLOT = 8;
 
     private final ServerSelectorMenu selectorMenu;
+    private final HubListMenuService hubListMenu;
     private final NamespacedKey selectorKey;
     private final NamespacedKey hubKey;
 
-    public HubItemListener(@NotNull JavaPlugin plugin, @NotNull ServerSelectorMenu selectorMenu) {
+    public HubItemListener(@NotNull JavaPlugin plugin,
+                           @NotNull ServerSelectorMenu selectorMenu,
+                           @NotNull HubListMenuService hubListMenu) {
         this.selectorMenu = selectorMenu;
+        this.hubListMenu = hubListMenu;
         this.selectorKey = new NamespacedKey(plugin, "server_selector");
         this.hubKey = new NamespacedKey(plugin, "hub_selector");
     }
@@ -60,7 +64,7 @@ public final class HubItemListener implements Listener {
         }
         if (isHubItem(item)) {
             event.setCancelled(true);
-            event.getPlayer().performCommand("hub");
+            hubListMenu.open(event.getPlayer());
         }
     }
 
@@ -147,7 +151,7 @@ public final class HubItemListener implements Listener {
     private ItemStack hubItem() {
         ItemStack item = MythicItem.create(Material.BEACON)
                 .name("&#F529BEHub Selector")
-                .lore(List.of("&#D2D8E0Right click to return to a hub"))
+                .lore(List.of("&#D2D8E0Right click to browse hubs"))
                 .build();
         var meta = item.getItemMeta();
         meta.getPersistentDataContainer().set(hubKey, PersistentDataType.BYTE, (byte) 1);

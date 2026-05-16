@@ -44,7 +44,8 @@ public class MythicItem {
     @NotNull
     public MythicItem name(@NotNull String name) {
         ItemMeta meta = itemStack.getItemMeta();
-        meta.displayName(MythicHex.colorize(name));
+        meta.displayName(MythicHex.colorize(name)
+                .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
         itemStack.setItemMeta(meta);
         return this;
     }
@@ -54,6 +55,7 @@ public class MythicItem {
         ItemMeta meta = itemStack.getItemMeta();
         List<Component> lore = Arrays.stream(lines)
                 .map(MythicHex::colorize)
+                .map(c -> c.decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false))
                 .collect(Collectors.toList());
         meta.lore(lore);
         itemStack.setItemMeta(meta);
