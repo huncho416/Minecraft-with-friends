@@ -56,7 +56,7 @@ public final class StaffListMenuService {
                 }
                 if (event.getClick().isLeftClick()) {
                     viewer.closeInventory();
-                    viewer.teleport(target.getLocation());
+                    viewer.teleportAsync(target.getLocation());
                     viewer.sendMessage(MythicHex.colorize(
                             "&#9CFF9CTeleported to &#FFFFFF" + entry.name + "&#9CFF9C."));
                 }

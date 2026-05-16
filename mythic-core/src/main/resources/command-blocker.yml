@@ -127,6 +127,8 @@ required-permissions:
   ci: "mythic.core.clearinv"
   managepunishments: "mythic.core.punish.manage"
   staffsettings: "mythic.core.staffsettings"
+  freeze: "mythic.core.staffmode.freeze"
+  rank: "mythic.core.rank.admin"
   # /appeal is intentionally NOT permission-gated — anyone can file.
   # /report /helpop /request are intentionally NOT permission-gated —
   # anyone can use them. Cooldowns + staff visibility live in reports.yml.

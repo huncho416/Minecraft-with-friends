@@ -278,6 +278,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         displayService.setStaffModeService(staffModeService);
         commandManager.register(new StaffModeCommand(staffModeService, messages));
         commandManager.register(new VanishCommand(staffModeService));
+        commandManager.register(new net.mythicpvp.core.command.FreezeCommand(staffModeService));
+        commandManager.register(new net.mythicpvp.core.command.RankCommand(rankService));
         getServer().getPluginManager().registerEvents(
                 new StaffModeToolListener(staffModeService, messages, grantService, rankService), this);
 
