@@ -1,4 +1,4 @@
-﻿package net.mythicpvp.core.social;
+package net.mythicpvp.core.social;
 
 import net.mythicpvp.core.config.CoreMessages;
 import org.bukkit.Bukkit;

@@ -1,4 +1,4 @@
-﻿package net.mythicpvp.core.command;
+package net.mythicpvp.core.command;
 
 import net.mythicpvp.core.chat.ChatControlService;
 import net.mythicpvp.core.chat.ChatScope;

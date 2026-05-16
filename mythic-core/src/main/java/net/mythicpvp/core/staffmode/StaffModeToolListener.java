@@ -1,4 +1,4 @@
-﻿package net.mythicpvp.core.staffmode;
+package net.mythicpvp.core.staffmode;
 
 import net.mythicpvp.core.config.CoreMessages;
 import org.bukkit.NamespacedKey;

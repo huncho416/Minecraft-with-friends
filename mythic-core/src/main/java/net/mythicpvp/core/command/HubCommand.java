@@ -1,4 +1,4 @@
-﻿package net.mythicpvp.core.command;
+package net.mythicpvp.core.command;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -3,8 +3,10 @@ FROM maven:3.9-eclipse-temurin-21 AS suite-build
 WORKDIR /build
 COPY pom.xml ./
 COPY mythic-suite/ ./mythic-suite/
+COPY mythic-core/ ./mythic-core/
+COPY mythic-hub/ ./mythic-hub/
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B -ntp -pl mythic-suite -am -DskipTests package
+    mvn -B -ntp -DskipTests package
 
 FROM eclipse-temurin:21-jre-jammy AS folia-fetch
 ARG FOLIA_VERSION=1.21.1
@@ -69,6 +71,8 @@ RUN apt-get update \
 WORKDIR /data
 COPY --from=folia-fetch /folia/folia.jar /opt/folia/folia.jar
 COPY --from=suite-build /build/mythic-suite/*/target/*.jar /opt/folia/suite/
+COPY --from=suite-build /build/mythic-core/target/mythic-core-*.jar /opt/folia/plugins/
+COPY --from=suite-build /build/mythic-hub/target/mythic-hub-*.jar /opt/folia/plugins/
 COPY --from=voice-plugin-fetch /voice-plugins/ /opt/folia/voice-plugins/
 COPY tools/docker/folia/entrypoint.sh /opt/folia/entrypoint.sh
 COPY tools/docker/folia/eula.txt /opt/folia/defaults/eula.txt
