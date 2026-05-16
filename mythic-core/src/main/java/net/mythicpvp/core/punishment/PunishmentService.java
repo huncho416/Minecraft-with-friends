@@ -32,6 +32,7 @@ public final class PunishmentService {
     private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
     private volatile Consumer<PunishmentNotice> enforcer = notice -> {};
     private volatile Consumer<PunishmentRecord> pardonListener = record -> {};
+    private volatile Consumer<PardonNotice> pardonNoticeListener = notice -> {};
     private volatile Consumer<PunishmentRecord> expiryListener = record -> {};
 
     public PunishmentService(@NotNull ProtocolManager protocolManager, @NotNull Clock clock) {
@@ -50,6 +51,34 @@ public final class PunishmentService {
 
     public void setPardonListener(@NotNull Consumer<PunishmentRecord> listener) {
         this.pardonListener = listener;
+    }
+
+    public void setPardonNoticeListener(@NotNull Consumer<PardonNotice> listener) {
+        this.pardonNoticeListener = listener;
+    }
+
+    public int pardonActive(@NotNull UUID targetUuid,
+                            @NotNull Set<PunishmentType> types,
+                            @NotNull UUID staff,
+                            @NotNull String staffName,
+                            @NotNull String reason,
+                            boolean silent) {
+        int pardoned = 0;
+        long nowMillis = clock.instant().toEpochMilli();
+        for (PunishmentRecord record : List.copyOf(records)) {
+            if (record.targetUuid().equals(targetUuid)
+                    && types.contains(record.type())
+                    && record.active(nowMillis)
+                    && pardon(record.id(), staff, reason)) {
+                pardoned++;
+                PunishmentRecord pardonedRecord = records.stream()
+                        .filter(r -> r.id() == record.id())
+                        .findFirst()
+                        .orElse(record);
+                pardonNoticeListener.accept(new PardonNotice(pardonedRecord, staffName, silent));
+            }
+        }
+        return pardoned;
     }
 
     public void setExpiryListener(@NotNull Consumer<PunishmentRecord> listener) {

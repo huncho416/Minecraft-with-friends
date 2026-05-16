@@ -148,7 +148,8 @@ public final class PunishmentLoginGuard implements Listener {
                 + "<white>Issued at: <gray>%issued_at%\n"
                 + "<white>Expires: <gray>%expiry%\n"
                 + "<white>Unbanned in: <gray>%remaining%\n\n"
-                + "<gray>Appeal at <#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>",
+                + "<white>You can appeal this punishment by joining our Discord:\n"
+                + "<#9CC3FF><hover:show_text:'<#9CC3FF>Click to open Discord'><click:open_url:'https://discord.gg/mythicpvp'><underlined>discord.gg/mythicpvp</underlined></click></hover>",
                 Map.of(
                         "type", typeLabel,
                         "reason", reasonText,

@@ -29,15 +29,34 @@ public final class UnmuteCommand extends MythicCommand {
 
     @Default
     @Complete({"players"})
-    public void execute(@NotNull CommandSender sender, @NotNull String targetName) {
+    public void execute(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length == 0) {
+            sender.sendMessage(MythicHex.colorize("&#FF8A8AUsage: &#FFFFFF/unmute <player> [-s]"));
+            return;
+        }
+        boolean silent = false;
+        String targetName = null;
+        for (String arg : args) {
+            if (arg.equalsIgnoreCase("-s")) {
+                silent = true;
+            } else if (targetName == null) {
+                targetName = arg;
+            }
+        }
+        if (targetName == null) {
+            sender.sendMessage(MythicHex.colorize("&#FF8A8AUsage: &#FFFFFF/unmute <player> [-s]"));
+            return;
+        }
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
         UUID staffUuid = sender instanceof Player player ? player.getUniqueId() : PunishmentService.SYSTEM_STAFF;
         int count = punishments.pardonActive(target.getUniqueId(),
                 Set.of(PunishmentType.MUTE, PunishmentType.TEMP_MUTE),
                 staffUuid,
-                "Unmuted");
+                sender.getName(),
+                "Unmuted",
+                silent);
         sender.sendMessage(MythicHex.colorize(count > 0
-                ? "&#9CFF9CUnmuted &f" + targetName + "&#9CFF9C."
+                ? "&#9CFF9CUnmuted &f" + targetName + "&#9CFF9C" + (silent ? " &7(silent)" : "") + "."
                 : "&#FF8A8ANo active mute found for &f" + targetName + "&#FF8A8A."));
     }
 }
