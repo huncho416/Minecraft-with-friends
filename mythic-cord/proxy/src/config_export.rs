@@ -28,7 +28,7 @@ struct ExportedServerConfig<'a> {
 pub struct ConfigExporter {
     registry: RegistryView,
     servers_dir: PathBuf,
-    domain_suffix: String,
+    domain_suffixes: Vec<String>,
     debounce: Duration,
     proxy_mode: String,
     send_proxy_protocol: bool,
@@ -41,7 +41,7 @@ impl ConfigExporter {
         Self {
             registry,
             servers_dir: PathBuf::from(&exp.servers_dir),
-            domain_suffix: exp.domain_suffix.clone(),
+            domain_suffixes: parse_domain_suffixes(&exp.domain_suffix),
             debounce: Duration::from_millis(exp.debounce_ms),
             proxy_mode: exp.proxy_mode.clone(),
             send_proxy_protocol: exp.send_proxy_protocol,
@@ -151,19 +151,28 @@ impl ConfigExporter {
     }
 
     fn domains_for(&self, entry: &ServerEntry) -> Vec<String> {
-        let suffix = self.domain_suffix.trim().trim_end_matches('.');
-        if suffix.is_empty() {
-            return vec![entry.shard_id.clone()];
+        let mut domains: Vec<String> = vec![entry.shard_id.clone()];
+        if self.domain_suffixes.is_empty() {
+            return domains;
         }
-        let mut domains = vec![
-            entry.shard_id.clone(),
-            format!("{}.{}", entry.shard_id, suffix),
-        ];
-        if entry.role.eq_ignore_ascii_case("HUB") {
-            domains.insert(0, suffix.to_string());
+        let is_hub = entry.role.eq_ignore_ascii_case("HUB");
+        for suffix in &self.domain_suffixes {
+            if is_hub {
+                domains.push(suffix.clone());
+            }
+            domains.push(format!("{}.{}", entry.shard_id, suffix));
         }
+        let mut seen = HashSet::new();
+        domains.retain(|d| seen.insert(d.clone()));
         domains
     }
+}
+
+fn parse_domain_suffixes(raw: &str) -> Vec<String> {
+    raw.split(',')
+        .map(|s| s.trim().trim_end_matches('.').to_string())
+        .filter(|s| !s.is_empty())
+        .collect()
 }
 
 fn snapshot_fingerprint(entries: &[ServerEntry]) -> String {
@@ -236,7 +245,7 @@ mod tests {
         ConfigExporter {
             registry: view,
             servers_dir: dir,
-            domain_suffix: "mythic.test".into(),
+            domain_suffixes: vec!["mythic.test".into()],
             debounce: Duration::from_millis(10),
             proxy_mode: "passthrough".into(),
             send_proxy_protocol: false,
