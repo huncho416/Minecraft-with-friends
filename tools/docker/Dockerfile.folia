@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -ntp -DskipTests package
 
 FROM eclipse-temurin:21-jre-jammy AS folia-fetch
-ARG FOLIA_VERSION=1.21.1
+ARG FOLIA_VERSION=1.21.11
 ARG FOLIA_BUILD=latest
 WORKDIR /folia
 RUN apt-get update \
@@ -25,7 +25,7 @@ RUN set -eux; \
         "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}/builds/${FOLIA_BUILD}/downloads/${JAR}"
 
 FROM eclipse-temurin:21-jre-jammy AS voice-plugin-fetch
-ARG FOLIA_VERSION=1.21.1
+ARG FOLIA_VERSION=1.21.11
 ARG VOICE_PLUGINS=true
 ARG SIMPLE_VOICE_CHAT_VERSION=Qnk9puxN
 ARG SIMPLE_VOICE_CHAT_SHA1=bc1e32243e3ef1b4999ac9d15720fdaddc7a3622
