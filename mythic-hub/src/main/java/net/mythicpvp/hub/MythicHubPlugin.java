@@ -45,6 +45,9 @@ public class MythicHubPlugin extends JavaPlugin implements MythicPlugin {
 
         spawnService = new SpawnService(this);
         spawnService.load(hubConfig);
+        getServer().getServicesManager().register(
+                SpawnService.class, spawnService, this,
+                org.bukkit.plugin.ServicePriority.Normal);
 
         selectorService = new ServerSelectorService();
         selectorService.loadGroups(hubConfig);

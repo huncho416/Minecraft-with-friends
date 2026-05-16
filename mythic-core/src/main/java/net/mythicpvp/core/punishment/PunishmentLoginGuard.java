@@ -13,12 +13,10 @@ import net.mythicpvp.suite.database.SpacetimeConnection;
 import net.mythicpvp.suite.database.StdbRowParser;
 import net.mythicpvp.suite.database.schema.TableNames;
 import net.mythicpvp.suite.database.schema.dto.PunishmentRow;
-import net.mythicpvp.suite.scheduler.MythicScheduler;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 
+@SuppressWarnings("deprecation")
 public final class PunishmentLoginGuard implements Listener {
 
     public static final String BYPASS_PERMISSION = "mythic.core.punish.bypass";
@@ -54,26 +53,16 @@ public final class PunishmentLoginGuard implements Listener {
         this.messages = messages;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onJoin(@NotNull PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        if (player.hasPermission(BYPASS_PERMISSION)) {
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onLogin(@NotNull PlayerLoginEvent event) {
+        if (event.getPlayer().hasPermission(BYPASS_PERMISSION)) {
             return;
         }
-        UUID uuid = player.getUniqueId();
-        Component kickReason = resolveKickReason(uuid);
-        if (kickReason == null) {
-            return;
+        UUID uuid = event.getPlayer().getUniqueId();
+        Component reason = resolveKickReason(uuid);
+        if (reason != null) {
+            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, reason);
         }
-        scheduleKick(player, kickReason);
-    }
-
-    private void scheduleKick(@NotNull Player player, @NotNull Component reason) {
-        MythicScheduler.runOnEntityLater(plugin, player, () -> {
-            if (player.isOnline()) {
-                player.kick(reason);
-            }
-        }, 1L);
     }
 
     @Nullable

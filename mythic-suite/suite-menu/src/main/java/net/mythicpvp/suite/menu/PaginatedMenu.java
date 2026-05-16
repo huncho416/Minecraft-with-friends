@@ -85,11 +85,17 @@ public class PaginatedMenu implements InventoryHolder {
     }
 
     public void open(@NotNull Player player, int page) {
-        this.currentPage = Math.max(0, Math.min(page, getMaxPages() - 1));
-        String pageTitle = title + " &#808080(" + (currentPage + 1) + "/" + getMaxPages() + ")";
+        int maxPages = Math.max(1, getMaxPages());
+        this.currentPage = Math.max(0, Math.min(page, maxPages - 1));
+        String pageTitle = title + " &#808080(" + (currentPage + 1) + "/" + maxPages + ")";
         this.inventory = Bukkit.createInventory(this, rows * 9, MythicHex.colorize(pageTitle));
         render();
-        player.openInventory(inventory);
+        try {
+            player.openInventory(inventory);
+        } catch (Throwable t) {
+            Bukkit.getLogger().warning("[mythic-menu] paginated openInventory failed for "
+                    + player.getName() + ": " + t.getClass().getSimpleName() + ": " + t.getMessage());
+        }
     }
 
     private void render() {

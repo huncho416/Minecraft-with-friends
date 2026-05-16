@@ -62,18 +62,20 @@ public final class ServerSelectorMenu {
             @NotNull ServerSelectorService.ServerGroup group,
             int serverCount,
             int totalPlayers) {
+        String status = serverCount > 0 ? "&#9CFF9COnline" : "&#FF8A8AOffline";
         java.util.Map<String, String> placeholders = java.util.Map.of(
                 "release_date", group.releaseDate(),
                 "age", group.age(),
                 "servers", Integer.toString(serverCount),
-                "players", Integer.toString(totalPlayers));
+                "players", Integer.toString(totalPlayers),
+                "status", status);
         java.util.List<String> lore = new java.util.ArrayList<>();
         if (!group.tagline().isEmpty()) {
             lore.add(group.tagline());
             lore.add("");
         }
         if (group.lore().isEmpty()) {
-            lore.add("&7Servers: &f" + serverCount);
+            lore.add("&7Status: " + status);
             lore.add("&7Players: &f" + totalPlayers);
             lore.add("");
             lore.add("&#9CFF9CClick to join");
