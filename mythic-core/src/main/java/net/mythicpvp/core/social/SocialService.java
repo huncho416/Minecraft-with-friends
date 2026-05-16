@@ -17,7 +17,7 @@ public final class SocialService {
 
     private final Clock clock;
     private final PersistenceGateway persistence;
-    private final AtomicLong localIds = new AtomicLong(-1L);
+    private final AtomicLong localIds = new AtomicLong(0L);
     private final ConcurrentMap<Long, FriendRequest> friendRequests = new ConcurrentHashMap<>();
     private final ConcurrentMap<UUID, ConcurrentMap<UUID, FriendLink>> friends = new ConcurrentHashMap<>();
     private final ConcurrentMap<Long, Party> parties = new ConcurrentHashMap<>();
@@ -94,6 +94,13 @@ public final class SocialService {
                 .toList();
     }
 
+    public FriendRequest findRequestFrom(@NotNull UUID target, @NotNull UUID from) {
+        return friendRequests.values().stream()
+                .filter(r -> r.to().equals(target) && r.from().equals(from))
+                .findFirst()
+                .orElse(null);
+    }
+
     public Party createParty(@NotNull UUID leader) {
         Long existing = partyByPlayer.get(leader);
         if (existing != null) {
@@ -117,6 +124,13 @@ public final class SocialService {
         applyPartyMember(new PartyMember(nextLocalId(), partyId, player, clock.millis()));
         persistence.partyJoin(partyId, player);
         return true;
+    }
+
+    public Party partyLedBy(@NotNull UUID leader) {
+        Long partyId = partyByPlayer.get(leader);
+        if (partyId == null) return null;
+        Party party = parties.get(partyId);
+        return party != null && party.leader().equals(leader) ? party : null;
     }
 
     public boolean leaveParty(@NotNull UUID player) {
@@ -305,6 +319,6 @@ public final class SocialService {
     }
 
     private long nextLocalId() {
-        return localIds.getAndDecrement();
+        return localIds.incrementAndGet();
     }
 }

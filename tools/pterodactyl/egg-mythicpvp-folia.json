@@ -42,9 +42,9 @@
         },
         {
             "name": "Shard ID",
-            "description": "Unique shard identifier reported to MythicPvP services.",
+            "description": "Unique shard identifier reported to MythicPvP services. Use 'hub-1', 'hub-2', 'skyblock-1', 'skyblock-2', etc. Avoid environment-specific suffixes like '-ptero' or '-vps' — the identifier is shown to players in scoreboard/tablist/server-selector menus.",
             "env_variable": "SHARD_ID",
-            "default_value": "hub-ptero-1",
+            "default_value": "hub-1",
             "user_viewable": true,
             "user_editable": true,
             "rules": "required|string|max:64",

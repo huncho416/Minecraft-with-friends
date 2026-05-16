@@ -15,6 +15,9 @@ import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +28,12 @@ public final class RegistrySubscriber {
     private final JavaPlugin plugin;
     private final ServerSelectorService selectorService;
     private final Logger logger;
+    private final ScheduledExecutorService refreshExecutor =
+            Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "mythic-hub-registry-refresh");
+                t.setDaemon(true);
+                return t;
+            });
 
     public RegistrySubscriber(@NotNull JavaPlugin plugin, @NotNull ServerSelectorService selectorService) {
         this.plugin = plugin;
@@ -42,6 +51,13 @@ public final class RegistrySubscriber {
         }
         connection.subscribeTable(TableNames.SERVER_REGISTRY, this::handleEvent);
         logger.info("[selector] subscribed to " + TableNames.SERVER_REGISTRY);
+        refreshExecutor.scheduleAtFixedRate(() -> {
+            try {
+                connection.subscribeTable(TableNames.SERVER_REGISTRY, this::handleEvent);
+            } catch (RuntimeException e) {
+                logger.log(Level.FINE, "[selector] re-subscribe failed", e);
+            }
+        }, 30, 30, TimeUnit.SECONDS);
     }
 
     private void handleEvent(@NotNull TableEvent event) {
