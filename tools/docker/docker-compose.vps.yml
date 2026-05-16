@@ -32,7 +32,7 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
-    networks: [mythicnet-vps]
+    networks: [mythicnet-vps, pterodactyl_nw]
 
   stdb-publish:
     build:
@@ -196,3 +196,5 @@ volumes:
 networks:
   mythicnet-vps:
     driver: bridge
+  pterodactyl_nw:
+    external: true
