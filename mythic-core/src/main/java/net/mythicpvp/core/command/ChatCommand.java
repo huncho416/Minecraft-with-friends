@@ -1,5 +1,6 @@
 package net.mythicpvp.core.command;
 
+import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.chat.ChatControlService;
 import net.mythicpvp.core.chat.ChatScope;
 import net.mythicpvp.core.config.CoreMessages;
@@ -10,7 +11,10 @@ import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
 import net.mythicpvp.suite.command.Optional;
 import net.mythicpvp.suite.command.Subcommand;
+import net.mythicpvp.suite.hex.MythicHex;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -46,6 +50,11 @@ public final class ChatCommand extends MythicCommand {
         sender.sendMessage(messages.component(
                 "messages.chat-control.muted",
                 "&#9CFF9CChat has been muted."));
+        Component globalNotice = MythicHex.colorize(
+                "&#FF8A8A&lChat has been muted by &#FFFFFF" + sender.getName() + "&#FF8A8A&l.");
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            viewer.sendMessage(globalNotice);
+        }
     }
 
     @Subcommand("unmute")
@@ -56,6 +65,11 @@ public final class ChatCommand extends MythicCommand {
         sender.sendMessage(messages.component(
                 "messages.chat-control.unmuted",
                 "&#9CFF9CChat has been unmuted."));
+        Component globalNotice = MythicHex.colorize(
+                "&#9CFF9C&lChat has been unmuted by &#FFFFFF" + sender.getName() + "&#9CFF9C&l.");
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            viewer.sendMessage(globalNotice);
+        }
     }
 
     @Subcommand("slow")
@@ -86,7 +100,9 @@ public final class ChatCommand extends MythicCommand {
     @Complete({"chat-scopes"})
     public void clear(@NotNull CommandSender sender, @Optional String scopeArg) {
         chatControl.clear(parseScope(scopeArg));
-
+        sender.sendMessage(messages.component(
+                "messages.chat-control.clear-confirm",
+                "&#9CFF9CChat cleared."));
     }
 
     @Subcommand("status")

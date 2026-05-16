@@ -70,10 +70,17 @@ public final class ChatFilterService {
             } catch (IllegalArgumentException e) {
                 type = ChatFilterEntry.Type.LITERAL;
             }
-            String pattern = entry.getString("pattern", "");
+            List<String> patterns = new ArrayList<>();
+            if (entry.isList("patterns")) {
+                for (String p : entry.getStringList("patterns")) {
+                    if (p != null && !p.isBlank()) patterns.add(p);
+                }
+            }
+            String legacy = entry.getString("pattern", "");
+            if (!legacy.isBlank()) patterns.add(legacy);
             boolean autoPunish = entry.getBoolean("auto-punish", true);
-            if (pattern.isBlank()) continue;
-            filters.put(id, new ChatFilterEntry(id, title, type, pattern, autoPunish));
+            if (patterns.isEmpty()) continue;
+            filters.put(id, new ChatFilterEntry(id, title, type, patterns, autoPunish));
             if (id > maxId) maxId = id;
         }
         nextId.set(maxId + 1);
@@ -85,16 +92,16 @@ public final class ChatFilterService {
             ConfigurationSection section = root.createSection(Long.toString(entry.id()));
             section.set("title", entry.title());
             section.set("type", entry.type().name());
-            section.set("pattern", entry.pattern());
+            section.set("patterns", entry.patterns());
             section.set("auto-punish", entry.autoPunish());
         }
         config.save();
     }
 
     @NotNull
-    public ChatFilterEntry add(@NotNull String title, @NotNull ChatFilterEntry.Type type, @NotNull String pattern, boolean autoPunish) {
+    public ChatFilterEntry add(@NotNull String title, @NotNull ChatFilterEntry.Type type, @NotNull List<String> patterns, boolean autoPunish) {
         long id = nextId.getAndIncrement();
-        ChatFilterEntry entry = new ChatFilterEntry(id, title, type, pattern, autoPunish);
+        ChatFilterEntry entry = new ChatFilterEntry(id, title, type, patterns, autoPunish);
         filters.put(id, entry);
         save();
         return entry;
@@ -146,16 +153,16 @@ public final class ChatFilterService {
                                           @NotNull String playerName,
                                           @NotNull ChatFilterEntry entry) {
         if (!entry.autoPunish()) {
-            recordHistoryWarn(playerUuid, playerName, entry, "Filter: " + entry.title());
+            recordHistoryWarn(playerUuid, playerName, entry, "Filter category: " + entry.title());
             return ChatFilterAction.warnHistory(
-                    "Your message was removed because it violates the rules (" + entry.title() + ").");
+                    "Your message was removed for using an inappropriate word.");
         }
         int offenses = offenseCounts.merge(playerUuid, 1, Integer::sum);
         if (offenses == 1) {
-            recordHistoryWarn(playerUuid, playerName, entry, "Filter: " + entry.title() + " (warning)");
+            recordHistoryWarn(playerUuid, playerName, entry, "Filter category: " + entry.title() + " (warning)");
             return ChatFilterAction.warnHistory(
-                    "Your message was removed because it violates the rules (" + entry.title()
-                            + "). The next time will result in a punishment.");
+                    "Your message was removed for using an inappropriate word. "
+                            + "The next violation will result in a punishment.");
         }
         int muteIndex = Math.min(offenses - 2, ESCALATION_LADDER.length - 1);
         Duration duration = muteIndex >= 0 && muteIndex < ESCALATION_LADDER.length
@@ -164,7 +171,7 @@ public final class ChatFilterService {
         if (offenses - 2 >= ESCALATION_LADDER.length) {
             issuePunishment(playerUuid, playerName, entry, null, true);
             return ChatFilterAction.permanentMute(
-                    "You have been permanently muted for repeated filter violations.");
+                    "You have been permanently muted for repeated use of inappropriate language.");
         }
         boolean atFinalRung = (offenses - 2) == ESCALATION_LADDER.length - 1;
         issuePunishment(playerUuid, playerName, entry, duration, false);
@@ -172,10 +179,12 @@ public final class ChatFilterService {
         if (atFinalRung) {
             return ChatFilterAction.mute(duration,
                     "You have been muted for " + formatted
-                            + ". The next violation will be a permanent mute.");
+                            + " for inappropriate language. "
+                            + "The next violation will be a permanent mute.");
         }
         return ChatFilterAction.mute(duration,
-                "You have been muted for " + formatted + " for repeated filter violations.");
+                "You have been muted for " + formatted
+                        + " for repeated use of inappropriate language.");
     }
 
     private void recordHistoryWarn(@NotNull UUID playerUuid,
@@ -212,10 +221,10 @@ public final class ChatFilterService {
                     PunishmentService.SYSTEM_STAFF,
                     "ChatFilter",
                     type,
-                    "Filter: " + entry.title(),
+                    "Filter category: " + entry.title(),
                     "",
                     duration == null ? null : clock.instant().plus(duration),
-                    false,
+                    true,
                     false,
                     serverId));
         } catch (RuntimeException ignored) {

@@ -84,6 +84,38 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
                 placeholders));
     }
 
+    public void onPardon(@NotNull PunishmentRecord record) {
+        MythicScheduler.runSync(plugin, () -> {
+            Player target = Bukkit.getPlayer(record.targetUuid());
+            if (target == null || !target.isOnline()) return;
+            if (record.type() == PunishmentType.MUTE || record.type() == PunishmentType.TEMP_MUTE) {
+                target.sendMessage(messages.component(
+                        "messages.punishment.notify-unmuted-staff",
+                        "&#9CFF9CYou have been unmuted by staff."));
+            } else if (record.type().loginBlocking()) {
+                target.sendMessage(messages.component(
+                        "messages.punishment.notify-unbanned-staff",
+                        "&#9CFF9CYour ban has been lifted."));
+            }
+        });
+    }
+
+    public void onExpiry(@NotNull PunishmentRecord record) {
+        MythicScheduler.runSync(plugin, () -> {
+            Player target = Bukkit.getPlayer(record.targetUuid());
+            if (target == null || !target.isOnline()) return;
+            if (record.type() == PunishmentType.TEMP_MUTE) {
+                target.sendMessage(messages.component(
+                        "messages.punishment.notify-unmuted-expired",
+                        "&#9CFF9CYour mute has expired. You can chat again."));
+            } else if (record.type() == PunishmentType.TEMP_BAN) {
+                target.sendMessage(messages.component(
+                        "messages.punishment.notify-unbanned-expired",
+                        "&#9CFF9CYour ban has expired."));
+            }
+        });
+    }
+
     private void notifyWarned(@NotNull Player target, @NotNull PunishmentRecord record) {
         String reasonText = record.reason().isEmpty() ? "No reason given" : record.reason();
         target.sendMessage(messages.component(

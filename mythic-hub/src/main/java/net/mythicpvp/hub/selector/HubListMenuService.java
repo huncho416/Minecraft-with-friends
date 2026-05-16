@@ -1,5 +1,6 @@
 package net.mythicpvp.hub.selector;
 
+import net.mythicpvp.core.transfer.ProxyTransferService;
 import net.mythicpvp.core.transfer.TransferQueueService;
 import net.mythicpvp.suite.hex.MythicHex;
 import net.mythicpvp.suite.item.MythicItem;
@@ -59,8 +60,14 @@ public final class HubListMenuService {
                 TransferQueueService queue = lookupQueue();
                 if (queue != null) {
                     queue.enqueue(player, hub.serverId());
+                    return;
+                }
+                ProxyTransferService transfer = lookupTransfer();
+                if (transfer != null) {
+                    transfer.transfer(player, hub.serverId());
                 } else {
-                    player.transfer(hub.serverId(), 25565);
+                    player.sendMessage(MythicHex.colorize(
+                            "&#FF8A8ATransfer is unavailable on this shard."));
                 }
             });
             slot++;
@@ -101,6 +108,13 @@ public final class HubListMenuService {
     private static TransferQueueService lookupQueue() {
         RegisteredServiceProvider<TransferQueueService> rsp =
                 Bukkit.getServicesManager().getRegistration(TransferQueueService.class);
+        return rsp == null ? null : rsp.getProvider();
+    }
+
+    @Nullable
+    private static ProxyTransferService lookupTransfer() {
+        RegisteredServiceProvider<ProxyTransferService> rsp =
+                Bukkit.getServicesManager().getRegistration(ProxyTransferService.class);
         return rsp == null ? null : rsp.getProvider();
     }
 }

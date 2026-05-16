@@ -99,8 +99,9 @@ public final class BroadcastService {
     }
 
     private static final Pattern URL_PATTERN = Pattern.compile(
-            "(?i)\\b((?:https?://[^\\s<>\"']+)|(?:(?:www\\.|discord\\.gg/|[a-z0-9-]+\\.)" +
-                    "[a-z0-9-]+(?:\\.[a-z]{2,})+(?:/[^\\s<>\"']*)?))");
+            "(?i)\\b((?:https?://[^\\s<>\"']+)|(?:(?:www\\.|discord\\.gg/)?" +
+                    "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9-]+)*\\.[a-z]{2,}" +
+                    "(?:/[^\\s<>\"']*)?))");
 
     @NotNull
     static String injectClickableLinks(@NotNull String input) {
