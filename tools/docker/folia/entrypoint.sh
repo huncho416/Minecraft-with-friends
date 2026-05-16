@@ -36,6 +36,37 @@ apply_property() {
         echo "${key}=${value}" >> "${file}"
     fi
 }
+apply_velocity_secret() {
+    local target="${DATA_DIR}/config/paper-global.yml"
+    if [ ! -f "${target}" ]; then
+        return 0
+    fi
+    local secret=""
+    if [ -n "${VELOCITY_SECRET:-}" ]; then
+        secret="${VELOCITY_SECRET}"
+    elif [ -n "${VELOCITY_SECRET_FILE:-}" ] && [ -r "${VELOCITY_SECRET_FILE}" ]; then
+        secret="$(tr -d '\n\r ' < "${VELOCITY_SECRET_FILE}")"
+    fi
+    if [ -z "${secret}" ]; then
+        return 0
+    fi
+    if ! grep -q "^    secret:" "${target}"; then
+        return 0
+    fi
+    local current
+    current="$(awk '/^    secret:/ { sub(/^    secret:[[:space:]]*/, ""); print; exit }' "${target}")"
+    if [ "${current}" = "${secret}" ]; then
+        return 0
+    fi
+    if printf '%s' "${secret}" | grep -q '[|&\\]'; then
+        echo "[entrypoint] WARN: Velocity secret contains | & or backslash; refusing to apply"
+        return 0
+    fi
+    sed -i "s|^    secret:.*|    secret: ${secret}|" "${target}"
+    echo "[entrypoint] applied Velocity forwarding secret to paper-global.yml"
+}
+apply_velocity_secret
+
 apply_property "${DATA_DIR}/server.properties" view-distance "${VIEW_DISTANCE:-8}"
 apply_property "${DATA_DIR}/server.properties" online-mode "${ONLINE_MODE:-true}"
 apply_property "${DATA_DIR}/server.properties" server-port "${SERVER_PORT:-${P_SERVER_PORT:-25565}}"
