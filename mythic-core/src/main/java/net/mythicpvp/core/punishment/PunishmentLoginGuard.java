@@ -3,10 +3,11 @@ package net.mythicpvp.core.punishment;
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.persistence.CoreHydrationSink;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -36,15 +37,18 @@ public final class PunishmentLoginGuard implements Listener {
         this.messages = messages;
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
-        UUID uuid = event.getUniqueId();
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onJoin(@NotNull PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        if (player.hasPermission(BYPASS_PERMISSION)) {
+            return;
+        }
+        UUID uuid = player.getUniqueId();
 
         if (hydrationSink.isBlacklisted(uuid)) {
-            Component reason = messages.component(
+            player.kick(messages.component(
                     "messages.punishment.login-blacklisted",
-                    "<red>You are blacklisted from this network.\n\n<gray>Appeal at <#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>");
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, reason);
+                    "<red>You are blacklisted from this network.\n\n<gray>Appeal at <#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>"));
             return;
         }
 
@@ -52,7 +56,7 @@ public final class PunishmentLoginGuard implements Listener {
             if (!record.type().loginBlocking()) {
                 continue;
             }
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, formatBan(record));
+            player.kick(formatBan(record));
             return;
         }
     }

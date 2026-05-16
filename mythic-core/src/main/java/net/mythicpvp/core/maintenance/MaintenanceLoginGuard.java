@@ -2,10 +2,11 @@ package net.mythicpvp.core.maintenance;
 
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
 public final class MaintenanceLoginGuard implements Listener {
@@ -18,12 +19,16 @@ public final class MaintenanceLoginGuard implements Listener {
         this.messages = messages;
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onPreLogin(@NotNull AsyncPlayerPreLoginEvent event) {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onJoin(@NotNull PlayerJoinEvent event) {
         if (!maintenance.isActive()) {
             return;
         }
-        if (maintenance.canBypass(event.getUniqueId())) {
+        Player player = event.getPlayer();
+        if (player.hasPermission(MaintenanceService.BYPASS_PERMISSION)) {
+            return;
+        }
+        if (maintenance.canBypass(player.getUniqueId())) {
             return;
         }
         Component reason = messages.component(
@@ -31,6 +36,6 @@ public final class MaintenanceLoginGuard implements Listener {
                 "<red><bold>This server is in maintenance mode.\n\n"
                 + "<white>Join our Discord to keep up with the latest updates:\n"
                 + "<#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>");
-        event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, reason);
+        player.kick(reason);
     }
 }
