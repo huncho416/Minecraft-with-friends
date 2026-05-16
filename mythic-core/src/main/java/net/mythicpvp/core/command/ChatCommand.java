@@ -1,4 +1,4 @@
-package net.mythicpvp.core.command;
+﻿package net.mythicpvp.core.command;
 
 import net.mythicpvp.core.chat.ChatControlService;
 import net.mythicpvp.core.chat.ChatScope;
@@ -30,9 +30,12 @@ public final class ChatCommand extends MythicCommand {
 
     @Default
     public void usage(@NotNull CommandSender sender) {
-        sender.sendMessage(messages.component(
-                "messages.chat-control.usage",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8AUsage: &#FFFFFF/chat <mute|unmute|slow|clear|status> [seconds] [local|network]"));
+        sender.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#F529BEChat Commands"));
+        sender.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/chat mute [local|network] &7- mute chat (defaults to local)"));
+        sender.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/chat unmute [local|network] &7- unmute chat"));
+        sender.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/chat slow <seconds> [local|network] &7- enforce a per-player chat cooldown (0 disables)"));
+        sender.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/chat clear [local|network] &7- clear chat history for everyone"));
+        sender.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/chat status &7- show current mute and slow-mode state"));
     }
 
     @Subcommand("mute")
@@ -42,7 +45,7 @@ public final class ChatCommand extends MythicCommand {
         chatControl.mute(parseScope(scopeArg));
         sender.sendMessage(messages.component(
                 "messages.chat-control.muted",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CChat has been muted."));
+                "&#9CFF9CChat has been muted."));
     }
 
     @Subcommand("unmute")
@@ -52,7 +55,7 @@ public final class ChatCommand extends MythicCommand {
         chatControl.unmute(parseScope(scopeArg));
         sender.sendMessage(messages.component(
                 "messages.chat-control.unmuted",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CChat has been unmuted."));
+                "&#9CFF9CChat has been unmuted."));
     }
 
     @Subcommand("slow")
@@ -62,18 +65,18 @@ public final class ChatCommand extends MythicCommand {
         if (seconds < 0) {
             sender.sendMessage(messages.component(
                     "messages.chat-control.usage",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8AUsage: &#FFFFFF/chat <mute|unmute|slow|clear|status> [seconds] [local|network]"));
+                    "&#FF8A8AUsage: &#FFFFFF/chat <mute|unmute|slow|clear|status> [seconds] [local|network]"));
             return;
         }
         chatControl.slow(seconds, parseScope(scopeArg));
         if (seconds == 0) {
             sender.sendMessage(messages.component(
                     "messages.chat-control.slowed-off",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CChat slow mode is off."));
+                    "&#9CFF9CChat slow mode is off."));
         } else {
             sender.sendMessage(messages.component(
                     "messages.chat-control.slowed",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CChat slow mode is now &#FFFFFF%seconds%s&#9CFF9C.",
+                    "&#9CFF9CChat slow mode is now &#FFFFFF%seconds%s&#9CFF9C.",
                     Map.of("seconds", Integer.toString(seconds))));
         }
     }
@@ -90,7 +93,7 @@ public final class ChatCommand extends MythicCommand {
     public void status(@NotNull CommandSender sender) {
         sender.sendMessage(messages.component(
                 "messages.chat-control.status",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFmuted=%muted% slow=%seconds%s scope=%scope%",
+                "&#FFFFFFmuted=%muted% slow=%seconds%s scope=%scope%",
                 Map.of(
                         "muted", Boolean.toString(chatControl.muted()),
                         "seconds", Integer.toString(chatControl.slowSeconds()),

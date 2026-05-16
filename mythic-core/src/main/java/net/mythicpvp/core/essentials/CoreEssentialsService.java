@@ -1,4 +1,4 @@
-package net.mythicpvp.core.essentials;
+﻿package net.mythicpvp.core.essentials;
 
 import net.mythicpvp.core.audit.CoreAuditLog;
 import net.mythicpvp.core.config.CoreMessages;
@@ -136,11 +136,11 @@ public final class CoreEssentialsService {
     }
 
     public void sendHelp(@NotNull CommandSender sender) {
-        messages.list("links.help", List.of("&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFHelp", "&#FFFFFFUse /discord for community support.")).forEach(sender::sendMessage);
+        messages.list("links.help", List.of("&#FFFFFFHelp", "&#FFFFFFUse /discord for community support.")).forEach(sender::sendMessage);
     }
 
     public void sendDiscord(@NotNull CommandSender sender) {
-        sender.sendMessage(messages.component("links.discord", "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFFdiscord.gg/mythicpvp")
+        sender.sendMessage(messages.component("links.discord", "&#FFFFFFdiscord.gg/mythicpvp")
                 .clickEvent(ClickEvent.openUrl("https://discord.gg/mythicpvp"))
                 .hoverEvent(HoverEvent.showText(messages.component("links.discord-hover", "&#D2D8E0Click to open Discord."))));
     }

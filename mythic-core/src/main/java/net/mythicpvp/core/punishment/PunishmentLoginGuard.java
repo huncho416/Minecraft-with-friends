@@ -1,4 +1,4 @@
-package net.mythicpvp.core.punishment;
+﻿package net.mythicpvp.core.punishment;
 
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
@@ -36,7 +36,7 @@ public final class PunishmentLoginGuard implements Listener {
         if (hydrationSink.isBlacklisted(uuid)) {
             Component reason = messages.component(
                     "messages.punishment.login-blacklisted",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8AYou are blacklisted from this network.");
+                    "&#FF8A8AYou are blacklisted from this network.");
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, reason);
             return;
         }
@@ -51,7 +51,7 @@ public final class PunishmentLoginGuard implements Listener {
                     : "expires " + java.time.Instant.ofEpochMilli(record.expiresAtMillis());
             Component reason = messages.component(
                     "messages.punishment.login-banned",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8AYou are banned: &#FFFFFF%reason% &#D2D8E0(%expiry%).",
+                    "&#FF8A8AYou are banned: &#FFFFFF%reason% &#D2D8E0(%expiry%).",
                     Map.of(
                             "reason", reasonText,
                             "expiry", expiry,

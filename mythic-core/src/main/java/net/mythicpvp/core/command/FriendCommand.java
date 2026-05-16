@@ -1,4 +1,4 @@
-package net.mythicpvp.core.command;
+﻿package net.mythicpvp.core.command;
 
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.social.FriendRequest;
@@ -30,9 +30,13 @@ public final class FriendCommand extends MythicCommand {
 
     @Default
     public void usage(@NotNull Player player) {
-        player.sendMessage(messages.component(
-                "messages.social.friend-usage",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AUsage: &#FFFFFF/friend <add|accept|deny|remove|list|requests>"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#F529BEFriend Commands"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/friend add <player> &7- send a friend request"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/friend accept <id> &7- accept a pending request"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/friend deny <id> &7- deny a pending request"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/friend remove <player> &7- remove a friend"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/friend list &7- show your friends and online status"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/friend requests &7- show pending friend requests"));
     }
 
     @Subcommand("add")
@@ -42,23 +46,23 @@ public final class FriendCommand extends MythicCommand {
         if (target == null) {
             player.sendMessage(messages.component(
                     "messages.command.player-not-found",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AThat player is not online."));
+                    "&#FF8A8AThat player is not online."));
             return;
         }
         if (target.getUniqueId().equals(player.getUniqueId())) {
             player.sendMessage(messages.component(
                     "messages.social.friend-self",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AYou cannot add yourself as a friend."));
+                    "&#FF8A8AYou cannot add yourself as a friend."));
             return;
         }
         FriendRequest request = social.requestFriend(player.getUniqueId(), target.getUniqueId());
         player.sendMessage(messages.component(
                 "messages.social.friend-request-sent",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#9CFF9CFriend request sent to &#FFFFFF%target%&#9CFF9C.",
+                "&#9CFF9CFriend request sent to &#FFFFFF%target%&#9CFF9C.",
                 Map.of("target", target.getName())));
         target.sendMessage(messages.component(
                 "messages.social.friend-request-received",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FFFFFF%sender% &#9CFF9Csent you a friend request. &#FFFFFF/friend accept %id%",
+                "&#FFFFFF%sender% &#9CFF9Csent you a friend request. &#FFFFFF/friend accept %id%",
                 Map.of("sender", player.getName(), "id", Long.toString(request.id()))));
     }
 
@@ -67,12 +71,12 @@ public final class FriendCommand extends MythicCommand {
         if (!social.acceptFriend(requestId, player.getUniqueId())) {
             player.sendMessage(messages.component(
                     "messages.social.friend-request-missing",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AThat friend request was not found."));
+                    "&#FF8A8AThat friend request was not found."));
             return;
         }
         player.sendMessage(messages.component(
                 "messages.social.friend-accepted",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#9CFF9CFriend request accepted."));
+                "&#9CFF9CFriend request accepted."));
     }
 
     @Subcommand("deny")
@@ -80,12 +84,12 @@ public final class FriendCommand extends MythicCommand {
         if (!social.denyFriend(requestId, player.getUniqueId())) {
             player.sendMessage(messages.component(
                     "messages.social.friend-request-missing",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AThat friend request was not found."));
+                    "&#FF8A8AThat friend request was not found."));
             return;
         }
         player.sendMessage(messages.component(
                 "messages.social.friend-denied",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#9CFF9CFriend request denied."));
+                "&#9CFF9CFriend request denied."));
     }
 
     @Subcommand("remove")
@@ -95,13 +99,13 @@ public final class FriendCommand extends MythicCommand {
         if (target == null || !social.areFriends(player.getUniqueId(), target)) {
             player.sendMessage(messages.component(
                     "messages.social.friend-not-found",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AThat player is not on your friends list."));
+                    "&#FF8A8AThat player is not on your friends list."));
             return;
         }
         social.removeFriend(player.getUniqueId(), target);
         player.sendMessage(messages.component(
                 "messages.social.friend-removed",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#9CFF9CFriend removed."));
+                "&#9CFF9CFriend removed."));
     }
 
     @Subcommand("list")
@@ -109,7 +113,7 @@ public final class FriendCommand extends MythicCommand {
         Set<UUID> friends = social.friendsOf(player.getUniqueId());
         player.sendMessage(messages.component(
                 "messages.social.friend-list",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FFFFFFYou have &#D2D8E0%count% &#FFFFFFfriends.",
+                "&#FFFFFFYou have &#D2D8E0%count% &#FFFFFFfriends.",
                 Map.of("count", Integer.toString(friends.size()))));
         for (UUID friendUuid : friends) {
             Player online = Bukkit.getPlayer(friendUuid);
@@ -127,7 +131,7 @@ public final class FriendCommand extends MythicCommand {
         List<FriendRequest> incoming = social.incomingRequests(player.getUniqueId());
         player.sendMessage(messages.component(
                 "messages.social.friend-requests",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FFFFFFYou have &#D2D8E0%count% &#FFFFFFpending friend requests.",
+                "&#FFFFFFYou have &#D2D8E0%count% &#FFFFFFpending friend requests.",
                 Map.of("count", Integer.toString(incoming.size()))));
         for (FriendRequest request : incoming) {
             Player sender = Bukkit.getPlayer(request.from());

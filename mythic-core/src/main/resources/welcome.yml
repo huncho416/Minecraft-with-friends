@@ -1,0 +1,25 @@
+# Welcome message shown to a player as they connect.
+#
+# Lines are sent in order with one blank line before and after the block
+# so it stands out against scrolling chat. Use %player% to interpolate
+# the player's name. Mythic hex codes (&#RRGGBB) and legacy color codes
+# (&7, &b, etc.) are supported. Avoid bold (&l) — see messages.yml.
+#
+# Optional `links` entries render as clickable lines below the message
+# block. The text supports color codes, `url` is opened on click, and
+# `hover` shows on mouseover. Set `enabled: false` to skip the welcome
+# block entirely.
+
+welcome:
+  enabled: true
+  # Each entry is one line. Empty strings render as a blank line.
+  lines:
+    - "&#9CFF9CWelcome, &#FFFFFF%player% &#9CFF9Cto &#F529BEMythic&#FFFFFFPvP&#9CFF9C!"
+    - "&7Explore the vast realms we have to offer."
+  links:
+    - label: "&#F529BESTORE&7: &#FFFFFFstore.mythicpvp.net"
+      url: "https://store.mythicpvp.net"
+      hover: "&7Click to open the store."
+    - label: "&#F529BEDISCORD&7: &#FFFFFFdiscord.gg/mythicpvp"
+      url: "https://discord.gg/mythicpvp"
+      hover: "&7Click to join the Discord."

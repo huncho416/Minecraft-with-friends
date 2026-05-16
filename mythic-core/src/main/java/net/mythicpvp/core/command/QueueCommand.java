@@ -27,6 +27,20 @@ public final class QueueCommand extends MythicCommand {
                         + "&#D2D8E0 paused=&#FFFFFF" + queueService.paused()
                         + "&#D2D8E0 enabled=&#FFFFFF" + queueService.enabled()
                         + "&#D2D8E0 drain/sec=&#FFFFFF" + queueService.drainPerTick()));
+        sender.sendMessage(MythicHex.colorize("&7Type &#FFFFFF/queue help &7for the full subcommand list."));
+    }
+
+    @Subcommand("help")
+    public void help(@NotNull CommandSender sender) {
+        sender.sendMessage(MythicHex.colorize("&#F529BEQueue Commands"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/queue &7- show queue size, pause state, drain rate"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/queue pause &7- stop draining (new transfers still queue up)"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/queue resume &7- resume draining"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/queue enable &7- turn the queue back on"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/queue disable &7- bypass the queue entirely (clears it)"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/queue skip &7- transfer the next player immediately"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/queue clear &7- drop everyone from the queue"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/queue rate <n> &7- set drain rate per second"));
     }
 
     @Subcommand("pause")

@@ -186,7 +186,7 @@ public final class CommandManager {
                 try {
                     resolved[i] = resolver.apply(args[argIndex++]);
                 } catch (Exception e) {
-                    sender.sendMessage(MythicHex.colorize("&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8AInvalid argument: &#FFFFFF" + args[argIndex - 1]));
+                    sender.sendMessage(MythicHex.colorize("&#FF8A8AInvalid argument: &#FFFFFF" + args[argIndex - 1]));
                     return;
                 }
             } else {
@@ -265,7 +265,7 @@ public final class CommandManager {
 
     @NotNull
     private static String prefixed(@NotNull String body) {
-        return "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» " + body;
+        return body;
     }
 
     @NotNull

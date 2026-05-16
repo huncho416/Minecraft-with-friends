@@ -1,4 +1,4 @@
-package net.mythicpvp.core.command;
+﻿package net.mythicpvp.core.command;
 
 import net.mythicpvp.core.audit.CoreAuditLog;
 import net.mythicpvp.core.config.CoreMessages;
@@ -38,7 +38,7 @@ public final class AppealsCommand extends MythicCommand {
     public void usage(@NotNull CommandSender sender) {
         sender.sendMessage(messages.component(
                 "messages.punishment.appeals-usage",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AUsage: &#FFFFFF/appeals review <approve|deny> <appealId> [notes...]"));
+                "&#FF8A8AUsage: &#FFFFFF/appeals review <approve|deny> <appealId> [notes...]"));
     }
 
     @Subcommand("review")
@@ -77,7 +77,7 @@ public final class AppealsCommand extends MythicCommand {
                         "notes", notes.isEmpty() ? "-" : notes));
         sender.sendMessage(messages.component(
                 "messages.punishment.appeal-reviewed",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FFFFFFAppeal #%id% %decision%.",
+                "&#FFFFFFAppeal #%id% %decision%.",
                 Map.of(
                         "id", Long.toString(appealId),
                         "decision", wireDecision.toLowerCase(Locale.ROOT))));

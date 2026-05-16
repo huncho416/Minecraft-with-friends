@@ -1,4 +1,4 @@
-package net.mythicpvp.core.command;
+﻿package net.mythicpvp.core.command;
 
 import net.mythicpvp.core.chat.ChatControlService;
 import net.mythicpvp.core.config.CoreMessages;
@@ -29,6 +29,6 @@ public final class UnmuteCommand extends MythicCommand {
         chatControl.unmute(ChatCommand.parseScope(scopeArg));
         sender.sendMessage(messages.component(
                 "messages.chat-control.unmuted",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CChat has been unmuted."));
+                "&#9CFF9CChat has been unmuted."));
     }
 }

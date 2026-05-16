@@ -27,6 +27,19 @@ public final class CreditsCommand extends MythicCommand {
     public void balance(@NotNull Player player) {
         long bal = creditService.getBalance(player.getUniqueId());
         player.sendMessage(MythicHex.colorize("&#FFD700Credits: &f" + bal));
+        if (player.hasPermission("mythic.core.credits.admin")) {
+            player.sendMessage(MythicHex.colorize("&7Type &#FFFFFF/credits help &7for admin subcommands."));
+        }
+    }
+
+    @Subcommand("help")
+    @CommandPermission("mythic.core.credits.admin")
+    public void help(@NotNull CommandSender sender) {
+        sender.sendMessage(MythicHex.colorize("&#F529BECredits Admin"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/credits &7- show your own balance"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/credits give <player> <amount> &7- add credits to a player"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/credits set <player> <amount> &7- overwrite a player's balance"));
+        sender.sendMessage(MythicHex.colorize("&#FFFFFF/credits check <player> &7- view another player's balance"));
     }
 
     @Subcommand("give")

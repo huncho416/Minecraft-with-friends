@@ -142,6 +142,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         saveResourceIfMissing("announcements.yml");
         saveResourceIfMissing("staff-mode.yml");
         saveResourceIfMissing("reports.yml");
+        saveResourceIfMissing("welcome.yml");
         serverIdentity = ServerIdentity.fromEnvironment();
         configManager = new ConfigManager(this);
         messages = new CoreMessages(new ConfigText(configManager.getOrCreate("messages"), "messages"));
@@ -374,6 +375,11 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                         this, staffModeService, staffStateStore, staffSettings,
                         rankService, grantService, staffChannelService),
                 this);
+
+        net.mythicpvp.core.welcome.WelcomeService welcomeService =
+                new net.mythicpvp.core.welcome.WelcomeService(configManager.getOrCreate("welcome"));
+        getServer().getPluginManager().registerEvents(
+                new net.mythicpvp.core.welcome.WelcomeListener(this, welcomeService), this);
 
         broadcastService = new BroadcastService(protocolManager, serverIdentity.id());
         broadcastService.load(configManager.getOrCreate("announcements"));

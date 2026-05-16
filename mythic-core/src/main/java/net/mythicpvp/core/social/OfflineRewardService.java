@@ -1,4 +1,4 @@
-package net.mythicpvp.core.social;
+﻿package net.mythicpvp.core.social;
 
 import net.mythicpvp.core.config.CoreMessages;
 import org.bukkit.event.EventHandler;
@@ -24,7 +24,7 @@ public final class OfflineRewardService implements Listener {
         if (streak.currentStreak() > 1) {
             event.getPlayer().sendMessage(messages.component(
                     "messages.social.login-streak",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#9CFF9CLogin streak: &#FFFFFF%streak% &#9CFF9Cdays!",
+                    "&#9CFF9CLogin streak: &#FFFFFF%streak% &#9CFF9Cdays!",
                     Map.of("streak", Integer.toString(streak.currentStreak()))));
         }
     }

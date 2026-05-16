@@ -80,7 +80,7 @@ public final class ReportCommand extends MythicCommand {
     }
 
     private void sendUsage(@NotNull Player player) {
-        player.sendMessage(MythicHex.colorize("&#F529BE&lReport &7System"));
+        player.sendMessage(MythicHex.colorize("&#F529BEReport &7System"));
         player.sendMessage(MythicHex.colorize("&7Use &#FFFFFF/report <player>&7 to open the report menu."));
         player.sendMessage(MythicHex.colorize("&7Pick a category in the menu to send the report to staff."));
         player.sendMessage(MythicHex.colorize("&7Cooldown: &f" + config.cooldownSeconds()
