@@ -17,11 +17,9 @@ import java.util.Locale;
 public final class ChatFilterCommand extends MythicCommand {
 
     private final ChatFilterService service;
-    private final ChatFilterMenu menu;
 
-    public ChatFilterCommand(@NotNull ChatFilterService service, @NotNull ChatFilterMenu menu) {
+    public ChatFilterCommand(@NotNull ChatFilterService service) {
         this.service = service;
-        this.menu = menu;
     }
 
     @Default
