@@ -70,19 +70,21 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
     private String buildPunishmentLine(@NotNull PunishmentRecord record, boolean silent) {
         String typeLabel = displayType(record.type());
         String reasonText = record.reason().isEmpty() ? "No reason given" : record.reason();
-        String duration = record.expiresAtMillis() <= 0
-                ? "permanent"
-                : formatRemaining(record.expiresAtMillis() - record.createdAtMillis());
         String targetColor = nameColor.colorTag(record.targetUuid());
         String staffColor = nameColor.colorTag(record.staffUuid());
         String prefix = silent
                 ? "<#FFEC8A>[Silent]</#FFEC8A> "
                 : "<#F529BE>[Punishment]</#F529BE> ";
-        return prefix
-                + targetColor + escape(record.targetName()) + "</" + tagName(targetColor) + "> "
-                + "<#D2D8E0>was <#FF8A8A>" + typeLabel + "</#FF8A8A> by </#D2D8E0>"
-                + staffColor + escape(record.staffName()) + "</" + tagName(staffColor) + "> "
-                + "<#D2D8E0>for <white>" + escape(reasonText) + "</white> (<white>" + duration + "</white>)</#D2D8E0>";
+        StringBuilder body = new StringBuilder(prefix);
+        body.append(targetColor).append(escape(record.targetName())).append("</").append(tagName(targetColor)).append("> ")
+            .append("<#D2D8E0>was <#FF8A8A>").append(typeLabel).append("</#FF8A8A> by </#D2D8E0>")
+            .append(staffColor).append(escape(record.staffName())).append("</").append(tagName(staffColor)).append("> ")
+            .append("<#D2D8E0>for <white>").append(escape(reasonText)).append("</white></#D2D8E0>");
+        if (record.type() != PunishmentType.KICK && record.type() != PunishmentType.WARN && record.expiresAtMillis() > 0) {
+            String duration = formatRemaining(record.expiresAtMillis() - record.createdAtMillis());
+            body.append(" <#D2D8E0>(<white>").append(duration).append("</white>)</#D2D8E0>");
+        }
+        return body.toString();
     }
 
     @NotNull

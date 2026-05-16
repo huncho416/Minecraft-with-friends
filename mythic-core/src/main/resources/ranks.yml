@@ -5,7 +5,7 @@ ranks:
     dye: "LIGHT_GRAY_DYE"
     prefix: "&#D2D8E0"
     suffix: ""
-    weight: 1000
+    weight: 1
     staff: false
     donator: false
     parent: ""
@@ -20,16 +20,215 @@ ranks:
     tab-format: "%tab_prefix%%player%"
     nametag-prefix: "&#D2D8E0"
     nametag-format: "%nametag_prefix%%player%"
+
+  helper:
+    name: "Helper"
+    color: "#FFF59D"
+    dye: "YELLOW_DYE"
+    prefix: "&#FFE082&lH&#FFEB3B&le&#FFF176&ll&#FFEE58&lp&#FFF59D&le&#FFF59D&lr "
+    suffix: ""
+    weight: 50
+    staff: true
+    donator: false
+    parent: "default"
+    permissions:
+      - "mythic.core.staffchat"
+      - "mythic.core.punish.menu"
+      - "mythic.core.punish.menu.mute"
+      - "mythic.core.punish.handbook"
+      - "mythic.core.report.review"
+      - "mythic.core.appeal"
+      - "mythic.core.helpop"
+      - "mythic.core.chat.mute"
+      - "mythic.core.chat.slow"
+    chat-prefix: "&#FFE082&lH&#FFEB3B&le&#FFF176&ll&#FFEE58&lp&#FFF59D&le&#FFF59D&lr "
+    chat-format: "%chat_prefix%&#FFF59D%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#FFE082&lH&#FFEB3B&le&#FFF176&ll&#FFEE58&lp&#FFF59D&le&#FFF59D&lr &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#FFE082&lH&#FFEB3B&le&#FFF176&ll&#FFEE58&lp&#FFF59D&le&#FFF59D&lr &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  mod:
+    name: "Mod"
+    color: "#64B5F6"
+    dye: "LIGHT_BLUE_DYE"
+    prefix: "&#42A5F5&lM&#64B5F6&lo&#90CAF9&ld "
+    suffix: ""
+    weight: 75
+    staff: true
+    donator: false
+    parent: "helper"
+    permissions:
+      - "mythic.core.staffmode"
+      - "mythic.core.vanish"
+      - "mythic.core.punish.menu.warn"
+      - "mythic.core.punish.menu.mute"
+      - "mythic.core.punish.menu.ban"
+      - "mythic.core.punish.mute"
+      - "mythic.core.punish.ban"
+      - "mythic.core.punish.warn"
+      - "mythic.core.punish.kick"
+      - "mythic.core.notes"
+      - "mythic.core.staffmode.inspect"
+      - "mythic.core.alts"
+    chat-prefix: "&#42A5F5&lM&#64B5F6&lo&#90CAF9&ld "
+    chat-format: "%chat_prefix%&#64B5F6%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#42A5F5&lM&#64B5F6&lo&#90CAF9&ld &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#42A5F5&lM&#64B5F6&lo&#90CAF9&ld &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  srmod:
+    name: "SrMod"
+    color: "#00BCD4"
+    dye: "CYAN_DYE"
+    prefix: "&#00ACC1&lS&#00BCD4&lr&#26C6DA&lM&#4DD0E1&lo&#80DEEA&ld "
+    suffix: ""
+    weight: 200
+    staff: true
+    donator: false
+    parent: "mod"
+    permissions:
+      - "mythic.core.punish.menu.permanent"
+      - "mythic.core.punish.history"
+      - "mythic.core.staffmode.unvanish"
+    chat-prefix: "&#00ACC1&lS&#00BCD4&lr&#26C6DA&lM&#4DD0E1&lo&#80DEEA&ld "
+    chat-format: "%chat_prefix%&#00BCD4%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#00ACC1&lS&#00BCD4&lr&#26C6DA&lM&#4DD0E1&lo&#80DEEA&ld &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#00ACC1&lS&#00BCD4&lr&#26C6DA&lM&#4DD0E1&lo&#80DEEA&ld &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  admin:
+    name: "Admin"
+    color: "#E57373"
+    dye: "RED_DYE"
+    prefix: "&#EF9A9A&lA&#E57373&ld&#EF5350&lm&#F44336&li&#EF5350&ln "
+    suffix: ""
+    weight: 350
+    staff: true
+    donator: false
+    parent: "srmod"
+    permissions:
+      - "mythic.core.punish.command"
+      - "mythic.core.punish.blacklist"
+      - "mythic.core.punish.menu.blacklist"
+      - "mythic.core.punish.clearhistory"
+      - "mythic.core.punish.clearpunishments"
+      - "mythic.core.gamemode"
+      - "mythic.core.gamemode.creative"
+      - "mythic.core.gamemode.survival"
+      - "mythic.core.gamemode.others"
+      - "mythic.core.stafflist"
+      - "mythic.core.staffmode.inspect.edit"
+      - "mythic.core.broadcast"
+      - "mythic.core.adminchat"
+    chat-prefix: "&#EF9A9A&lA&#E57373&ld&#EF5350&lm&#F44336&li&#EF5350&ln "
+    chat-format: "%chat_prefix%&#E57373%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#EF9A9A&lA&#E57373&ld&#EF5350&lm&#F44336&li&#EF5350&ln &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#EF9A9A&lA&#E57373&ld&#EF5350&lm&#F44336&li&#EF5350&ln &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  sradmin:
+    name: "SrAdmin"
+    color: "#B71C1C"
+    dye: "RED_DYE"
+    prefix: "&#C62828&lS&#B71C1C&lr&#A31515&lA&#8B0000&ld&#A31515&lm&#B71C1C&li&#C62828&ln "
+    suffix: ""
+    weight: 700
+    staff: true
+    donator: false
+    parent: "admin"
+    permissions:
+      - "mythic.core.managementchat"
+      - "mythic.core.rank.admin"
+      - "mythic.core.rank.editor"
+      - "mythic.core.grant.menu"
+      - "mythic.core.grant.command"
+      - "mythic.core.grant.history"
+      - "mythic.core.grant.clear"
+      - "mythic.core.maintenance"
+      - "mythic.core.server.transfer"
+    chat-prefix: "&#C62828&lS&#B71C1C&lr&#A31515&lA&#8B0000&ld&#A31515&lm&#B71C1C&li&#C62828&ln "
+    chat-format: "%chat_prefix%&#B71C1C%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#C62828&lS&#B71C1C&lr&#A31515&lA&#8B0000&ld&#A31515&lm&#B71C1C&li&#C62828&ln &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#C62828&lS&#B71C1C&lr&#A31515&lA&#8B0000&ld&#A31515&lm&#B71C1C&li&#C62828&ln &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  manager:
+    name: "Manager"
+    color: "#00BFA5"
+    dye: "CYAN_DYE"
+    prefix: "&#00897B&lM&#00A693&la&#00BFA5&ln&#1DE9B6&la&#64FFDA&lg&#00BFA5&le&#00A693&lr "
+    suffix: ""
+    weight: 800
+    staff: true
+    donator: false
+    parent: "sradmin"
+    permissions:
+      - "mythic.core.punish.template.add"
+      - "mythic.core.punish.template.edit"
+      - "mythic.core.punish.template.remove"
+      - "mythic.core.queue.admin"
+    chat-prefix: "&#00897B&lM&#00A693&la&#00BFA5&ln&#1DE9B6&la&#64FFDA&lg&#00BFA5&le&#00A693&lr "
+    chat-format: "%chat_prefix%&#00BFA5%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#00897B&lM&#00A693&la&#00BFA5&ln&#1DE9B6&la&#64FFDA&lg&#00BFA5&le&#00A693&lr &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#00897B&lM&#00A693&la&#00BFA5&ln&#1DE9B6&la&#64FFDA&lg&#00BFA5&le&#00A693&lr &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  platformadmin:
+    name: "PlatformAdmin"
+    color: "#5C0000"
+    dye: "BLACK_DYE"
+    prefix: "&#5C0000&lP&#700000&lA&#850000&l "
+    suffix: ""
+    weight: 850
+    staff: true
+    donator: false
+    parent: "manager"
+    permissions:
+      - "mythic.core.staffsettings"
+      - "mythic.core.staffsettings.bypass"
+      - "mythic.core.ownerchat"
+    chat-prefix: "&#5C0000&lP&#5C0000&ll&#700000&la&#700000&lt&#850000&lf&#850000&lo&#9A0000&lr&#9A0000&lm&#A30000&lA&#A30000&ld&#B71C1C&lm&#B71C1C&li&#C62828&ln "
+    chat-format: "%chat_prefix%&#5C0000%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#5C0000&lP&#5C0000&lA &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#5C0000&lP&#5C0000&lA &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  developer:
+    name: "Developer"
+    color: "#FFC107"
+    dye: "YELLOW_DYE"
+    prefix: "&#FFA000&lD&#FFB300&le&#FFC107&lv&#FFCA28&l "
+    suffix: ""
+    weight: 900
+    staff: true
+    donator: false
+    parent: "platformadmin"
+    permissions:
+      - "mythic.*"
+    chat-prefix: "&#FFA000&lD&#FFB300&le&#FFC107&lv&#FFCA28&le&#FFD54F&ll&#FFC107&lo&#FFB300&lp&#FFA000&le&#FF8F00&lr "
+    chat-format: "%chat_prefix%&#FFC107%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#FFA000&lD&#FFC107&le&#FFD54F&lv &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#FFA000&lD&#FFC107&le&#FFD54F&lv &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
   owner:
     name: "Owner"
     color: "#DE2222"
     dye: "RED_DYE"
     prefix: "&#DD3838O&#E01B1Bw&#E72C2Cn&#EE3D3De&#EE0B0Br #DE2222"
     suffix: ""
-    weight: 1
+    weight: 1000
     staff: true
     donator: false
-    parent: "default"
+    parent: "developer"
     permissions:
       - "mythic.*"
       - "mythic.core.color.*"
@@ -40,6 +239,199 @@ ranks:
     tab-format: "%tab_prefix%%player%"
     nametag-prefix: "&#D22020&lO&#DE2222&lW&#C12D2D&lN&#A43737&lE&#E90000&lR #FFFFFF&l"
     nametag-format: "%nametag_prefix%%player%"
+
+  builder:
+    name: "Builder"
+    color: "#81C784"
+    dye: "LIME_DYE"
+    prefix: "&#66BB6A&lB&#81C784&lu&#A5D6A7&li&#C8E6C9&ll&#A5D6A7&ld&#81C784&le&#66BB6A&lr "
+    suffix: ""
+    weight: 2
+    staff: false
+    donator: false
+    parent: "default"
+    permissions:
+      - "mythic.core.builderchat"
+    chat-prefix: "&#66BB6A&lB&#81C784&lu&#A5D6A7&li&#C8E6C9&ll&#A5D6A7&ld&#81C784&le&#66BB6A&lr "
+    chat-format: "%chat_prefix%&#81C784%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#66BB6A&lB&#81C784&lu&#A5D6A7&li&#C8E6C9&ll&#A5D6A7&ld&#81C784&le&#66BB6A&lr &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#66BB6A&lB&#81C784&lu&#A5D6A7&li&#C8E6C9&ll&#A5D6A7&ld&#81C784&le&#66BB6A&lr &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  famous:
+    name: "Famous"
+    color: "#F48FB1"
+    dye: "PINK_DYE"
+    prefix: "&#F8BBD0&lF&#F48FB1&la&#F06292&lm&#EC407A&lo&#F06292&lu&#F48FB1&ls "
+    suffix: ""
+    weight: 2
+    staff: false
+    donator: false
+    parent: "default"
+    permissions: []
+    chat-prefix: "&#F8BBD0&lF&#F48FB1&la&#F06292&lm&#EC407A&lo&#F06292&lu&#F48FB1&ls "
+    chat-format: "%chat_prefix%&#F48FB1%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#F8BBD0&lF&#F48FB1&la&#F06292&lm&#EC407A&lo&#F06292&lu&#F48FB1&ls &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#F8BBD0&lF&#F48FB1&la&#F06292&lm&#EC407A&lo&#F06292&lu&#F48FB1&ls &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  youtuber:
+    name: "Youtuber"
+    color: "#FF0000"
+    dye: "RED_DYE"
+    prefix: "&#FFFFFF&lYou&#FF0000&lTube "
+    suffix: ""
+    weight: 2
+    staff: false
+    donator: false
+    parent: "default"
+    permissions: []
+    chat-prefix: "&#FFFFFF&lYou&#FF0000&lTube "
+    chat-format: "%chat_prefix%&#FFFFFF%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#FFFFFF&lYou&#FF0000&lTube &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#FFFFFF&lYou&#FF0000&lTube &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  twitch:
+    name: "Twitch"
+    color: "#9146FF"
+    dye: "PURPLE_DYE"
+    prefix: "&#9146FF&lT&#A970FF&lw&#BF94FF&li&#A970FF&lt&#9146FF&lc&#7A33E5&lh "
+    suffix: ""
+    weight: 2
+    staff: false
+    donator: false
+    parent: "default"
+    permissions: []
+    chat-prefix: "&#9146FF&lT&#A970FF&lw&#BF94FF&li&#A970FF&lt&#9146FF&lc&#7A33E5&lh "
+    chat-format: "%chat_prefix%&#9146FF%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#9146FF&lT&#A970FF&lw&#BF94FF&li&#A970FF&lt&#9146FF&lc&#7A33E5&lh &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#9146FF&lT&#A970FF&lw&#BF94FF&li&#A970FF&lt&#9146FF&lc&#7A33E5&lh &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  initiate:
+    name: "Initiate"
+    color: "#B0BEC5"
+    dye: "LIGHT_GRAY_DYE"
+    prefix: "&#90A4AE&lI&#B0BEC5&ln&#CFD8DC&li&#B0BEC5&lt "
+    suffix: ""
+    weight: 2
+    staff: false
+    donator: true
+    parent: "default"
+    permissions:
+      - "mythic.core.color.basic"
+      - "mythic.core.creditshop"
+    chat-prefix: "&#90A4AE&lI&#B0BEC5&ln&#CFD8DC&li&#B0BEC5&lt "
+    chat-format: "%chat_prefix%&#B0BEC5%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#90A4AE&lI&#B0BEC5&ln&#CFD8DC&li&#B0BEC5&lt &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#90A4AE&lI&#B0BEC5&ln&#CFD8DC&li&#B0BEC5&lt &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  champion:
+    name: "Champion"
+    color: "#4FC3F7"
+    dye: "LIGHT_BLUE_DYE"
+    prefix: "&#03A9F4&lC&#29B6F6&lh&#4FC3F7&la&#81D4FA&lm&#4FC3F7&lp&#29B6F6&l "
+    suffix: ""
+    weight: 3
+    staff: false
+    donator: true
+    parent: "initiate"
+    permissions:
+      - "mythic.core.color.cyan"
+      - "mythic.core.cosmetics"
+    chat-prefix: "&#03A9F4&lC&#29B6F6&lh&#4FC3F7&la&#81D4FA&lm&#4FC3F7&lp&#29B6F6&l "
+    chat-format: "%chat_prefix%&#4FC3F7%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#03A9F4&lC&#29B6F6&lh&#4FC3F7&la&#81D4FA&lm&#4FC3F7&lp&#29B6F6&l &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#03A9F4&lC&#29B6F6&lh&#4FC3F7&la&#81D4FA&lm&#4FC3F7&lp&#29B6F6&l &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  elite:
+    name: "Elite"
+    color: "#AB47BC"
+    dye: "MAGENTA_DYE"
+    prefix: "&#9C27B0&lE&#AB47BC&ll&#BA68C8&li&#CE93D8&lt&#AB47BC&le "
+    suffix: ""
+    weight: 4
+    staff: false
+    donator: true
+    parent: "champion"
+    permissions:
+      - "mythic.core.color.purple"
+    chat-prefix: "&#9C27B0&lE&#AB47BC&ll&#BA68C8&li&#CE93D8&lt&#AB47BC&le "
+    chat-format: "%chat_prefix%&#AB47BC%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#9C27B0&lE&#AB47BC&ll&#BA68C8&li&#CE93D8&lt&#AB47BC&le &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#9C27B0&lE&#AB47BC&ll&#BA68C8&li&#CE93D8&lt&#AB47BC&le &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  legend:
+    name: "Legend"
+    color: "#FF7043"
+    dye: "ORANGE_DYE"
+    prefix: "&#FF5722&lL&#FF7043&le&#FF8A65&lg&#FFAB91&le&#FF8A65&ln&#FF7043&ld "
+    suffix: ""
+    weight: 5
+    staff: false
+    donator: true
+    parent: "elite"
+    permissions:
+      - "mythic.core.color.orange"
+    chat-prefix: "&#FF5722&lL&#FF7043&le&#FF8A65&lg&#FFAB91&le&#FF8A65&ln&#FF7043&ld "
+    chat-format: "%chat_prefix%&#FF7043%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#FF5722&lL&#FF7043&le&#FF8A65&lg&#FFAB91&le&#FF8A65&ln&#FF7043&ld &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#FF5722&lL&#FF7043&le&#FF8A65&lg&#FFAB91&le&#FF8A65&ln&#FF7043&ld &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  titan:
+    name: "Titan"
+    color: "#EC407A"
+    dye: "MAGENTA_DYE"
+    prefix: "&#E91E63&l&n[&#EC407A&l&nT&#F06292&l&ni&#F48FB1&l&nt&#F06292&l&na&#EC407A&l&nn&#E91E63&l&n] "
+    suffix: ""
+    weight: 6
+    staff: false
+    donator: true
+    parent: "legend"
+    permissions:
+      - "mythic.core.color.pink"
+      - "mythic.core.cosmetics.premium"
+    chat-prefix: "&#E91E63&l[&#EC407A&lT&#F06292&li&#F48FB1&lt&#F06292&la&#EC407A&ln&#E91E63&l] "
+    chat-format: "%chat_prefix%&#EC407A%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#E91E63&l[&#EC407A&lT&#F06292&li&#F48FB1&lt&#F06292&la&#EC407A&ln&#E91E63&l] &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#E91E63&l[&#EC407A&lT&#F06292&li&#F48FB1&lt&#F06292&la&#EC407A&ln&#E91E63&l] &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
+  mythic:
+    name: "Mythic"
+    color: "#FFD700"
+    dye: "GOLD_INGOT"
+    prefix: "&#FFB300&l&n✦&#FFC107&l&nM&#FFD700&l&ny&#FFEB3B&l&nt&#FFD700&l&nh&#FFC107&l&ni&#FFB300&l&nc&#FF8F00&l&n✦ "
+    suffix: ""
+    weight: 10
+    staff: false
+    donator: true
+    parent: "titan"
+    permissions:
+      - "mythic.core.color.*"
+      - "mythic.core.cosmetics.mythic"
+      - "mythic.core.chat"
+    chat-prefix: "&#FFB300&l✦&#FFC107&lM&#FFD700&ly&#FFEB3B&lt&#FFD700&lh&#FFC107&li&#FFB300&lc&#FF8F00&l✦ "
+    chat-format: "%chat_prefix%&#FFD700%player%&7: &#FFFFFF%message%"
+    tab-prefix: "&#FFB300&l✦&#FFC107&lM&#FFD700&ly&#FFEB3B&lt&#FFD700&lh&#FFC107&li&#FFB300&lc&#FF8F00&l✦ &#FFFFFF"
+    tab-format: "%tab_prefix%%player%"
+    nametag-prefix: "&#FFB300&l✦&#FFC107&lM&#FFD700&ly&#FFEB3B&lt&#FFD700&lh&#FFC107&li&#FFB300&lc&#FF8F00&l✦ &#FFFFFF"
+    nametag-format: "%nametag_prefix%%player%"
+
 grant:
   durations:
     - "1d"

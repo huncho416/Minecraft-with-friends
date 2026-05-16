@@ -15,24 +15,70 @@ shop:
       material: "DIAMOND"
       slot: 11
       items:
-        vip:
-          display-name: "VIP Rank"
-          material: "EMERALD"
-          cost: 1000
+        initiate:
+          display-name: "Initiate Rank"
+          material: "IRON_INGOT"
+          cost: 500
           type: "RANK"
-          value: "vip"
+          value: "initiate"
           lore:
-            - "&7Purchase the VIP rank."
-            - "&7Includes exclusive perks and prefix."
-        mvp:
-          display-name: "MVP Rank"
-          material: "DIAMOND"
-          cost: 2500
+            - "&7Your first step into the network."
+            - "&7• Basic chat colors"
+            - "&7• Access to /creditshop perks"
+        champion:
+          display-name: "Champion Rank"
+          material: "LAPIS_LAZULI"
+          cost: 1500
           type: "RANK"
-          value: "mvp"
+          value: "champion"
           lore:
-            - "&7Purchase the MVP rank."
-            - "&7Includes all VIP perks plus more."
+            - "&7Stand above the crowd."
+            - "&7• Cyan chat colors"
+            - "&7• Access to cosmetics"
+            - "&7• All Initiate perks"
+        elite:
+          display-name: "Elite Rank"
+          material: "AMETHYST_SHARD"
+          cost: 3500
+          type: "RANK"
+          value: "elite"
+          lore:
+            - "&7Join the elite few."
+            - "&7• Purple chat colors"
+            - "&7• All Champion perks"
+        legend:
+          display-name: "Legend Rank"
+          material: "BLAZE_POWDER"
+          cost: 7500
+          type: "RANK"
+          value: "legend"
+          lore:
+            - "&7Become a legend on the network."
+            - "&7• Orange chat colors"
+            - "&7• All Elite perks"
+        titan:
+          display-name: "Titan Rank"
+          material: "NETHERITE_INGOT"
+          cost: 15000
+          type: "RANK"
+          value: "titan"
+          lore:
+            - "&7Towering above the rest."
+            - "&7• Pink chat colors"
+            - "&7• Premium cosmetics"
+            - "&7• All Legend perks"
+        mythic:
+          display-name: "Mythic Rank"
+          material: "NETHER_STAR"
+          cost: 35000
+          type: "RANK"
+          value: "mythic"
+          lore:
+            - "&#FFD700&l✦ The pinnacle of MythicPvP. ✦"
+            - "&7• All chat color permissions"
+            - "&7• Exclusive Mythic-tier cosmetics"
+            - "&7• Custom chat formatting"
+            - "&7• All Titan perks"
 
     crates:
       display-name: "Crates"
@@ -69,13 +115,49 @@ shop:
       material: "NETHER_STAR"
       slot: 15
       items:
-        vip_to_mvp:
-          display-name: "VIP → MVP Upgrade"
-          material: "NETHER_STAR"
-          cost: 1500
+        initiate_to_champion:
+          display-name: "Initiate → Champion"
+          material: "LAPIS_LAZULI"
+          cost: 1100
           type: "RANK_UPGRADE"
-          value: "mvp"
-          requires-rank: "vip"
+          value: "champion"
+          requires-rank: "initiate"
           lore:
-            - "&7Upgrade from VIP to MVP."
-            - "&7Requires VIP rank."
+            - "&7Upgrade from Initiate to Champion."
+        champion_to_elite:
+          display-name: "Champion → Elite"
+          material: "AMETHYST_SHARD"
+          cost: 2200
+          type: "RANK_UPGRADE"
+          value: "elite"
+          requires-rank: "champion"
+          lore:
+            - "&7Upgrade from Champion to Elite."
+        elite_to_legend:
+          display-name: "Elite → Legend"
+          material: "BLAZE_POWDER"
+          cost: 4500
+          type: "RANK_UPGRADE"
+          value: "legend"
+          requires-rank: "elite"
+          lore:
+            - "&7Upgrade from Elite to Legend."
+        legend_to_titan:
+          display-name: "Legend → Titan"
+          material: "NETHERITE_INGOT"
+          cost: 8500
+          type: "RANK_UPGRADE"
+          value: "titan"
+          requires-rank: "legend"
+          lore:
+            - "&7Upgrade from Legend to Titan."
+        titan_to_mythic:
+          display-name: "Titan → Mythic"
+          material: "NETHER_STAR"
+          cost: 22000
+          type: "RANK_UPGRADE"
+          value: "mythic"
+          requires-rank: "titan"
+          lore:
+            - "&#FFD700&lThe ultimate ascension."
+            - "&7Upgrade from Titan to Mythic."
