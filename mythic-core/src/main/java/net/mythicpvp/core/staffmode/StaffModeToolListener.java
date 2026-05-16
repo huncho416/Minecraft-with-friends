@@ -6,39 +6,51 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class StaffModeToolListener implements Listener {
 
+    public static final String INSPECT_VIEW_PERMISSION = "mythic.core.staffmode.inspect.view";
+    public static final String INSPECT_EDIT_PERMISSION = "mythic.core.staffmode.inspect.edit";
+
     private final StaffModeService staff;
     private final CoreMessages messages;
-    private final net.mythicpvp.core.rank.GrantService grants;
-    private final net.mythicpvp.core.rank.RankService ranks;
+    private final Map<UUID, UUID> inspectingViewers = new ConcurrentHashMap<>();
 
     public StaffModeToolListener(
             @NotNull StaffModeService staff,
             @NotNull CoreMessages messages,
-            @NotNull net.mythicpvp.core.rank.GrantService grants,
-            @NotNull net.mythicpvp.core.rank.RankService ranks) {
+            @SuppressWarnings("unused") @NotNull net.mythicpvp.core.rank.GrantService grants,
+            @SuppressWarnings("unused") @NotNull net.mythicpvp.core.rank.RankService ranks) {
         this.staff = staff;
         this.messages = messages;
-        this.grants = grants;
-        this.ranks = ranks;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInteractEntity(@NotNull PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
         Player player = event.getPlayer();
         if (!staff.inStaffMode(player.getUniqueId())) {
             return;
@@ -61,6 +73,9 @@ public final class StaffModeToolListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInteract(@NotNull PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
         Player player = event.getPlayer();
         if (!staff.inStaffMode(player.getUniqueId())) {
             return;
@@ -82,6 +97,9 @@ public final class StaffModeToolListener implements Listener {
             case "DISABLE" -> {
                 event.setCancelled(true);
                 staff.disable(player);
+                player.sendMessage(messages.component(
+                        "messages.staff-mode.disabled",
+                        "&#9CFF9CStaff mode disabled."));
             }
             default -> {  }
         }
@@ -110,19 +128,60 @@ public final class StaffModeToolListener implements Listener {
 
         staff.onQuit(event.getPlayer());
         staff.refreshVisibility();
+        inspectingViewers.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onInspectClick(@NotNull InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player viewer)) return;
+        UUID targetUuid = inspectingViewers.get(viewer.getUniqueId());
+        if (targetUuid == null) return;
+        if (!sameInventory(event.getView().getTopInventory(), targetUuid)) {
+            return;
+        }
+        if (!viewer.hasPermission(INSPECT_EDIT_PERMISSION)) {
+            event.setCancelled(true);
+            return;
+        }
+        InventoryAction action = event.getAction();
+        if (action == InventoryAction.NOTHING || action == InventoryAction.UNKNOWN) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onInspectDrag(@NotNull InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player viewer)) return;
+        UUID targetUuid = inspectingViewers.get(viewer.getUniqueId());
+        if (targetUuid == null) return;
+        if (!sameInventory(event.getView().getTopInventory(), targetUuid)) {
+            return;
+        }
+        if (!viewer.hasPermission(INSPECT_EDIT_PERMISSION)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onInspectClose(@NotNull org.bukkit.event.inventory.InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player viewer)) return;
+        inspectingViewers.remove(viewer.getUniqueId());
+    }
+
+    private boolean sameInventory(@NotNull Inventory top, @NotNull UUID expectedTargetUuid) {
+        if (!(top.getHolder() instanceof Player holder)) return false;
+        return holder.getUniqueId().equals(expectedTargetUuid);
     }
 
     private void handleInspect(@NotNull Player staffPlayer, @NotNull Player target) {
-        String rankId = grants.activeRank(target.getUniqueId());
-        var rank = ranks.get(rankId);
-        String rankName = rank == null ? "default" : rank.name();
-        staffPlayer.sendMessage(messages.component(
-                "messages.staff-mode.inspect",
-                "&#FFFFFF%target%: rank=%rank% gamemode=%gamemode%",
-                Map.of(
-                        "target", target.getName(),
-                        "rank", rankName,
-                        "gamemode", target.getGameMode().name())));
+        if (!staffPlayer.hasPermission(INSPECT_VIEW_PERMISSION)) {
+            staffPlayer.sendMessage(messages.component(
+                    "messages.staff-mode.inspect-no-permission",
+                    "&#FF8A8AYou don't have permission to inspect inventories."));
+            return;
+        }
+        inspectingViewers.put(staffPlayer.getUniqueId(), target.getUniqueId());
+        staffPlayer.openInventory(target.getInventory());
     }
 
     private void handleFreeze(@NotNull Player staffPlayer, @NotNull Player target) {
@@ -136,14 +195,24 @@ public final class StaffModeToolListener implements Listener {
     }
 
     private void handleRandomTeleport(@NotNull Player staffPlayer) {
+        Set<UUID> exclude = new HashSet<>();
+        exclude.add(staffPlayer.getUniqueId());
         var candidates = staffPlayer.getServer().getOnlinePlayers().stream()
-                .filter(p -> !p.getUniqueId().equals(staffPlayer.getUniqueId()))
+                .filter(p -> !exclude.contains(p.getUniqueId()))
+                .filter(p -> staff.canSee(staffPlayer, p))
                 .toList();
         if (candidates.isEmpty()) {
+            staffPlayer.sendMessage(messages.component(
+                    "messages.staff-mode.no-targets",
+                    "&#FFEC8ANo other players are online to teleport to."));
             return;
         }
         Player chosen = candidates.get((int) (Math.random() * candidates.size()));
         staffPlayer.teleportAsync(chosen.getLocation());
+        staffPlayer.sendMessage(messages.component(
+                "messages.staff-mode.random-teleport",
+                "&#9CFF9CTeleported to &#FFFFFF%target%&#9CFF9C.",
+                Map.of("target", chosen.getName())));
     }
 
     @Nullable
