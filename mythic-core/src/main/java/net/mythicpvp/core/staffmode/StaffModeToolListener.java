@@ -39,9 +39,7 @@ public final class StaffModeToolListener implements Listener {
 
     public StaffModeToolListener(
             @NotNull StaffModeService staff,
-            @NotNull CoreMessages messages,
-            @SuppressWarnings("unused") @NotNull net.mythicpvp.core.rank.GrantService grants,
-            @SuppressWarnings("unused") @NotNull net.mythicpvp.core.rank.RankService ranks) {
+            @NotNull CoreMessages messages) {
         this.staff = staff;
         this.messages = messages;
     }

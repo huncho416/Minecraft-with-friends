@@ -281,7 +281,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new net.mythicpvp.core.command.FreezeCommand(staffModeService));
         commandManager.register(new net.mythicpvp.core.command.RankCommand(rankService));
         getServer().getPluginManager().registerEvents(
-                new StaffModeToolListener(staffModeService, messages, grantService, rankService), this);
+                new StaffModeToolListener(staffModeService, messages), this);
 
         commandManager.register(new AppealCommand(punishmentService, persistenceGateway, messages, auditLog));
         commandManager.register(new AppealsCommand(persistenceGateway, messages, auditLog));

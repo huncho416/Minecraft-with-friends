@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -78,14 +77,6 @@ public final class StaffStateStore {
             yaml.save(file);
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to save staff-state.yml", e);
-        }
-    }
-
-    @SuppressWarnings("unused")
-    @NotNull
-    public List<UUID> snapshotStaffMode() {
-        synchronized (staffMode) {
-            return staffMode.stream().toList();
         }
     }
 }
