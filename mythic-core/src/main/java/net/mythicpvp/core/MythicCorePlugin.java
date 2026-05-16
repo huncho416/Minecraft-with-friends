@@ -257,6 +257,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new PunishmentsCommand(punishmentMenuService));
         commandManager.register(new HistoryCommand(punishmentService, punishmentMenuService));
         commandManager.register(new ClearPunishmentsCommand(punishmentService));
+        commandManager.register(new net.mythicpvp.core.command.ClearHistoryCommand(punishmentService));
         commandManager.register(new PunishmentDirectCommand.Ban(punishmentService, serverIdentity.id(), Clock.systemUTC()));
         commandManager.register(new PunishmentDirectCommand.TempBan(punishmentService, serverIdentity.id(), Clock.systemUTC()));
         commandManager.register(new PunishmentDirectCommand.Mute(punishmentService, serverIdentity.id(), Clock.systemUTC()));

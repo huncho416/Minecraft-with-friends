@@ -87,11 +87,6 @@ public final class SpacetimeConnection implements WebSocket.Listener {
     public CompletableFuture<ReducerResult> callReducer(@NotNull String reducerName, @NotNull Object args) {
         ensureIdentifier(reducerName, "Reducer name");
         String requestId = UUID.randomUUID().toString();
-        if (!isConnected()) {
-            CompletableFuture<ReducerResult> future = new CompletableFuture<>();
-            future.completeExceptionally(new IllegalStateException("SpacetimeDB connection is not connected"));
-            return future;
-        }
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(httpBaseUri() + "/v1/database/" + path(moduleName) + "/call/" + path(reducerName)))

@@ -17,13 +17,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.EnumSet;
 import java.util.UUID;
 
-@CommandAlias("clearpunishments")
-@CommandPermission("mythic.core.punish.clearpunishments")
-public final class ClearPunishmentsCommand extends MythicCommand {
+@CommandAlias("clearhistory")
+@CommandPermission("mythic.core.punish.clearhistory")
+public final class ClearHistoryCommand extends MythicCommand {
 
     private final PunishmentService punishmentService;
 
-    public ClearPunishmentsCommand(@NotNull PunishmentService punishmentService) {
+    public ClearHistoryCommand(@NotNull PunishmentService punishmentService) {
         this.punishmentService = punishmentService;
     }
 
@@ -38,8 +38,9 @@ public final class ClearPunishmentsCommand extends MythicCommand {
                         PunishmentType.MUTE, PunishmentType.TEMP_MUTE, PunishmentType.WARN, PunishmentType.KICK),
                 staffUuid,
                 "Cleared by " + sender.getName());
+        int removed = punishmentService.clearHistory(target.getUniqueId(), staffUuid);
         sender.sendMessage(MythicHex.colorize(
-                "&#9CFF9CPardoned &f" + pardoned + " &#9CFF9Cactive punishment(s) for &f" + targetName
-                        + "&#9CFF9C. History is preserved — use /clearhistory to wipe the menu."));
+                "&#9CFF9CWiped &f" + removed + " &#9CFF9Crecord(s) (&f" + pardoned
+                        + " &#9CFF9Cstill-active first) for &f" + targetName + "&#9CFF9C."));
     }
 }
