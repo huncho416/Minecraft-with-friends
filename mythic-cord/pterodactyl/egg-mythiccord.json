@@ -139,10 +139,10 @@
       "field_type": "text"
     },
     {
-      "name": "Config export domain suffix",
-      "description": "Domain suffix appended to each generated server config (e.g. 'node.mythicpvp.net' becomes hub-1.node.mythicpvp.net).",
+      "name": "Config export domain suffix(es)",
+      "description": "Comma-separated list of domain suffixes the proxy will accept. Each suffix routes to the hub when used bare (e.g. play.mythicpvp.net) and to a specific shard when prefixed (e.g. skyblock-1.play.mythicpvp.net). Example: 'play.mythicpvp.net,mc.mythicpvp.net,mythicpvp.net'.",
       "env_variable": "MYTHIC_CONFIG_DOMAIN_SUFFIX",
-      "default_value": "node.mythicpvp.net",
+      "default_value": "play.mythicpvp.net,mc.mythicpvp.net,mythicpvp.net",
       "user_viewable": true,
       "user_editable": true,
       "rules": "required|string",
