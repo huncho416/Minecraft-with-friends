@@ -48,13 +48,33 @@ public record PunishmentCommand(
         if (input.length() < 2) {
             throw new IllegalArgumentException("duration");
         }
-        long amount = Long.parseLong(input.substring(0, input.length() - 1));
-        return switch (Character.toLowerCase(input.charAt(input.length() - 1))) {
-            case 's' -> Duration.ofSeconds(amount);
-            case 'm' -> Duration.ofMinutes(amount);
-            case 'h' -> Duration.ofHours(amount);
-            case 'd' -> Duration.ofDays(amount);
-            default -> throw new IllegalArgumentException("duration");
-        };
+        Duration total = Duration.ZERO;
+        StringBuilder digits = new StringBuilder();
+        boolean parsedAny = false;
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (c >= '0' && c <= '9') {
+                digits.append(c);
+                continue;
+            }
+            if (digits.length() == 0) {
+                throw new IllegalArgumentException("duration");
+            }
+            long amount = Long.parseLong(digits.toString());
+            digits.setLength(0);
+            parsedAny = true;
+            total = total.plus(switch (Character.toLowerCase(c)) {
+                case 's' -> Duration.ofSeconds(amount);
+                case 'm' -> Duration.ofMinutes(amount);
+                case 'h' -> Duration.ofHours(amount);
+                case 'd' -> Duration.ofDays(amount);
+                case 'w' -> Duration.ofDays(amount * 7L);
+                default -> throw new IllegalArgumentException("duration");
+            });
+        }
+        if (!parsedAny || digits.length() > 0) {
+            throw new IllegalArgumentException("duration");
+        }
+        return total;
     }
 }

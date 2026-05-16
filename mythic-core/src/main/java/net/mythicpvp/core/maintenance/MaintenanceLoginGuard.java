@@ -33,11 +33,10 @@ public final class MaintenanceLoginGuard implements Listener {
         if (isOperator(event.getUniqueId())) {
             return;
         }
-        Component reason = messages.component(
-                "messages.maintenance.kick",
-                "<#FF8A8A><bold>This server is in maintenance mode.\n\n"
-                + "<white>Join our Discord to keep up with the latest updates:\n"
-                + "<#9CC3FF><hover:show_text:'<#9CC3FF>Click to open Discord'><click:open_url:'https://discord.gg/mythicpvp'><underlined>discord.gg/mythicpvp</underlined></click></hover>");
+        Component reason = messages.codeOwned(
+                "<#FF8A8A><bold>This server is in maintenance mode.</bold></#FF8A8A>\n\n"
+                + "<white>Join our Discord to keep up with the latest updates:</white>\n"
+                + "<hover:show_text:'<#9CC3FF>Click to open Discord'><click:open_url:'https://discord.gg/mythicpvp'><#9CC3FF><underlined>discord.gg/mythicpvp</underlined></#9CC3FF></click></hover>");
         event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, reason);
     }
 
