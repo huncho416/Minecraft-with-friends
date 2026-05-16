@@ -53,6 +53,20 @@ public final class ConfigText {
     }
 
     @NotNull
+    public Component codeOwned(@NotNull String fallback, @NotNull Map<String, String> placeholders) {
+        String text = fallback;
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+            text = text.replace("%" + entry.getKey() + "%", entry.getValue());
+        }
+        return MythicHex.colorize(text);
+    }
+
+    @NotNull
+    public Component codeOwned(@NotNull String fallback) {
+        return MythicHex.colorize(fallback);
+    }
+
+    @NotNull
     public List<String> list(@NotNull String key, @NotNull List<String> fallback) {
         String path = path(key);
         if (!config.contains(path)) {

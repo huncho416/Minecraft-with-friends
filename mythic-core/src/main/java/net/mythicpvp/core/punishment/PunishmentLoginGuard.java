@@ -64,9 +64,11 @@ public final class PunishmentLoginGuard implements Listener {
     @Nullable
     private Component resolveKickReason(@NotNull UUID uuid) {
         if (hydrationSink.isBlacklisted(uuid)) {
-            return messages.component(
-                    "messages.punishment.login-blacklisted",
-                    "<red>You are blacklisted from this network.\n\n<gray>Appeal at <#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>");
+            return messages.codeOwned(
+                    "<red><bold>YOU ARE BLACKLISTED</bold>\n\n"
+                    + "<white>You are blacklisted from this network.\n\n"
+                    + "<white>You can appeal this punishment by joining our Discord:\n"
+                    + "<#9CC3FF><hover:show_text:'<#9CC3FF>Click to open Discord'><click:open_url:'https://discord.gg/mythicpvp'><underlined>discord.gg/mythicpvp</underlined></click></hover>");
         }
         for (PunishmentRecord record : punishments.active(uuid)) {
             if (record.type().loginBlocking()) {
@@ -140,8 +142,7 @@ public final class PunishmentLoginGuard implements Listener {
             long ms = record.expiresAtMillis() - System.currentTimeMillis();
             remaining = ms <= 0 ? "expiring" : formatDuration(ms);
         }
-        return messages.component(
-                "messages.punishment.login-banned",
+        return messages.codeOwned(
                 "<red><bold>YOU ARE %type%</bold>\n\n"
                 + "<white>Reason: <gray>%reason%\n"
                 + "<white>Issued by: <gray>%staff%\n"

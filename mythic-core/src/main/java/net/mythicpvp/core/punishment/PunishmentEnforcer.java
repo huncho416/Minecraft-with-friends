@@ -9,11 +9,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
 public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
+
+    private static final DateTimeFormatter TIME_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'").withZone(ZoneId.of("UTC"));
 
     private final JavaPlugin plugin;
     private final CoreMessages messages;
@@ -79,15 +84,31 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
                     Map.of("reason", reasonText));
         } else {
             String expiry = record.expiresAtMillis() <= 0
-                    ? "permanent"
-                    : "until " + java.time.Instant.ofEpochMilli(record.expiresAtMillis());
-            kickReason = messages.component(
-                    "messages.punishment.banned-kick",
-                    "&#FF8A8AYou were %type%: &#FFFFFF%reason% &#D2D8E0(%expiry%)",
+                    ? "Permanent"
+                    : TIME_FORMAT.format(java.time.Instant.ofEpochMilli(record.expiresAtMillis()));
+            String remaining;
+            if (record.expiresAtMillis() <= 0) {
+                remaining = "never";
+            } else {
+                long ms = record.expiresAtMillis() - System.currentTimeMillis();
+                remaining = ms <= 0 ? "expiring" : formatRemaining(ms);
+            }
+            kickReason = messages.codeOwned(
+                    "<red><bold>YOU ARE %type%</bold>\n\n"
+                    + "<white>Reason: <gray>%reason%\n"
+                    + "<white>Issued by: <gray>%staff%\n"
+                    + "<white>Issued at: <gray>%issued_at%\n"
+                    + "<white>Expires: <gray>%expiry%\n"
+                    + "<white>Unbanned in: <gray>%remaining%\n\n"
+                    + "<white>You can appeal this punishment by joining our Discord:\n"
+                    + "<#9CC3FF><hover:show_text:'<#9CC3FF>Click to open Discord'><click:open_url:'https://discord.gg/mythicpvp'><underlined>discord.gg/mythicpvp</underlined></click></hover>",
                     Map.of(
-                            "type", typeLabel,
+                            "type", typeLabel.toUpperCase(java.util.Locale.ROOT),
                             "reason", reasonText,
-                            "expiry", expiry));
+                            "staff", record.staffName(),
+                            "issued_at", TIME_FORMAT.format(java.time.Instant.ofEpochMilli(record.createdAtMillis())),
+                            "expiry", expiry,
+                            "remaining", remaining));
         }
         target.kick(kickReason);
     }
