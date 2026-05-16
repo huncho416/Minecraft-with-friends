@@ -176,6 +176,32 @@ impl ClientBridge {
         registry: &PacketRegistry,
     ) -> Result<(), CoreError> {
         let json = serde_json::json!({"text": reason}).to_string();
+        self.disconnect_with_json(json, registry).await
+    }
+
+    /// Disconnect with a reason that is already a JSON-encoded text Component
+    /// (i.e. starts with `{`). Used when forwarding a backend's disconnect
+    /// packet verbatim so the styled component is preserved.
+    pub async fn disconnect_raw_json(
+        &mut self,
+        component_json: &str,
+        registry: &PacketRegistry,
+    ) -> Result<(), CoreError> {
+        let json = if component_json.trim_start().starts_with('{')
+            || component_json.trim_start().starts_with('[')
+        {
+            component_json.to_string()
+        } else {
+            serde_json::json!({"text": component_json}).to_string()
+        };
+        self.disconnect_with_json(json, registry).await
+    }
+
+    async fn disconnect_with_json(
+        &mut self,
+        json: String,
+        registry: &PacketRegistry,
+    ) -> Result<(), CoreError> {
         match self.state {
             ConnectionState::Login => {
                 let pkt = CLoginDisconnect { reason: json };
@@ -188,8 +214,8 @@ impl ClientBridge {
                     buf.write_string(&json)?;
                     buf
                 } else {
-                    // 1.20.3+: Network NBT text component
-                    Component::text(reason).to_nbt_network()
+                    // 1.20.3+: Network NBT text component (fallback wraps json as plain text)
+                    Component::text(json.clone()).to_nbt_network()
                 };
                 let pkt = CConfigDisconnect {
                     reason: reason_bytes,
@@ -199,10 +225,10 @@ impl ClientBridge {
             ConnectionState::Play => {
                 let reason_bytes = if self.protocol_version.less_than(ProtocolVersion::V1_20_3) {
                     // JSON bytes — CDisconnect.encode() adds the VarInt length prefix
-                    json.into_bytes()
+                    json.clone().into_bytes()
                 } else {
-                    // 1.20.3+: Network NBT text component
-                    Component::text(reason).to_nbt_network()
+                    // 1.20.3+: Network NBT text component (fallback wraps json as plain text)
+                    Component::text(json.clone()).to_nbt_network()
                 };
                 let pkt = CDisconnect {
                     reason: reason_bytes,

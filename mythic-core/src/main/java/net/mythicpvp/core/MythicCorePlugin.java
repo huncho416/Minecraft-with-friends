@@ -197,6 +197,11 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         getServer().getPluginManager().registerEvents(
                 new net.mythicpvp.core.maintenance.MaintenanceLoginGuard(maintenanceService, messages), this);
         commandManager.register(new net.mythicpvp.core.command.MaintenanceCommand(maintenanceService));
+        net.mythicpvp.core.security.IpTracker ipTracker =
+                new net.mythicpvp.core.security.IpTracker(getLogger(), getDataFolder());
+        getServer().getPluginManager().registerEvents(ipTracker, this);
+        commandManager.register(new net.mythicpvp.core.command.AltsCommand(ipTracker));
+        commandManager.register(new net.mythicpvp.core.command.IpReportCommand(ipTracker));
         commandManager.register(new net.mythicpvp.core.command.SetSpawnCommand(configManager.getOrCreate("spawn")));
 
         displayService = new DisplayService(this, rankService, grantService, serverIdentity.id());

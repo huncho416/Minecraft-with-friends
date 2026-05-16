@@ -273,10 +273,9 @@ impl BackendBridge {
 
                         if let Some(disconnect) = packet.as_any().downcast_ref::<CLoginDisconnect>()
                         {
-                            return Err(CoreError::Rejected(format!(
-                                "backend refused login: {}",
-                                disconnect.reason
-                            )));
+                            return Err(CoreError::BackendDisconnect(
+                                disconnect.reason.to_string(),
+                            ));
                         }
 
                         if let Some(request) = packet.as_any().downcast_ref::<CLoginPluginRequest>()
