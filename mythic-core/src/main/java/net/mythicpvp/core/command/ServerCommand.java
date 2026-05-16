@@ -1,4 +1,4 @@
-package net.mythicpvp.core.command;
+﻿package net.mythicpvp.core.command;
 
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.transfer.ProxyTransferService;
@@ -30,12 +30,12 @@ public final class ServerCommand extends MythicCommand {
         if (ok) {
             player.sendMessage(messages.component(
                     "messages.server.transferring",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CTransferring to &#FFFFFF%shard%&#9CFF9C...",
+                    "&#9CFF9CTransferring to &#FFFFFF%shard%&#9CFF9C...",
                     Map.of("shard", shardId)));
         } else {
             player.sendMessage(messages.component(
                     "messages.server.transfer-failed",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8ATransfer to %shard% failed.",
+                    "&#FF8A8ATransfer to %shard% failed.",
                     Map.of("shard", shardId)));
         }
     }

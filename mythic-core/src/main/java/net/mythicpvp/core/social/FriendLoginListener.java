@@ -1,4 +1,4 @@
-package net.mythicpvp.core.social;
+﻿package net.mythicpvp.core.social;
 
 import net.mythicpvp.core.config.CoreMessages;
 import org.bukkit.Bukkit;
@@ -34,7 +34,7 @@ public final class FriendLoginListener implements Listener {
             if (friend != null && friend.isOnline()) {
                 friend.sendMessage(messages.component(
                         "messages.social.friend-online",
-                        "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FFFFFF%player% &#9CFF9Cis now online.",
+                        "&#FFFFFF%player% &#9CFF9Cis now online.",
                         Map.of("player", joiner.getName())));
             }
         }

@@ -54,7 +54,9 @@ public final class ManagePunishmentsCommand extends MythicCommand {
     }
 
     private void sendUsage(@NotNull Player player) {
-        player.sendMessage(MythicHex.colorize("&#FF8A8AUsage: &#FFFFFF/managepunishments clear <category>"));
+        player.sendMessage(MythicHex.colorize("&#F529BEManage Punishments"));
+        player.sendMessage(MythicHex.colorize("&#FFFFFF/managepunishments &7- open the admin overview menu"));
+        player.sendMessage(MythicHex.colorize("&#FFFFFF/managepunishments clear <category> &7- wipe every record of one type"));
         player.sendMessage(MythicHex.colorize("&7Categories: &f" + validCategoryList()));
     }
 

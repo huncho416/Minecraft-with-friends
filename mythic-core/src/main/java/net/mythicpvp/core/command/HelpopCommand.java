@@ -63,7 +63,7 @@ public final class HelpopCommand extends MythicCommand {
         }
 
         static void sendUsage(@NotNull Player player, @NotNull ReportConfig config, @NotNull String label) {
-            player.sendMessage(MythicHex.colorize("&#F529BE&lHelpop &7System"));
+            player.sendMessage(MythicHex.colorize("&#F529BEHelpop &7System"));
             player.sendMessage(MythicHex.colorize("&7Use &#FFFFFF" + label + " <message>&7 to ask staff for help."));
             player.sendMessage(MythicHex.colorize("&7Your message goes to all online staff with your name and server."));
             player.sendMessage(MythicHex.colorize("&7Cooldown: &f" + config.helpopCooldownSeconds() + "s &7per request."));

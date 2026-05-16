@@ -33,11 +33,11 @@ public final class NoteCommand extends MythicCommand {
 
     @Default
     public void usage(@NotNull Player staff) {
-        staff.sendMessage(MythicHex.colorize("&#FF8A8AUsage:"));
-        staff.sendMessage(MythicHex.colorize("&#FFFFFF/note add <player> &7— add a new note (you'll be prompted for title and body)"));
-        staff.sendMessage(MythicHex.colorize("&#FFFFFF/note remove <player> <title> &7— remove a note by title"));
-        staff.sendMessage(MythicHex.colorize("&#FFFFFF/notes <player> &7— view notes"));
-        staff.sendMessage(MythicHex.colorize("&#FFFFFF/notes clear <player> &7— admin only"));
+        staff.sendMessage(MythicHex.colorize("&#F529BENote Commands"));
+        staff.sendMessage(MythicHex.colorize("&#FFFFFF/note add <player> &7- add a new note (chat-prompts for title and body)"));
+        staff.sendMessage(MythicHex.colorize("&#FFFFFF/note remove <player> <title> &7- remove a note by title"));
+        staff.sendMessage(MythicHex.colorize("&#FFFFFF/notes <player> &7- open the notes menu for a player"));
+        staff.sendMessage(MythicHex.colorize("&#FFFFFF/notes clear <player> &7- wipe every note for a player (admin only)"));
     }
 
     @Subcommand("add")

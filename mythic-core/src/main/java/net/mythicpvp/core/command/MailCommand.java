@@ -1,4 +1,4 @@
-package net.mythicpvp.core.command;
+﻿package net.mythicpvp.core.command;
 
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.social.MailMessage;
@@ -30,9 +30,10 @@ public final class MailCommand extends MythicCommand {
 
     @Default
     public void usage(@NotNull Player player) {
-        player.sendMessage(messages.component(
-                "messages.social.mail-usage",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AUsage: &#FFFFFF/mail <send|inbox|read>"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#F529BEMail Commands"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/mail send <player> <message> &7- send a private message to a player"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/mail inbox &7- list every mail in your inbox"));
+        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize("&#FFFFFF/mail read <id> &7- read a mail by id (from /mail inbox)"));
     }
 
     @Subcommand("send")
@@ -47,7 +48,7 @@ public final class MailCommand extends MythicCommand {
         social.sendMail(player.getUniqueId(), target, "Message from " + player.getName(), body);
         player.sendMessage(messages.component(
                 "messages.social.mail-sent",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#9CFF9CMail sent to &#FFFFFF%target%&#9CFF9C.",
+                "&#9CFF9CMail sent to &#FFFFFF%target%&#9CFF9C.",
                 Map.of("target", targetName)));
     }
 
@@ -56,7 +57,7 @@ public final class MailCommand extends MythicCommand {
         List<MailMessage> inbox = social.inbox(player.getUniqueId());
         player.sendMessage(messages.component(
                 "messages.social.mail-inbox",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FFFFFFInbox: &#D2D8E0%count% &#FFFFFFmessages, &#D2D8E0%unread% &#FFFFFFunread.",
+                "&#FFFFFFInbox: &#D2D8E0%count% &#FFFFFFmessages, &#D2D8E0%unread% &#FFFFFFunread.",
                 Map.of(
                         "count", Integer.toString(inbox.size()),
                         "unread", Integer.toString(social.unread(player.getUniqueId()).size()))));
@@ -75,13 +76,13 @@ public final class MailCommand extends MythicCommand {
         if (mail == null) {
             player.sendMessage(messages.component(
                     "messages.social.mail-missing",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FF8A8AMail not found."));
+                    "&#FF8A8AMail not found."));
             return;
         }
         social.markMailRead(mailId, player.getUniqueId());
         player.sendMessage(messages.component(
                 "messages.social.mail-read",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8\u00BB &#FFFFFF%body%",
+                "&#FFFFFF%body%",
                 Map.of("body", mail.body())));
     }
 

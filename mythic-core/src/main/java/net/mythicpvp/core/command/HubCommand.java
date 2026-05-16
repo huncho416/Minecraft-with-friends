@@ -1,4 +1,4 @@
-package net.mythicpvp.core.command;
+﻿package net.mythicpvp.core.command;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -59,25 +59,25 @@ public final class HubCommand extends MythicCommand {
         if (HUB_ROLE.equalsIgnoreCase(localRole)) {
             player.sendMessage(messages.component(
                     "messages.hub.already-here",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFEC8AYou are already in the hub."));
+                    "&#FFEC8AYou are already in the hub."));
             return;
         }
         ServerEntryRow target = pickHub();
         if (target == null) {
             player.sendMessage(messages.component(
                     "messages.hub.none-available",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8ANo hub servers are available right now."));
+                    "&#FF8A8ANo hub servers are available right now."));
             return;
         }
         if (!transferService.transfer(player, target.shard_id())) {
             player.sendMessage(messages.component(
                     "messages.hub.transfer-failed",
-                    "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8ATransfer failed."));
+                    "&#FF8A8ATransfer failed."));
             return;
         }
         player.sendMessage(messages.component(
                 "messages.hub.transferring",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CTransferring to hub..."));
+                "&#9CFF9CTransferring to hub..."));
     }
 
     private void subscribeRegistry() {

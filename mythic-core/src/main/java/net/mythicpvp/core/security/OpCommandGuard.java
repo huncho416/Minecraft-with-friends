@@ -1,4 +1,4 @@
-package net.mythicpvp.core.security;
+﻿package net.mythicpvp.core.security;
 
 import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.entity.Player;
@@ -28,7 +28,7 @@ public final class OpCommandGuard implements Listener {
         event.setCancelled(true);
         Player player = event.getPlayer();
         player.sendMessage(MythicHex.colorize(
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FF8A8A/op and /deop are console-only."));
+                "&#FF8A8A/op and /deop are console-only."));
     }
 
     @EventHandler

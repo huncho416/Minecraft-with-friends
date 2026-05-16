@@ -1,4 +1,4 @@
-package net.mythicpvp.core.staffmode;
+﻿package net.mythicpvp.core.staffmode;
 
 import net.mythicpvp.core.config.CoreMessages;
 import org.bukkit.NamespacedKey;
@@ -118,7 +118,7 @@ public final class StaffModeToolListener implements Listener {
         String rankName = rank == null ? "default" : rank.name();
         staffPlayer.sendMessage(messages.component(
                 "messages.staff-mode.inspect",
-                "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFF%target%: rank=%rank% gamemode=%gamemode%",
+                "&#FFFFFF%target%: rank=%rank% gamemode=%gamemode%",
                 Map.of(
                         "target", target.getName(),
                         "rank", rankName,
@@ -130,8 +130,8 @@ public final class StaffModeToolListener implements Listener {
         staffPlayer.sendMessage(messages.component(
                 nowFrozen ? "messages.staff-mode.frozen" : "messages.staff-mode.unfrozen",
                 nowFrozen
-                        ? "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CFroze &#FFFFFF%target%&#9CFF9C."
-                        : "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CUnfroze &#FFFFFF%target%&#9CFF9C.",
+                        ? "&#9CFF9CFroze &#FFFFFF%target%&#9CFF9C."
+                        : "&#9CFF9CUnfroze &#FFFFFF%target%&#9CFF9C.",
                 Map.of("target", target.getName())));
     }
 

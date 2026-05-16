@@ -24,7 +24,7 @@ public final class BuildModeCommand extends MythicCommand {
         boolean now = buildMode.toggle(player.getUniqueId());
         player.sendMessage(MythicHex.colorize(
                 now
-                        ? "&#9CFF9CBuild mode &lENABLED&r&#9CFF9C — break/place/containers unlocked."
-                        : "&#FF8A8ABuild mode &lDISABLED&r&#FF8A8A — back to safe-hub rules."));
+                        ? "&#9CFF9CBuild mode enabled — break/place/containers unlocked."
+                        : "&#FF8A8ABuild mode disabled — back to safe-hub rules."));
     }
 }

@@ -19,4 +19,4 @@ announcements:
 broadcast:
   # Format applied to /broadcast <message>. %message% is replaced with
   # the staff-supplied text after Mythic hex parsing.
-  format: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#FFFFFF%message%"
+  format: "&#D2D8E0%message%"

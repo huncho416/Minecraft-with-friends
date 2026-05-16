@@ -1,4 +1,4 @@
-package net.mythicpvp.core.command;
+﻿package net.mythicpvp.core.command;
 
 import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.staffmode.StaffModeService;
@@ -27,7 +27,7 @@ public final class StaffModeCommand extends MythicCommand {
         player.sendMessage(messages.component(
                 nowEnabled ? "messages.staff-mode.enabled" : "messages.staff-mode.disabled",
                 nowEnabled
-                        ? "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CStaff mode enabled."
-                        : "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP  &8» &#9CFF9CStaff mode disabled."));
+                        ? "&#9CFF9CStaff mode enabled."
+                        : "&#9CFF9CStaff mode disabled."));
     }
 }
