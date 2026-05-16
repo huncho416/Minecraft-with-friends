@@ -51,7 +51,7 @@ public final class ChatCommand extends MythicCommand {
                 "messages.chat-control.muted",
                 "&#9CFF9CChat has been muted."));
         Component globalNotice = MythicHex.colorize(
-                "&#FF8A8A&lChat has been muted by &#FFFFFF" + sender.getName() + "&#FF8A8A&l.");
+                "&#FF8A8AChat has been muted by &#FFFFFF" + sender.getName() + "&#FF8A8A.");
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             viewer.sendMessage(globalNotice);
         }
@@ -66,7 +66,7 @@ public final class ChatCommand extends MythicCommand {
                 "messages.chat-control.unmuted",
                 "&#9CFF9CChat has been unmuted."));
         Component globalNotice = MythicHex.colorize(
-                "&#9CFF9C&lChat has been unmuted by &#FFFFFF" + sender.getName() + "&#9CFF9C&l.");
+                "&#9CFF9CChat has been unmuted by &#FFFFFF" + sender.getName() + "&#9CFF9C.");
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             viewer.sendMessage(globalNotice);
         }

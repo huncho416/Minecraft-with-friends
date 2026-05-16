@@ -12,9 +12,9 @@ announcements:
   # once at the top of the block. Keep entries short - players read the
   # first line and ignore the rest.
   messages:
-    - "Join our Discord at &ndiscord.gg/mythicpvp"
-    - "Vote daily at &nmythicpvp.net/vote &#FFFFFFfor rewards."
-    - "Need help? Type &n/help &#FFFFFFor ask in chat."
+    - "Join our Discord at discord.gg/mythicpvp"
+    - "Vote daily at mythicpvp.net/vote &#FFFFFFfor rewards."
+    - "Need help? Type &#FFFFFF/help&r or ask in chat."
 
 broadcast:
   # Format applied to /broadcast <message>. %message% is replaced with
