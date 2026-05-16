@@ -81,6 +81,7 @@ install_jars() {
             name=$(basename "${jar}")
             case "${name}" in
                 *-tests.jar|*-sources.jar|*-javadoc.jar) continue ;;
+                simplevoice-geyser*.jar) continue ;;
             esac
             if ! is_plugin_allowed "${name}"; then
                 remove_disallowed_plugin "${name}"
@@ -94,6 +95,24 @@ install_jars() {
     fi
 }
 
+SUITE_JAR_DIR="${SUITE_JAR_DIR:-/opt/folia/suite}"
+install_suite_plugin_jar() {
+    local jar
+    for jar in "${SUITE_JAR_DIR}"/suite-plugin-*.jar; do
+        case "$(basename "${jar}")" in
+            original-*) continue ;;
+        esac
+        if [ -f "${jar}" ]; then
+            local dest="${DATA_DIR}/plugins/$(basename "${jar}")"
+            if [ ! -f "${dest}" ] || ! cmp -s "${jar}" "${dest}"; then
+                cp "${jar}" "${dest}"
+                echo "[entrypoint] installed suite plugin $(basename "${jar}")"
+            fi
+        fi
+    done
+}
+
+install_suite_plugin_jar
 install_jars "${PACKAGED_PLUGINS_DIR}"
 install_jars "${VOICE_PLUGIN_DIR}"
 install_jars "${USER_PLUGINS_DIR}"
