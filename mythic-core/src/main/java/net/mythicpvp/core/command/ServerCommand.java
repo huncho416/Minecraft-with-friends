@@ -4,6 +4,7 @@ import net.mythicpvp.core.config.CoreMessages;
 import net.mythicpvp.core.transfer.ProxyTransferService;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.CommandPermission;
+import net.mythicpvp.suite.command.Complete;
 import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
 import org.bukkit.entity.Player;
@@ -25,6 +26,7 @@ public final class ServerCommand extends MythicCommand {
     }
 
     @Default
+    @Complete({"shards"})
     public void execute(@NotNull Player player, @NotNull String shardId) {
         boolean ok = transferService.transfer(player, shardId);
         if (ok) {

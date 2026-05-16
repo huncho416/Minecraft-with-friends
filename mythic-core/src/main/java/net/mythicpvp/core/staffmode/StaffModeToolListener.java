@@ -44,7 +44,7 @@ public final class StaffModeToolListener implements Listener {
         this.messages = messages;
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteractEntity(@NotNull PlayerInteractEntityEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) {
             return;
@@ -69,9 +69,14 @@ public final class StaffModeToolListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteract(@NotNull PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
+        org.bukkit.event.block.Action action = event.getAction();
+        if (action != org.bukkit.event.block.Action.RIGHT_CLICK_AIR
+                && action != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
             return;
         }
         Player player = event.getPlayer();

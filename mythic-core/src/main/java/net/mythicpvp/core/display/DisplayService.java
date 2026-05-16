@@ -176,7 +176,8 @@ public final class DisplayService {
         }
         return "  \n&#F529BEQueue&8: &#FFFFFF#" + status.position()
                 + "&7/&#FFFFFF" + status.total()
-                + "&8 → &#D2D8E0" + status.shard();
+                + "&8 → &#D2D8E0" + status.shard()
+                + "\n   ";
     }
 
     @NotNull

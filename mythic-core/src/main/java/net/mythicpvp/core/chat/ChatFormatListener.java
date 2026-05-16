@@ -74,7 +74,10 @@ public final class ChatFormatListener implements Listener {
         if (prefix == null || prefix.isBlank()) {
             prefix = rank.prefix();
         }
-        return prefix == null || prefix.isBlank() ? "" : prefix + " ";
+        if (prefix == null || prefix.isBlank()) {
+            return "";
+        }
+        return MythicHex.normalizeBareHex(prefix) + " ";
     }
 
     @NotNull
@@ -102,7 +105,8 @@ public final class ChatFormatListener implements Listener {
                 .replaceAll("(?i)&#[0-9a-f]{6}", "")
                 .replaceAll("(?i)&[0-9a-fk-or]", "")
                 .replaceAll("(?i)§#[0-9a-f]{6}", "")
-                .replaceAll("(?i)§[0-9a-fk-or]", "");
+                .replaceAll("(?i)§[0-9a-fk-or]", "")
+                .replaceAll("(?i)#[0-9a-f]{6}", "");
     }
 
     @NotNull
