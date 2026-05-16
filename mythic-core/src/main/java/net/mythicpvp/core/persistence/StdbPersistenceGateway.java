@@ -448,7 +448,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     }
 
     @NotNull
-    static PunishmentRecord toPunishmentRecord(@NotNull PunishmentRow row) {
+    public static PunishmentRecord toPunishmentRecord(@NotNull PunishmentRow row) {
         PunishmentType type = punishmentTypeFor(row.kind());
 
         boolean pardoned = !row.active();

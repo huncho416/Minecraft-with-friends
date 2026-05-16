@@ -9,12 +9,19 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.UUID;
 
 public final class PunishmentLoginGuard implements Listener {
 
     public static final String BYPASS_PERMISSION = "mythic.core.punish.bypass";
+
+    private static final DateTimeFormatter TIME_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'").withZone(ZoneId.of("UTC"));
 
     private final PunishmentService punishments;
     private final CoreHydrationSink hydrationSink;
@@ -36,7 +43,7 @@ public final class PunishmentLoginGuard implements Listener {
         if (hydrationSink.isBlacklisted(uuid)) {
             Component reason = messages.component(
                     "messages.punishment.login-blacklisted",
-                    "&#FF8A8AYou are blacklisted from this network.");
+                    "<red>You are blacklisted from this network.\n\n<gray>Appeal at <#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>");
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, reason);
             return;
         }
@@ -45,19 +52,59 @@ public final class PunishmentLoginGuard implements Listener {
             if (!record.type().loginBlocking()) {
                 continue;
             }
-            String reasonText = record.reason().isEmpty() ? "No reason given" : record.reason();
-            String expiry = record.expiresAtMillis() <= 0
-                    ? "permanent"
-                    : "expires " + java.time.Instant.ofEpochMilli(record.expiresAtMillis());
-            Component reason = messages.component(
-                    "messages.punishment.login-banned",
-                    "&#FF8A8AYou are banned: &#FFFFFF%reason% &#D2D8E0(%expiry%).",
-                    Map.of(
-                            "reason", reasonText,
-                            "expiry", expiry,
-                            "type", record.type().name()));
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, reason);
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, formatBan(record));
             return;
         }
+    }
+
+    @NotNull
+    private Component formatBan(@NotNull PunishmentRecord record) {
+        String typeLabel = switch (record.type()) {
+            case BAN -> "Banned";
+            case TEMP_BAN -> "Temporarily Banned";
+            case BLACKLIST -> "Blacklisted";
+            default -> "Banned";
+        };
+        String reasonText = record.reason().isEmpty() ? "No reason given" : record.reason();
+        String issuedAt = TIME_FORMAT.format(Instant.ofEpochMilli(record.createdAtMillis()));
+        String expiry = record.expiresAtMillis() <= 0
+                ? "Permanent"
+                : TIME_FORMAT.format(Instant.ofEpochMilli(record.expiresAtMillis()));
+        String remaining;
+        if (record.expiresAtMillis() <= 0) {
+            remaining = "never";
+        } else {
+            long ms = record.expiresAtMillis() - System.currentTimeMillis();
+            remaining = ms <= 0 ? "expiring" : formatDuration(ms);
+        }
+        return messages.component(
+                "messages.punishment.login-banned",
+                "<red><bold>YOU ARE %type%</bold>\n\n"
+                + "<white>Reason: <gray>%reason%\n"
+                + "<white>Issued by: <gray>%staff%\n"
+                + "<white>Issued at: <gray>%issued_at%\n"
+                + "<white>Expires: <gray>%expiry%\n"
+                + "<white>Unbanned in: <gray>%remaining%\n\n"
+                + "<gray>Appeal at <#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>",
+                Map.of(
+                        "type", typeLabel,
+                        "reason", reasonText,
+                        "staff", record.staffName(),
+                        "issued_at", issuedAt,
+                        "expiry", expiry,
+                        "remaining", remaining));
+    }
+
+    @NotNull
+    private static String formatDuration(long millis) {
+        Duration d = Duration.ofMillis(millis);
+        long days = d.toDays();
+        long hours = d.minusDays(days).toHours();
+        long minutes = d.minusDays(days).minusHours(hours).toMinutes();
+        StringBuilder sb = new StringBuilder();
+        if (days > 0) sb.append(days).append("d ");
+        if (hours > 0) sb.append(hours).append("h ");
+        if (sb.length() == 0 || minutes > 0) sb.append(minutes).append("m");
+        return sb.toString().trim();
     }
 }

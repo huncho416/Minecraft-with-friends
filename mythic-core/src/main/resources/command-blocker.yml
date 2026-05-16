@@ -98,6 +98,8 @@ required-permissions:
   warn: "mythic.core.punish.warn"
   kick: "mythic.core.punish.kick"
   unban: "mythic.core.punish.unban"
+  filter: "mythic.core.chatfilter.manage"
+  filters: "mythic.core.chatfilter.manage"
   pardon: "mythic.core.punish.unban"
   punishmentadd: "mythic.core.punish.template"
   punishmentedit: "mythic.core.punish.template"
