@@ -234,8 +234,18 @@ pub(super) async fn resolve_initial_mode(
                         error = %e,
                         "backend unreachable, sending disconnect to client"
                     );
-                    let msg = server_config.effective_disconnect_message();
-                    client.disconnect(msg, &services.packet_registry).await.ok();
+                    match &e {
+                        crate::error::CoreError::BackendDisconnect(reason) => {
+                            client
+                                .disconnect_raw_json(reason, &services.packet_registry)
+                                .await
+                                .ok();
+                        }
+                        _ => {
+                            let msg = server_config.effective_disconnect_message();
+                            client.disconnect(msg, &services.packet_registry).await.ok();
+                        }
+                    }
                     return Ok(InitialMode::Denied);
                 }
             }
@@ -310,20 +320,8 @@ async fn connect_to_backend(
             .consume_backend_login(&services.packet_registry, version, velocity_ctx)
             .await
         {
-            match &e {
-                crate::error::CoreError::BackendDisconnect(reason) => {
-                    client
-                        .disconnect_raw_json(reason, &services.packet_registry)
-                        .await
-                        .ok();
-                }
-                _ => {
-                    client
-                        .disconnect("Backend refused connection", &services.packet_registry)
-                        .await
-                        .ok();
-                }
-            }
+            // Propagate without disconnecting here; caller handles client-side
+            // disconnect (including BackendDisconnect raw-JSON forwarding).
             return Err(e);
         }
 

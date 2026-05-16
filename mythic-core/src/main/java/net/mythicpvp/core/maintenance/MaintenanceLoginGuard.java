@@ -2,11 +2,15 @@ package net.mythicpvp.core.maintenance;
 
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.UUID;
 
 public final class MaintenanceLoginGuard implements Listener {
 
@@ -26,11 +30,26 @@ public final class MaintenanceLoginGuard implements Listener {
         if (maintenance.canBypass(event.getUniqueId())) {
             return;
         }
+        if (isOperator(event.getUniqueId())) {
+            return;
+        }
         Component reason = messages.component(
                 "messages.maintenance.kick",
                 "<#FF8A8A><bold>This server is in maintenance mode.\n\n"
                 + "<white>Join our Discord to keep up with the latest updates:\n"
                 + "<#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>");
         event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, reason);
+    }
+
+    private static boolean isOperator(@NotNull UUID uuid) {
+        try {
+            for (OfflinePlayer op : Bukkit.getOperators()) {
+                if (uuid.equals(op.getUniqueId())) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
     }
 }
