@@ -122,6 +122,45 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
         });
     }
 
+    public void onPardonNotice(@NotNull PardonNotice notice) {
+        MythicScheduler.runSync(plugin, () -> {
+            PunishmentRecord record = notice.record();
+            String actionLabel = pardonActionLabel(record.type());
+            Component line;
+            if (notice.silent()) {
+                line = MythicHex.colorize(
+                        "&#FFEC8A[Silent] &#FFFFFF" + record.targetName()
+                                + " &7was &#9CFF9C" + actionLabel
+                                + " &7by &#FFFFFF" + notice.staffName() + "&7.");
+                for (Player viewer : Bukkit.getOnlinePlayers()) {
+                    if (viewer.hasPermission(net.mythicpvp.core.staff.StaffPresenceListener.STAFF_PERMISSION)) {
+                        viewer.sendMessage(line);
+                    }
+                }
+                Bukkit.getConsoleSender().sendMessage(line);
+            } else {
+                line = MythicHex.colorize(
+                        "&#F529BE[Punishment] &#FFFFFF" + record.targetName()
+                                + " &#D2D8E0was &#9CFF9C" + actionLabel
+                                + " &#D2D8E0by &#FFFFFF" + notice.staffName() + "&#D2D8E0.");
+                for (Player viewer : Bukkit.getOnlinePlayers()) {
+                    viewer.sendMessage(line);
+                }
+                Bukkit.getConsoleSender().sendMessage(line);
+            }
+        });
+    }
+
+    @NotNull
+    private static String pardonActionLabel(@NotNull PunishmentType type) {
+        return switch (type) {
+            case BAN, TEMP_BAN, BLACKLIST -> "unbanned";
+            case MUTE, TEMP_MUTE -> "unmuted";
+            case WARN -> "had a warning cleared";
+            case KICK -> "had a kick cleared";
+        };
+    }
+
     public void onExpiry(@NotNull PunishmentRecord record) {
         MythicScheduler.runSync(plugin, () -> {
             Player target = Bukkit.getPlayer(record.targetUuid());

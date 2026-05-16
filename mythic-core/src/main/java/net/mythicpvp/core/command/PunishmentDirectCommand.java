@@ -157,15 +157,36 @@ public abstract class PunishmentDirectCommand extends MythicCommand {
 
         @Default
         @Complete({"players"})
-        public void execute(@NotNull CommandSender sender, @NotNull String targetName) {
+        public void execute(@NotNull CommandSender sender, @NotNull String[] args) {
+            if (args.length == 0) {
+                sender.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize(
+                        "&#FF8A8AUsage: &#FFFFFF/unban <player> [-s]"));
+                return;
+            }
+            boolean silent = false;
+            String targetName = null;
+            for (String arg : args) {
+                if (arg.equalsIgnoreCase("-s")) {
+                    silent = true;
+                } else if (targetName == null) {
+                    targetName = arg;
+                }
+            }
+            if (targetName == null) {
+                sender.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize(
+                        "&#FF8A8AUsage: &#FFFFFF/unban <player> [-s]"));
+                return;
+            }
             OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
             UUID staffUuid = sender instanceof Player player ? player.getUniqueId() : PunishmentService.SYSTEM_STAFF;
             int count = punishments.pardonActive(target.getUniqueId(),
                     Set.of(PunishmentType.BAN, PunishmentType.TEMP_BAN, PunishmentType.BLACKLIST),
                     staffUuid,
-                    "Unbanned");
-            sender.sendMessage(MythicHex.colorize(count > 0
-                    ? "&#9CFF9CUnbanned &f" + targetName + "&#9CFF9C."
+                    sender.getName(),
+                    "Unbanned",
+                    silent);
+            sender.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize(count > 0
+                    ? "&#9CFF9CUnbanned &f" + targetName + "&#9CFF9C" + (silent ? " &7(silent)" : "") + "."
                     : "&#FF8A8ANo active ban found for &f" + targetName + "&#FF8A8A."));
         }
     }
