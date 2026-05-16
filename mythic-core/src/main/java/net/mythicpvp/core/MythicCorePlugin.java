@@ -348,7 +348,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         chatFilterService.load();
         net.mythicpvp.core.chat.ChatFilterMenu chatFilterMenu =
                 new net.mythicpvp.core.chat.ChatFilterMenu(chatFilterService, chatPromptService);
-        commandManager.register(new net.mythicpvp.core.chat.ChatFilterCommand(chatFilterService, chatFilterMenu));
+        commandManager.register(new net.mythicpvp.core.chat.ChatFilterCommand(chatFilterService));
         commandManager.register(new net.mythicpvp.core.chat.ChatFilterCommand.FiltersCommand(chatFilterMenu));
         ChatGuard chatGuard = new ChatGuard(this, chatControlService, punishmentService, messages,
                 serverIdentity.id(), chatFilterService);
