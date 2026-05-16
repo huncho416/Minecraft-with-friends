@@ -15,6 +15,16 @@ public final class NoteService {
 
     private final Map<Long, PlayerNote> notes = new ConcurrentHashMap<>();
     private final AtomicLong sequence = new AtomicLong();
+    private volatile NoteStore store;
+
+    public void setStore(@NotNull NoteStore store) {
+        this.store = store;
+        NoteStore.LoadResult loaded = store.load();
+        for (PlayerNote note : loaded.notes()) {
+            notes.put(note.id(), note);
+        }
+        sequence.set(Math.max(sequence.get(), loaded.maxId()));
+    }
 
     @NotNull
     public PlayerNote add(@NotNull UUID targetUuid,
@@ -28,6 +38,7 @@ public final class NoteService {
         PlayerNote note = new PlayerNote(id, targetUuid, targetName, authorUuid, authorName,
                 title, body, serverId, System.currentTimeMillis());
         notes.put(id, note);
+        flush();
         return note;
     }
 
@@ -37,7 +48,19 @@ public final class NoteService {
     }
 
     public boolean delete(long id) {
-        return notes.remove(id) != null;
+        boolean removed = notes.remove(id) != null;
+        if (removed) flush();
+        return removed;
+    }
+
+    public boolean setActive(long id, boolean active) {
+        PlayerNote note = notes.get(id);
+        if (note == null || note.active() == active) {
+            return false;
+        }
+        note.setActive(active);
+        flush();
+        return true;
     }
 
     public int clearFor(@NotNull UUID targetUuid) {
@@ -48,6 +71,7 @@ public final class NoteService {
                 removed++;
             }
         }
+        if (removed > 0) flush();
         return removed;
     }
 
@@ -63,6 +87,11 @@ public final class NoteService {
         return out;
     }
 
+    @NotNull
+    public List<PlayerNote> all() {
+        return new ArrayList<>(notes.values());
+    }
+
     @Nullable
     public PlayerNote findByTitle(@NotNull UUID targetUuid, @NotNull String title) {
         for (PlayerNote note : notes.values()) {
@@ -71,5 +100,11 @@ public final class NoteService {
             }
         }
         return null;
+    }
+
+    public void flush() {
+        if (store != null) {
+            store.save(sequence.get(), new ArrayList<>(notes.values()));
+        }
     }
 }
