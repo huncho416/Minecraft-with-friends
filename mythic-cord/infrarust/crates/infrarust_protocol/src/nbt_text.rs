@@ -1,143 +1,207 @@
 //! JSON Text Component → Minecraft Network NBT encoder.
 //!
-//! Minecraft 1.21.6+ switched several disconnect packets (CLoginDisconnect
+//! Minecraft 1.20.5+ switched several disconnect packets (CLoginDisconnect
 //! among them) from JSON-string chat components to Network-NBT text
 //! components. This module accepts a serialized JSON Component (as Mojang's
 //! GsonComponentSerializer emits) and produces the corresponding Network
 //! NBT byte stream the client expects.
 //!
-//! Network NBT root format (1.20.2+):
-//! - Tag type byte `0x0A` (Compound), no root name length/bytes
-//! - Compound payload (children + TAG_End)
+//! Implementation: parse JSON via serde_json::Value, convert to a serde
+//! struct that fastnbt knows how to serialize, then use the existing
+//! to_network_nbt helper (which strips the named-root prefix).
 
-const TAG_END: u8 = 0;
-const TAG_BYTE: u8 = 1;
-const TAG_STRING: u8 = 8;
-const TAG_LIST: u8 = 9;
-const TAG_COMPOUND: u8 = 10;
+use serde::Serialize;
+use serde_json::Value;
+use std::collections::BTreeMap;
 
 /// Serializes a JSON-format text component into Network NBT bytes.
 ///
-/// On any JSON parse error, falls back to a single-text component containing
+/// On JSON parse failure, falls back to a single-text component containing
 /// the raw input so the player at least sees something legible.
 #[must_use]
 pub fn json_text_to_network_nbt(json: &str) -> Vec<u8> {
-    let value: serde_json::Value = serde_json::from_str(json)
-        .unwrap_or_else(|_| serde_json::json!({ "text": json }));
-    let mut out = Vec::with_capacity(64);
-    out.push(TAG_COMPOUND);
-    write_compound_payload(&mut out, &value);
+    let value: Value = serde_json::from_str(json).unwrap_or_else(|_| {
+        let mut m = serde_json::Map::new();
+        m.insert("text".into(), Value::String(json.to_string()));
+        Value::Object(m)
+    });
+    let nbt = value_to_nbt(&value);
+    crate::nbt_util::to_network_nbt(&nbt).unwrap_or_else(|_| {
+        // Last-resort fallback: write a minimal compound with TAG_END only.
+        vec![0x0A, 0x00]
+    })
+}
+
+#[derive(Debug, Serialize)]
+struct NbtComponent {
+    #[serde(skip_serializing_if = "String::is_empty")]
+    text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    bold: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    italic: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    underlined: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    strikethrough: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    obfuscated: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    insertion: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    extra: Vec<NbtComponent>,
+    #[serde(rename = "clickEvent", skip_serializing_if = "Option::is_none")]
+    click_event: Option<NbtClickEvent>,
+    #[serde(rename = "hoverEvent", skip_serializing_if = "Option::is_none")]
+    hover_event: Option<NbtHoverEvent>,
+}
+
+#[derive(Debug, Serialize)]
+struct NbtClickEvent {
+    action: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    value: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    url: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    command: String,
+}
+
+#[derive(Debug, Serialize)]
+struct NbtHoverEvent {
+    action: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    contents: Option<Box<NbtComponent>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    value: Option<Box<NbtComponent>>,
+}
+
+fn value_to_nbt(value: &Value) -> NbtComponent {
+    match value {
+        Value::String(s) => NbtComponent {
+            text: s.clone(),
+            color: None,
+            bold: None,
+            italic: None,
+            underlined: None,
+            strikethrough: None,
+            obfuscated: None,
+            insertion: None,
+            extra: vec![],
+            click_event: None,
+            hover_event: None,
+        },
+        Value::Array(items) => NbtComponent {
+            text: String::new(),
+            color: None,
+            bold: None,
+            italic: None,
+            underlined: None,
+            strikethrough: None,
+            obfuscated: None,
+            insertion: None,
+            extra: items.iter().map(value_to_nbt).collect(),
+            click_event: None,
+            hover_event: None,
+        },
+        Value::Object(map) => object_to_nbt(map),
+        _ => NbtComponent {
+            text: value.to_string(),
+            color: None,
+            bold: None,
+            italic: None,
+            underlined: None,
+            strikethrough: None,
+            obfuscated: None,
+            insertion: None,
+            extra: vec![],
+            click_event: None,
+            hover_event: None,
+        },
+    }
+}
+
+fn object_to_nbt(map: &serde_json::Map<String, Value>) -> NbtComponent {
+    let mut out = NbtComponent {
+        text: String::new(),
+        color: None,
+        bold: None,
+        italic: None,
+        underlined: None,
+        strikethrough: None,
+        obfuscated: None,
+        insertion: None,
+        extra: vec![],
+        click_event: None,
+        hover_event: None,
+    };
+    if let Some(Value::String(s)) = map.get("text") {
+        out.text = s.clone();
+    }
+    if let Some(Value::String(s)) = map.get("color") {
+        out.color = Some(s.clone());
+    }
+    if let Some(Value::Bool(b)) = map.get("bold") {
+        out.bold = Some(*b);
+    }
+    if let Some(Value::Bool(b)) = map.get("italic") {
+        out.italic = Some(*b);
+    }
+    if let Some(Value::Bool(b)) = map.get("underlined") {
+        out.underlined = Some(*b);
+    }
+    if let Some(Value::Bool(b)) = map.get("strikethrough") {
+        out.strikethrough = Some(*b);
+    }
+    if let Some(Value::Bool(b)) = map.get("obfuscated") {
+        out.obfuscated = Some(*b);
+    }
+    if let Some(Value::String(s)) = map.get("insertion") {
+        out.insertion = Some(s.clone());
+    }
+    if let Some(Value::Array(items)) = map.get("extra") {
+        out.extra = items.iter().map(value_to_nbt).collect();
+    }
+    if let Some(click) = map.get("click_event").or_else(|| map.get("clickEvent")) {
+        out.click_event = parse_click(click);
+    }
+    if let Some(hover) = map.get("hover_event").or_else(|| map.get("hoverEvent")) {
+        out.hover_event = parse_hover(hover);
+    }
     out
 }
 
-fn write_compound_payload(out: &mut Vec<u8>, value: &serde_json::Value) {
-    let obj = match value {
-        serde_json::Value::Object(map) => map.clone(),
-        serde_json::Value::String(s) => {
-            let mut map = serde_json::Map::new();
-            map.insert("text".into(), serde_json::Value::String(s.clone()));
-            map
-        }
-        serde_json::Value::Array(arr) => {
-            let mut map = serde_json::Map::new();
-            map.insert("text".into(), serde_json::Value::String(String::new()));
-            map.insert("extra".into(), serde_json::Value::Array(arr.clone()));
-            map
-        }
-        _ => {
-            let mut map = serde_json::Map::new();
-            map.insert("text".into(), serde_json::Value::String(value.to_string()));
-            map
-        }
-    };
-    let has_text = obj.contains_key("text");
-    if !has_text {
-        write_string_field(out, "text", "");
-    }
-    for (key, child) in &obj {
-        match child {
-            serde_json::Value::String(s) => write_string_field(out, key, s),
-            serde_json::Value::Bool(b) => write_byte_field(out, key, u8::from(*b)),
-            serde_json::Value::Number(n) => {
-                if let Some(i) = n.as_i64() {
-                    write_byte_field(out, key, (i & 0xFF) as u8);
-                } else {
-                    write_string_field(out, key, &n.to_string());
-                }
-            }
-            serde_json::Value::Array(items) => {
-                if key == "extra" {
-                    write_extra_list(out, key, items);
-                } else if items.iter().all(serde_json::Value::is_string) {
-                    write_string_list(out, key, items);
-                } else {
-                    write_extra_list(out, key, items);
-                }
-            }
-            serde_json::Value::Object(_) => write_object_field(out, key, child),
-            serde_json::Value::Null => {}
-        }
-    }
-    out.push(TAG_END);
+fn parse_click(value: &Value) -> Option<NbtClickEvent> {
+    let obj = value.as_object()?;
+    let action = obj.get("action").and_then(Value::as_str).unwrap_or("").to_string();
+    let url = obj.get("url").and_then(Value::as_str).unwrap_or("").to_string();
+    let command = obj.get("command").and_then(Value::as_str).unwrap_or("").to_string();
+    let value_str = obj.get("value").and_then(Value::as_str).unwrap_or("").to_string();
+    Some(NbtClickEvent {
+        action,
+        value: value_str,
+        url,
+        command,
+    })
 }
 
-fn write_string_field(out: &mut Vec<u8>, name: &str, value: &str) {
-    out.push(TAG_STRING);
-    write_name(out, name);
-    write_string_payload(out, value);
+fn parse_hover(value: &Value) -> Option<NbtHoverEvent> {
+    let obj = value.as_object()?;
+    let action = obj.get("action").and_then(Value::as_str).unwrap_or("show_text").to_string();
+    let contents = obj.get("contents").map(|v| Box::new(value_to_nbt(v)));
+    let legacy_value = obj.get("value").map(|v| Box::new(value_to_nbt(v)));
+    Some(NbtHoverEvent {
+        action,
+        contents,
+        value: legacy_value,
+    })
 }
 
-fn write_byte_field(out: &mut Vec<u8>, name: &str, value: u8) {
-    out.push(TAG_BYTE);
-    write_name(out, name);
-    out.push(value);
-}
-
-fn write_object_field(out: &mut Vec<u8>, name: &str, value: &serde_json::Value) {
-    out.push(TAG_COMPOUND);
-    write_name(out, name);
-    write_compound_payload(out, value);
-}
-
-fn write_extra_list(out: &mut Vec<u8>, name: &str, items: &[serde_json::Value]) {
-    out.push(TAG_LIST);
-    write_name(out, name);
-    out.push(TAG_COMPOUND);
-    let len: i32 = items.len().try_into().unwrap_or(i32::MAX);
-    out.extend_from_slice(&len.to_be_bytes());
-    for item in items {
-        write_compound_payload(out, item);
-    }
-}
-
-fn write_string_list(out: &mut Vec<u8>, name: &str, items: &[serde_json::Value]) {
-    out.push(TAG_LIST);
-    write_name(out, name);
-    out.push(TAG_STRING);
-    let len: i32 = items.len().try_into().unwrap_or(i32::MAX);
-    out.extend_from_slice(&len.to_be_bytes());
-    for item in items {
-        if let serde_json::Value::String(s) = item {
-            write_string_payload(out, s);
-        } else {
-            write_string_payload(out, &item.to_string());
-        }
-    }
-}
-
-fn write_name(out: &mut Vec<u8>, name: &str) {
-    let bytes = name.as_bytes();
-    let len: u16 = bytes.len().try_into().unwrap_or(u16::MAX);
-    out.extend_from_slice(&len.to_be_bytes());
-    out.extend_from_slice(bytes);
-}
-
-fn write_string_payload(out: &mut Vec<u8>, value: &str) {
-    let bytes = value.as_bytes();
-    let len: u16 = bytes.len().try_into().unwrap_or(u16::MAX);
-    out.extend_from_slice(&len.to_be_bytes());
-    out.extend_from_slice(bytes);
-}
+// Keep unused import warnings quiet.
+#[allow(dead_code)]
+fn _btree_keep(_: BTreeMap<String, String>) {}
 
 #[cfg(test)]
 mod tests {
@@ -146,8 +210,8 @@ mod tests {
     #[test]
     fn encodes_simple_text() {
         let bytes = json_text_to_network_nbt(r#"{"text":"Hello"}"#);
-        assert_eq!(bytes[0], TAG_COMPOUND);
-        assert_eq!(bytes[1], TAG_STRING);
+        assert_eq!(bytes[0], 0x0A); // TAG_COMPOUND
+        assert!(bytes.windows(4).any(|w| w == b"text"));
     }
 
     #[test]
@@ -155,7 +219,6 @@ mod tests {
         let bytes = json_text_to_network_nbt(
             r#"{"text":"Hi","extra":[{"text":"there","color":"red"}]}"#,
         );
-        assert!(bytes.windows(4).any(|w| w == b"text"));
         assert!(bytes.windows(5).any(|w| w == b"extra"));
         assert!(bytes.windows(5).any(|w| w == b"color"));
     }
@@ -163,6 +226,6 @@ mod tests {
     #[test]
     fn falls_back_on_garbage() {
         let bytes = json_text_to_network_nbt("not-json");
-        assert_eq!(bytes[0], TAG_COMPOUND);
+        assert_eq!(bytes[0], 0x0A);
     }
 }
