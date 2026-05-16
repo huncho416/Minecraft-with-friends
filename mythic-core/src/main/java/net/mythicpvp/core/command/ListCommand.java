@@ -73,7 +73,7 @@ public final class ListCommand extends MythicCommand {
                 buckets.add(new RankBucket(rankId, weight));
             }
         }
-        buckets.sort(Comparator.comparingInt((RankBucket b) -> b.weight).thenComparing(b -> b.rankId));
+        buckets.sort(Comparator.comparingInt((RankBucket b) -> b.weight).reversed().thenComparing(b -> b.rankId));
         Map<String, List<Player>> sorted = new LinkedHashMap<>();
         for (RankBucket b : buckets) {
             sorted.put(b.rankId, grouped.get(b.rankId));

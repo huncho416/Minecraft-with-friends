@@ -73,7 +73,7 @@ public final class TabManager {
         Map<UUID, Component> sorted = new LinkedHashMap<>();
         Bukkit.getOnlinePlayers().stream()
                 .filter(target -> visibilityPredicate.test(viewer, target))
-                .sorted(Comparator.comparingInt(player -> entries.getOrDefault(player.getUniqueId(), TabEntry.EMPTY).sortWeight()))
+                .sorted(Comparator.comparingInt((Player player) -> entries.getOrDefault(player.getUniqueId(), TabEntry.EMPTY).sortWeight()).reversed())
                 .forEach(target -> {
                     TabEntry entry = entries.getOrDefault(target.getUniqueId(), TabEntry.EMPTY);
                     String name = DisguiseManager.getInstance().getVisibleName(viewer.getUniqueId(), target.getUniqueId(), target.getName());

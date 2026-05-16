@@ -265,7 +265,7 @@ ranks:
     dye: "PINK_DYE"
     prefix: "&#F8BBD0&lF&#F48FB1&la&#F06292&lm&#EC407A&lo&#F06292&lu&#F48FB1&ls "
     suffix: ""
-    weight: 2
+    weight: 15
     staff: false
     donator: false
     parent: "default"
@@ -283,7 +283,7 @@ ranks:
     dye: "RED_DYE"
     prefix: "&#FFFFFF&lYou&#FF0000&lTube "
     suffix: ""
-    weight: 2
+    weight: 11
     staff: false
     donator: false
     parent: "default"
@@ -301,7 +301,7 @@ ranks:
     dye: "PURPLE_DYE"
     prefix: "&#9146FF&lT&#A970FF&lw&#BF94FF&li&#A970FF&lt&#9146FF&lc&#7A33E5&lh "
     suffix: ""
-    weight: 2
+    weight: 12
     staff: false
     donator: false
     parent: "default"

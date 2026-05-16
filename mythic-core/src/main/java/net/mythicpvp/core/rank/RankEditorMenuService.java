@@ -71,6 +71,9 @@ public final class RankEditorMenuService {
                 .slot(16, MythicItem.create(Material.BARRIER)
                         .name(text.editorClose()).build(),
                         event -> viewer.closeInventory())
+                .slot(18, MythicItem.create(Material.ARROW)
+                        .name("&#FFEC8A<- Back to rank list").build(),
+                        event -> openRankList(viewer))
                 .open(viewer);
     }
 

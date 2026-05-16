@@ -115,7 +115,9 @@ public final class NametagManager {
 
     @NotNull
     private String teamName(int sortWeight, @NotNull UUID uuid) {
-        return ("%03d_%s".formatted(sortWeight, uuid.toString().replace("-", ""))).substring(0, 16);
+        int clamped = Math.max(0, Math.min(sortWeight, 999));
+        int inverted = 999 - clamped;
+        return ("%03d_%s".formatted(inverted, uuid.toString().replace("-", ""))).substring(0, 16);
     }
 
     public void remove(@NotNull Player player) {
