@@ -187,12 +187,25 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         rankService.setDisplayRefresher(displayService::applyAll);
         grantService.setDisplayRefresher(displayService::refresh);
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(displayService), this);
-        CoreCompletions.register(commandManager, rankService, punishmentService);
+        net.mythicpvp.core.transfer.ShardRegistry shardRegistry =
+                new net.mythicpvp.core.transfer.ShardRegistry(getLogger());
+        shardRegistry.subscribe();
+        getServer().getServicesManager().register(
+                net.mythicpvp.core.transfer.ShardRegistry.class,
+                shardRegistry,
+                this,
+                org.bukkit.plugin.ServicePriority.Normal);
+        CoreCompletions.register(commandManager, rankService, punishmentService, shardRegistry);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(chatPromptService, this);
         getServer().getPluginManager().registerEvents(new net.mythicpvp.core.security.OpCommandGuard(), this);
         net.mythicpvp.core.transfer.ProxyTransferService transferService =
                 new net.mythicpvp.core.transfer.ProxyTransferService(this);
+        String proxyDomain = System.getenv().getOrDefault("MYTHIC_PROXY_DOMAIN", "play.mythicpvp.net");
+        int proxyPort = parseInt(System.getenv("MYTHIC_PROXY_PORT"), 25565);
+        transferService.setProxyDomain(proxyDomain, proxyPort);
+        getLogger().info("[transfer] using proxy domain " + proxyDomain + ":" + proxyPort
+                + " for cross-shard transfers");
         net.mythicpvp.core.transfer.TransferQueueService transferQueueService =
                 new net.mythicpvp.core.transfer.TransferQueueService(
                         this, transferService, rankService, grantService);

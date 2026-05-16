@@ -30,6 +30,7 @@ public final class HubListMenuService {
 
     public void open(@NotNull Player player) {
         List<ServerSelectorService.ServerInfo> hubs = selectorService.getServersForRole(HUB_ROLE).stream()
+                .filter(s -> !isProxyShard(s.serverId()))
                 .sorted(Comparator.comparing(ServerSelectorService.ServerInfo::serverId, String.CASE_INSENSITIVE_ORDER))
                 .toList();
         int rows = Math.max(3, (hubs.size() + 8) / 9 + 2);
@@ -89,6 +90,11 @@ public final class HubListMenuService {
                         "",
                         statusLine)
                 .build();
+    }
+
+    private static boolean isProxyShard(@NotNull String shardId) {
+        String lower = shardId.toLowerCase(Locale.ROOT);
+        return lower.startsWith("proxy-") || lower.equals("proxy");
     }
 
     @Nullable

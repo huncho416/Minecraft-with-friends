@@ -108,6 +108,17 @@ public final class MythicHex {
         return color;
     }
 
+    /**
+     * Promote bare {@code #RRGGBB} occurrences (no leading {@code &}) to
+     * the canonical {@code &#RRGGBB} form so they survive the MiniMessage
+     * conversion. Useful for rank prefixes that operators wrote as
+     * trailing color sentinels like {@code "Owner #DE2222"}.
+     */
+    @NotNull
+    public static String normalizeBareHex(@NotNull String text) {
+        return text.replaceAll("(?<![&§])#([A-Fa-f0-9]{6})", "&#$1");
+    }
+
     @NotNull
     public static String toMiniMessage(@NotNull String text) {
         String result = text;

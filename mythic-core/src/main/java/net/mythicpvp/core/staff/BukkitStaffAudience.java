@@ -26,7 +26,7 @@ public final class BukkitStaffAudience implements StaffAudience {
                 "sender", message.senderName(),
                 "rank", message.rank(),
                 "rank_color", coerceColor(message.rankColor()),
-                "chat_prefix", message.chatPrefix(),
+                "chat_prefix", MythicHex.normalizeBareHex(message.chatPrefix()),
                 "channel_tag", channelTag,
                 "message", stripColorCodes(message.message()),
                 "channel", channel.id()));
@@ -48,7 +48,8 @@ public final class BukkitStaffAudience implements StaffAudience {
                 .replaceAll("(?i)&#[0-9a-f]{6}", "")
                 .replaceAll("(?i)&[0-9a-fk-or]", "")
                 .replaceAll("(?i)§#[0-9a-f]{6}", "")
-                .replaceAll("(?i)§[0-9a-fk-or]", "");
+                .replaceAll("(?i)§[0-9a-fk-or]", "")
+                .replaceAll("(?i)#[0-9a-f]{6}", "");
     }
 
     @NotNull

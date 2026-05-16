@@ -129,6 +129,26 @@
             "user_editable": false,
             "rules": "nullable|string|max:128",
             "field_type": "text"
+        },
+        {
+            "name": "Proxy Domain",
+            "description": "Domain suffix the backend prepends with <shard>. when transferring players via the Server Transfer packet. Must match one of the proxy's MYTHIC_CONFIG_DOMAIN_SUFFIX entries. Example: 'play.mythicpvp.net' means cross-shard transfers send the client to 'skyblock-1.play.mythicpvp.net'.",
+            "env_variable": "MYTHIC_PROXY_DOMAIN",
+            "default_value": "play.mythicpvp.net",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:128",
+            "field_type": "text"
+        },
+        {
+            "name": "Proxy Port",
+            "description": "Public port the proxy listens on. Used together with MYTHIC_PROXY_DOMAIN for cross-shard transfers.",
+            "env_variable": "MYTHIC_PROXY_PORT",
+            "default_value": "25565",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:1|max:65535",
+            "field_type": "text"
         }
     ]
 }
