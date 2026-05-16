@@ -108,7 +108,12 @@ public class MythicMenu implements InventoryHolder {
     }
 
     public void open(@NotNull Player player) {
-        player.openInventory(inventory);
+        try {
+            player.openInventory(inventory);
+        } catch (Throwable t) {
+            org.bukkit.Bukkit.getLogger().warning("[mythic-menu] openInventory failed for "
+                    + player.getName() + ": " + t.getClass().getSimpleName() + ": " + t.getMessage());
+        }
     }
 
     @Override

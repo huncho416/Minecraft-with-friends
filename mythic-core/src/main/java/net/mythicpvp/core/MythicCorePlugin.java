@@ -195,7 +195,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         net.mythicpvp.core.maintenance.MaintenanceService maintenanceService =
                 new net.mythicpvp.core.maintenance.MaintenanceService(getLogger(), getDataFolder());
         getServer().getPluginManager().registerEvents(
-                new net.mythicpvp.core.maintenance.MaintenanceLoginGuard(this, maintenanceService, messages), this);
+                new net.mythicpvp.core.maintenance.MaintenanceLoginGuard(maintenanceService, messages), this);
         commandManager.register(new net.mythicpvp.core.command.MaintenanceCommand(maintenanceService));
         commandManager.register(new net.mythicpvp.core.command.SetSpawnCommand(configManager.getOrCreate("spawn")));
 
@@ -283,6 +283,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new TeleportCommand(essentialsService));
         commandManager.register(new TpHereCommand(essentialsService));
         commandManager.register(new HelpCommand(essentialsService));
+        commandManager.register(new net.mythicpvp.core.command.ListCommand(rankService, grantService));
         commandManager.register(new DiscordCommand(essentialsService));
         commandManager.register(new FriendCommand(socialService));
         commandManager.register(new PartyCommand(socialService, serverIdentity.id()));

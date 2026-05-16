@@ -2,48 +2,39 @@ package net.mythicpvp.core.maintenance;
 
 import net.kyori.adventure.text.Component;
 import net.mythicpvp.core.config.CoreMessages;
-import net.mythicpvp.suite.scheduler.MythicScheduler;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("deprecation")
 public final class MaintenanceLoginGuard implements Listener {
 
-    private final JavaPlugin plugin;
     private final MaintenanceService maintenance;
     private final CoreMessages messages;
 
-    public MaintenanceLoginGuard(@NotNull JavaPlugin plugin, @NotNull MaintenanceService maintenance, @NotNull CoreMessages messages) {
-        this.plugin = plugin;
+    public MaintenanceLoginGuard(@NotNull MaintenanceService maintenance, @NotNull CoreMessages messages) {
         this.maintenance = maintenance;
         this.messages = messages;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onJoin(@NotNull PlayerJoinEvent event) {
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onLogin(@NotNull PlayerLoginEvent event) {
         if (!maintenance.isActive()) {
             return;
         }
-        Player player = event.getPlayer();
-        if (player.hasPermission(MaintenanceService.BYPASS_PERMISSION)) {
+        if (event.getPlayer().hasPermission(MaintenanceService.BYPASS_PERMISSION)) {
             return;
         }
-        if (maintenance.canBypass(player.getUniqueId())) {
+        if (maintenance.canBypass(event.getPlayer().getUniqueId())) {
             return;
         }
         Component reason = messages.component(
                 "messages.maintenance.kick",
-                "<red><bold>This server is in maintenance mode.\n\n"
+                "<#FF8A8A><bold>This server is in maintenance mode.\n\n"
                 + "<white>Join our Discord to keep up with the latest updates:\n"
                 + "<#9CC3FF><click:open_url:'https://discord.gg/mythicpvp'>discord.gg/mythicpvp</click>");
-        MythicScheduler.runOnEntityLater(plugin, player, () -> {
-            if (player.isOnline()) {
-                player.kick(reason);
-            }
-        }, 1L);
+        event.disallow(PlayerLoginEvent.Result.KICK_OTHER, reason);
     }
 }

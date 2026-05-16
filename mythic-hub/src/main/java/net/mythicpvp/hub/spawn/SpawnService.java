@@ -50,6 +50,10 @@ public final class SpawnService {
         return spawnLocation;
     }
 
+    public void setSpawnLocation(@NotNull Location location) {
+        this.spawnLocation = location.clone();
+    }
+
     public double getVoidTeleportY() {
         return voidTeleportY;
     }

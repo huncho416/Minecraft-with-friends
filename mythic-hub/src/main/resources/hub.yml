@@ -32,7 +32,7 @@ selector:
         - ""
         - "&7Released: &f%release_date%"
         - "&7Age: &f%age%"
-        - "&7Online servers: &f%servers%"
+        - "&7Status: %status%"
         - "&7Players online: &f%players%"
         - ""
         - "&#9CFF9CClick to join the queue"
