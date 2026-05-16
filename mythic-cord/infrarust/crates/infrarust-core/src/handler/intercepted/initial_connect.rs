@@ -310,10 +310,20 @@ async fn connect_to_backend(
             .consume_backend_login(&services.packet_registry, version, velocity_ctx)
             .await
         {
-            client
-                .disconnect("Backend refused connection", &services.packet_registry)
-                .await
-                .ok();
+            match &e {
+                crate::error::CoreError::BackendDisconnect(reason) => {
+                    client
+                        .disconnect_raw_json(reason, &services.packet_registry)
+                        .await
+                        .ok();
+                }
+                _ => {
+                    client
+                        .disconnect("Backend refused connection", &services.packet_registry)
+                        .await
+                        .ok();
+                }
+            }
             return Err(e);
         }
 

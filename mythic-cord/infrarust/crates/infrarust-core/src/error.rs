@@ -14,6 +14,9 @@ pub enum CoreError {
     #[error("pipeline rejected: {0}")]
     Rejected(String),
 
+    #[error("backend disconnect: {0}")]
+    BackendDisconnect(String),
+
     #[error("no server found for domain: {0}")]
     UnknownDomain(String),
 

@@ -30,7 +30,8 @@ public final class ChatPromptService implements Listener {
         boolean alreadyWaiting = prompts.put(player.getUniqueId(), handler) != null;
         player.closeInventory();
         if (!alreadyWaiting) {
-            player.sendMessage("Enter the value in chat, or type cancel.");
+            player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize(
+                    "&#D2D8E0Enter the value in chat, or type &#FF8A8Acancel&#D2D8E0."));
         }
     }
 

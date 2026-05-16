@@ -159,18 +159,32 @@ public final class RankEditorMenuService {
                                 @NotNull String label, @NotNull String fieldKey,
                                 @NotNull String currentValue, @NotNull Player viewer,
                                 @NotNull String rankId) {
+        java.util.List<String> lore = new java.util.ArrayList<>();
+        lore.add("&7Current: &f" + sanitizeColors(currentValue));
+        lore.add(text.editorFieldPrompt());
+        if ("parent".equals(fieldKey)) {
+            lore.add("&#FF8A8ARight-click to remove parent.");
+        }
         menu.slot(slot, MythicItem.create(icon)
                 .name("&#F529BE" + label)
-                .lore(List.of(
-                        "&7Current: &f" + sanitizeColors(currentValue),
-                        text.editorFieldPrompt()))
-                .build(), event -> prompts.await(viewer, (player, input) -> {
-                    boolean ok = rankService.setField(rankId, fieldKey, input);
-                    player.sendMessage(ok
-                            ? text.editorFieldUpdated(label, input)
-                            : text.editorFieldFailed(label));
-                    openFieldEditor(player, rankId);
-                }));
+                .lore(lore)
+                .build(), event -> {
+                    if ("parent".equals(fieldKey) && event.getClick() != null && event.getClick().isRightClick()) {
+                        boolean ok = rankService.setField(rankId, "parent", "");
+                        viewer.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize(ok
+                                ? "&#9CFF9CParent rank removed."
+                                : "&#FF8A8AFailed to remove parent."));
+                        openFieldEditor(viewer, rankId);
+                        return;
+                    }
+                    prompts.await(viewer, (player, input) -> {
+                        boolean ok = rankService.setField(rankId, fieldKey, input);
+                        player.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize(ok
+                                ? text.editorFieldUpdated(label, input)
+                                : text.editorFieldFailed(label)));
+                        openFieldEditor(player, rankId);
+                    });
+                });
     }
 
     @NotNull
