@@ -3,4 +3,5 @@ tablist:
     - "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP"
     - "&#D2D8E0%server%"
   footer:
+    - "&#D2D8E0Ping&8: %ping% &8| &#D2D8E0TPS&8: %tps%"
     - "&#FFFFFFdiscord.gg/mythicpvp"

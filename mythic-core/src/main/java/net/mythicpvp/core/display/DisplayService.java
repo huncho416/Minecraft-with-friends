@@ -162,7 +162,38 @@ public final class DisplayService {
                 .set("cosmetic_chat_tag", cosmeticDisplay(player.getUniqueId(), CosmeticType.CHAT_TAG))
                 .set("cosmetic_title", cosmeticDisplay(player.getUniqueId(), CosmeticType.TITLE))
                 .set("queue_position", queuePositionDisplay(player.getUniqueId()))
-                .set("queue_section", queueSectionDisplay(player.getUniqueId()));
+                .set("queue_section", queueSectionDisplay(player.getUniqueId()))
+                .set("ping", pingDisplay(player))
+                .set("tps", tpsDisplay());
+    }
+
+    @NotNull
+    private static String pingDisplay(@NotNull Player player) {
+        int ping = player.getPing();
+        String color;
+        if (ping < 100) color = "&#9CFF9C";
+        else if (ping < 200) color = "&#FFEC8A";
+        else color = "&#FF8A8A";
+        return color + ping + "ms";
+    }
+
+    @NotNull
+    private String tpsDisplay() {
+        double tps = currentTps();
+        String color;
+        if (tps >= 19.5) color = "&#9CFF9C";
+        else if (tps >= 17.0) color = "&#FFEC8A";
+        else color = "&#FF8A8A";
+        return color + String.format(java.util.Locale.ROOT, "%.2f", Math.min(tps, 20.0));
+    }
+
+    private double currentTps() {
+        try {
+            double[] tps = Bukkit.getServer().getTPS();
+            return tps.length > 0 ? tps[0] : 20.0;
+        } catch (Throwable t) {
+            return 20.0;
+        }
     }
 
     @NotNull

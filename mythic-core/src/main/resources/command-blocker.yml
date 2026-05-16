@@ -96,6 +96,7 @@ required-permissions:
   tempmute: "mythic.core.punish.mute"
   blacklist: "mythic.core.punish.blacklist"
   warn: "mythic.core.punish.warn"
+  kick: "mythic.core.punish.kick"
   unban: "mythic.core.punish.unban"
   pardon: "mythic.core.punish.unban"
   punishmentadd: "mythic.core.punish.template"

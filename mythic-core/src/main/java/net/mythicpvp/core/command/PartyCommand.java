@@ -5,7 +5,6 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.mythicpvp.core.social.Party;
 import net.mythicpvp.core.social.SocialService;
-import net.mythicpvp.core.transfer.ShardRegistry;
 import net.mythicpvp.core.transfer.TransferQueueService;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.Complete;
@@ -249,11 +248,4 @@ public final class PartyCommand extends MythicCommand {
         return rsp == null ? null : rsp.getProvider();
     }
 
-    @SuppressWarnings("unused")
-    @Nullable
-    private static ShardRegistry lookupShardRegistry() {
-        RegisteredServiceProvider<ShardRegistry> rsp =
-                Bukkit.getServicesManager().getRegistration(ShardRegistry.class);
-        return rsp == null ? null : rsp.getProvider();
-    }
 }

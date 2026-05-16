@@ -167,6 +167,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         ProtocolManager protocolManager = ProtocolManager.getInstance();
         punishmentService = new PunishmentService(protocolManager, Clock.systemUTC());
         punishmentService.setPersistence(persistenceGateway);
+        punishmentService.setEnforcer(new net.mythicpvp.core.punishment.PunishmentEnforcer(this, messages));
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
                 new net.mythicpvp.core.punishment.PunishmentMenuText(menusConfig);
         punishmentMenuService = new PunishmentMenuService(
@@ -187,6 +188,11 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         rankService.setDisplayRefresher(displayService::applyAll);
         grantService.setDisplayRefresher(displayService::refresh);
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(displayService), this);
+        net.mythicpvp.suite.scheduler.MythicScheduler.runTimer(
+                this,
+                displayService::applyAll,
+                100L,
+                100L);
         net.mythicpvp.core.transfer.ShardRegistry shardRegistry =
                 new net.mythicpvp.core.transfer.ShardRegistry(getLogger());
         shardRegistry.subscribe();
@@ -242,6 +248,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new PunishmentDirectCommand.TempMute(punishmentService, serverIdentity.id(), Clock.systemUTC()));
         commandManager.register(new PunishmentDirectCommand.Blacklist(punishmentService, serverIdentity.id(), Clock.systemUTC()));
         commandManager.register(new PunishmentDirectCommand.Warn(punishmentService, serverIdentity.id(), Clock.systemUTC()));
+        commandManager.register(new PunishmentDirectCommand.Kick(punishmentService, serverIdentity.id(), Clock.systemUTC()));
         commandManager.register(new PunishmentDirectCommand.Unban(punishmentService));
         commandManager.register(new PunishmentAddCommand(punishmentService));
         commandManager.register(new PunishmentRemoveCommand(punishmentService));

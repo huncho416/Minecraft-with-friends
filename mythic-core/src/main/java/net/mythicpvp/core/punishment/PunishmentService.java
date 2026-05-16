@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 public final class PunishmentService {
 
@@ -29,6 +30,7 @@ public final class PunishmentService {
     private final List<PunishmentTemplate> templates = new CopyOnWriteArrayList<>();
 
     private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
+    private volatile Consumer<PunishmentNotice> enforcer = notice -> {};
 
     public PunishmentService(@NotNull ProtocolManager protocolManager, @NotNull Clock clock) {
         this.protocolManager = protocolManager;
@@ -40,14 +42,20 @@ public final class PunishmentService {
         this.persistence = persistence;
     }
 
+    public void setEnforcer(@NotNull Consumer<PunishmentNotice> enforcer) {
+        this.enforcer = enforcer;
+    }
+
     @NotNull
     public PunishmentRecord punish(@NotNull PunishmentRequest request) {
         Instant now = clock.instant();
         long expiresAtMillis = request.expiresAt() == null ? 0L : request.expiresAt().toEpochMilli();
         PunishmentRecord record = new PunishmentRecord(ids.incrementAndGet(), request.targetUuid(), request.targetName(), request.staffUuid(), request.staffName(), request.type(), request.reason(), request.proof(), now.toEpochMilli(), expiresAtMillis, request.silent(), request.clearInventory(), false, request.server());
         records.add(record);
-        protocolManager.publish(CHANNEL, new PunishmentNotice(record, !request.silent()));
+        PunishmentNotice notice = new PunishmentNotice(record, !request.silent());
+        protocolManager.publish(CHANNEL, notice);
         persistence.punishIssue(record);
+        enforcer.accept(notice);
         return record;
     }
 
