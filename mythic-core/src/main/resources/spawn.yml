@@ -1,0 +1,17 @@
+# Spawn coordinates written by /setspawn.
+#
+# /setspawn requires permission mythic.core.spawn.set, captures the
+# running player's current location, sets the underlying world's
+# spawn point, and saves the coordinates here.
+#
+# This file is informational/source-of-truth for the spawn point.
+# The hub plugin's on-join teleport uses its own hub.yml entry — set
+# that to the same coordinates if you want join-time teleport.
+
+spawn:
+  world: "world"
+  x: 0.5
+  y: 100.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
