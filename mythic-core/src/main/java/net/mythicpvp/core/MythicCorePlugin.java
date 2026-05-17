@@ -177,8 +177,12 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         punishmentService.setPardonListener(punishmentEnforcer::onPardon);
         punishmentService.setPardonNoticeListener(punishmentEnforcer::onPardonNotice);
         punishmentService.setExpiryListener(punishmentEnforcer::onExpiry);
-        new net.mythicpvp.core.punishment.PunishmentSqlRefresher(punishmentService, getLogger()).start();
+        net.mythicpvp.core.punishment.PunishmentSqlRefresher punishmentRefresher =
+                new net.mythicpvp.core.punishment.PunishmentSqlRefresher(punishmentService, getLogger());
+        punishmentRefresher.setRemoteEnforcer(punishmentEnforcer::enforceTargetOnly);
+        punishmentRefresher.start();
         new net.mythicpvp.core.rank.GrantSqlRefresher(grantService, getLogger()).start();
+        new net.mythicpvp.core.social.SocialSqlRefresher(socialService, getLogger()).start();
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
                 new net.mythicpvp.core.punishment.PunishmentMenuText(menusConfig);
         punishmentMenuService = new PunishmentMenuService(

@@ -70,6 +70,7 @@ public final class HubCommand extends MythicCommand {
         List<ServerEntryRow> candidates = shardRegistry.all().stream()
                 .filter(row -> HUB_ROLE.equalsIgnoreCase(row.role()))
                 .filter(row -> !row.shard_id().equalsIgnoreCase(localShardId))
+                .filter(row -> !isProxyEntry(row))
                 .sorted(Comparator
                         .comparingInt(ServerEntryRow::player_count)
                         .thenComparing(ServerEntryRow::shard_id))
@@ -79,5 +80,14 @@ public final class HubCommand extends MythicCommand {
             return null;
         }
         return candidates.get(0);
+    }
+
+    private static boolean isProxyEntry(@NotNull ServerEntryRow row) {
+        String id = row.shard_id();
+        String addr = row.address();
+        if (id != null && id.regionMatches(true, 0, "proxy", 0, 5)) {
+            return true;
+        }
+        return addr != null && (addr.startsWith("0.0.0.0") || addr.startsWith("[::]") || addr.startsWith(":"));
     }
 }

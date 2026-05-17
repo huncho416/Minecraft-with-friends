@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +26,8 @@ public final class PunishmentSqlRefresher {
     private final PunishmentService punishments;
     private final Logger logger;
     private final Map<Long, Boolean> wasActive = new HashMap<>();
+    private volatile boolean firstPollComplete = false;
+    private volatile Consumer<PunishmentRecord> remoteEnforcer = record -> {};
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = new Thread(r, "mythic-punishment-refresh");
         t.setDaemon(true);
@@ -34,6 +37,10 @@ public final class PunishmentSqlRefresher {
     public PunishmentSqlRefresher(@NotNull PunishmentService punishments, @NotNull Logger logger) {
         this.punishments = punishments;
         this.logger = logger;
+    }
+
+    public void setRemoteEnforcer(@NotNull Consumer<PunishmentRecord> enforcer) {
+        this.remoteEnforcer = enforcer;
     }
 
     public void start() {
@@ -73,6 +80,7 @@ public final class PunishmentSqlRefresher {
         }
         JsonArray rows = table.getAsJsonArray("rows");
         long now = System.currentTimeMillis();
+        boolean baselineDone = firstPollComplete;
         for (JsonElement rowElement : rows) {
             if (!rowElement.isJsonArray()) continue;
             PunishmentRow row = StdbRowParser.parse(rowElement.toString(), PunishmentRow.class);
@@ -81,9 +89,13 @@ public final class PunishmentSqlRefresher {
             punishments.applyRecord(record);
             boolean isActive = record.active(now);
             Boolean previously = wasActive.put(record.id(), isActive);
+            if (previously == null && isActive && baselineDone && !record.pardoned()) {
+                remoteEnforcer.accept(record);
+            }
             if (previously != null && previously && !isActive && !record.pardoned()) {
                 punishments.fireExpiry(record);
             }
         }
+        firstPollComplete = true;
     }
 }

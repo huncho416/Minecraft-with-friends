@@ -36,6 +36,18 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
         MythicScheduler.runSync(plugin, () -> apply(notice));
     }
 
+    public void enforceTargetOnly(@NotNull PunishmentRecord record) {
+        MythicScheduler.runSync(plugin, () -> {
+            Player target = Bukkit.getPlayer(record.targetUuid());
+            if (target == null || !target.isOnline()) return;
+            switch (record.type()) {
+                case KICK, BAN, TEMP_BAN, BLACKLIST -> kick(target, record);
+                case MUTE, TEMP_MUTE -> notifyMuted(target, record);
+                case WARN -> notifyWarned(target, record);
+            }
+        });
+    }
+
     private void apply(@NotNull PunishmentNotice notice) {
         PunishmentRecord record = notice.record();
         Player target = Bukkit.getPlayer(record.targetUuid());
