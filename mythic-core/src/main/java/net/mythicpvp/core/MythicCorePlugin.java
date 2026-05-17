@@ -188,6 +188,9 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new net.mythicpvp.core.session.CrossShardPresenceService(
                         rankService, grantService, serverIdentity.id(), getLogger());
         crossShardPresence.start();
+        net.mythicpvp.core.transfer.TransferRequestService transferDispatch =
+                new net.mythicpvp.core.transfer.TransferRequestService(this, transferService, getLogger());
+        transferDispatch.start();
         getServer().getPluginManager().registerEvents(
                 new net.mythicpvp.core.session.SessionPresenceListener(serverIdentity.id()), this);
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
@@ -264,8 +267,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 this,
                 org.bukkit.plugin.ServicePriority.Normal);
         commandManager.register(new net.mythicpvp.core.command.ServerCommand(transferService, messages));
-        commandManager.register(new net.mythicpvp.core.command.SendCommand(transferService, crossShardPresence));
-        commandManager.register(new net.mythicpvp.core.command.SummonCommand(crossShardPresence, serverIdentity.id()));
+        commandManager.register(new net.mythicpvp.core.command.SendCommand(transferService, crossShardPresence, transferDispatch));
+        commandManager.register(new net.mythicpvp.core.command.SummonCommand(crossShardPresence, transferDispatch, serverIdentity.id()));
         net.mythicpvp.core.mode.PlayerModeService modeService = new net.mythicpvp.core.mode.PlayerModeService();
         getServer().getPluginManager().registerEvents(
                 new net.mythicpvp.core.mode.BuildPvpListener(modeService), this);
@@ -335,6 +338,12 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 "&#888888[%server%] %rank_color%%rank%%sender% &8\u00BB &#FFFFFF%message%",
                 java.util.Map.of());
         staffChannelService.addAudience(new BukkitStaffAudience(staffFormat));
+
+        net.mythicpvp.core.staff.StaffChatSqlRelay staffChatRelay =
+                new net.mythicpvp.core.staff.StaffChatSqlRelay(
+                        staffChannelService, serverIdentity.id(), getLogger());
+        staffChannelService.setRelay(staffChatRelay);
+        staffChatRelay.start();
 
         commandManager.register(new StaffChatCommand.Staff(staffChannelService, rankService, grantService));
         commandManager.register(new StaffChatCommand.Builder(staffChannelService, rankService, grantService));
@@ -432,6 +441,10 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new net.mythicpvp.core.command.ReportCommand(
                 reportService, reportMenuService, reportConfig, serverIdentity.id()));
         commandManager.register(new net.mythicpvp.core.command.ReportsCommand(reportMenuService));
+        net.mythicpvp.core.report.ReportSqlRefresher reportRefresher =
+                new net.mythicpvp.core.report.ReportSqlRefresher(reportService, getLogger());
+        reportRefresher.setNewReportListener(net.mythicpvp.core.report.StaffNotifier::notifyReport);
+        reportRefresher.start();
         commandManager.register(new net.mythicpvp.core.command.HelpopCommand(reportConfig, serverIdentity.id()));
         commandManager.register(new net.mythicpvp.core.command.RequestCommand(reportConfig, serverIdentity.id()));
 

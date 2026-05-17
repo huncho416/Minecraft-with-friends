@@ -22,6 +22,7 @@ public final class StaffNotifier {
                 "&#FF8A8A[REPORT] &#FFFFFF" + report.reporterName()
                         + " &#FF8A8Areported &#FFFFFF" + report.targetName()
                         + " &#FF8A8Afor &#FFFFFF" + report.category().displayName()
+                        + " &#FF8A8Afrom &#FFFFFF" + report.reporterServer()
                         + " &8(report #" + report.id() + ")");
         broadcast(REPORT_NOTIFY_PERMISSION, msg);
     }

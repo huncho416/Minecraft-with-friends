@@ -43,6 +43,8 @@ services:
     environment:
       STDB_HOST: http://spacetimedb:3000
       STDB_MODULE: ${STDB_MODULE:-mythicpvp}
+    volumes:
+      - stdb-publish-identity:/root/.config/spacetime
     depends_on:
       spacetimedb:
         condition: service_healthy
@@ -190,6 +192,7 @@ services:
 
 volumes:
   stdb-vps-data:
+  stdb-publish-identity:
   prometheus-vps-data:
   grafana-vps-data:
 

@@ -21,6 +21,7 @@
 pub mod common;
 pub mod cosmetics;
 pub mod economy;
+pub mod events;
 pub mod gameplay;
 pub mod players;
 pub mod punishments;

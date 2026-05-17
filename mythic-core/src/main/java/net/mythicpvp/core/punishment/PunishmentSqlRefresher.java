@@ -89,7 +89,8 @@ public final class PunishmentSqlRefresher {
             punishments.applyRecord(record);
             boolean isActive = record.active(now);
             Boolean previously = wasActive.put(record.id(), isActive);
-            if (previously == null && isActive && baselineDone && !record.pardoned()) {
+            if (previously == null && isActive && baselineDone && !record.pardoned()
+                    && !punishments.wasIssuedLocallyRecently(record.targetUuid())) {
                 remoteEnforcer.accept(record);
             }
             if (previously != null && previously && !isActive && !record.pardoned()) {
