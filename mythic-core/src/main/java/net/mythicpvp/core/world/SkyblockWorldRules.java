@@ -11,9 +11,16 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.event.world.WorldInitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 public final class SkyblockWorldRules implements Listener {
+
+    private final JavaPlugin plugin;
+
+    public SkyblockWorldRules(@NotNull JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onWorldInit(@NotNull WorldInitEvent event) {
@@ -51,12 +58,18 @@ public final class SkyblockWorldRules implements Listener {
     }
 
     public void applyAll() {
-        for (World world : Bukkit.getWorlds()) {
-            applyRules(world);
-        }
+        Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
+            for (World world : Bukkit.getWorlds()) {
+                applyRulesUnsafe(world);
+            }
+        });
     }
 
     private void applyRules(@NotNull World world) {
+        Bukkit.getGlobalRegionScheduler().execute(plugin, () -> applyRulesUnsafe(world));
+    }
+
+    private void applyRulesUnsafe(@NotNull World world) {
         world.setStorm(false);
         world.setThundering(false);
         world.setWeatherDuration(Integer.MAX_VALUE);

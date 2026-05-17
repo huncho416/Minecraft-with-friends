@@ -276,7 +276,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new net.mythicpvp.core.command.PvpModeCommand(modeService));
         if ("skyblock".equalsIgnoreCase(serverIdentity.type())) {
             net.mythicpvp.core.world.SkyblockWorldRules skyblockRules =
-                    new net.mythicpvp.core.world.SkyblockWorldRules();
+                    new net.mythicpvp.core.world.SkyblockWorldRules(this);
             getServer().getPluginManager().registerEvents(skyblockRules, this);
             skyblockRules.applyAll();
             getLogger().info("[skyblock] world rules applied: no natural mob spawning, no weather, silent joins");
