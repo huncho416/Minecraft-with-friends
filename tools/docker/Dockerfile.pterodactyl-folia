@@ -61,35 +61,13 @@ RUN set -eux; \
         fetch_modrinth simple-voice-chat "${SIMPLE_VOICE_CHAT_VERSION}" "${SIMPLE_VOICE_CHAT_SHA1}" simple-voice-chat.jar; \
     fi
 
-FROM eclipse-temurin:21-jre-jammy AS worldedit-fetch
-WORKDIR /worldedit
-RUN apt-get update \
- && apt-get install -y --no-install-recommends curl jq ca-certificates zip unzip \
- && rm -rf /var/lib/apt/lists/*
-# FastAsyncWorldEdit is the canonical WorldEdit superset. Pull the latest
-# Paper build from the FAWE Modrinth project and force-enable Folia support
-# by patching the bundled paper-plugin.yml. FAWE's core operations are
-# region-thread agnostic so this works for schematic load / paste, which is
-# the only use case we need.
-RUN set -eux; \
-    url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" \
-        "https://api.modrinth.com/v2/project/fastasyncworldedit/version?loaders=%5B%22paper%22%5D" \
-        | jq -r '.[0].files[]? | select(.primary == true) | .url' | head -n 1); \
-    test -n "${url}"; \
-    test "${url}" != "null"; \
-    curl -fsSL -o fastasyncworldedit.jar "${url}"; \
-    mkdir -p _patch; \
-    cd _patch; \
-    unzip -q ../fastasyncworldedit.jar; \
-    if [ -f paper-plugin.yml ] && ! grep -q "^folia-supported:" paper-plugin.yml; then \
-        echo "folia-supported: true" >> paper-plugin.yml; \
-    fi; \
-    if [ -f plugin.yml ] && ! grep -q "^folia-supported:" plugin.yml; then \
-        echo "folia-supported: true" >> plugin.yml; \
-    fi; \
-    zip -qr ../fastasyncworldedit.jar paper-plugin.yml plugin.yml 2>/dev/null || true; \
-    cd ..; \
-    rm -rf _patch
+# NOTE: FAWE / WorldEdit is intentionally NOT bundled. The plugin uses
+# Bukkit's legacy CraftScheduler which throws UnsupportedOperationException
+# on Folia, crashing the shard during enable+disable. Operators that need
+# schematic paste should either:
+#   1. Mount a folia-native worldedit replacement into user-plugins/
+#   2. Paste schematics offline (mcedit) before the world boots
+#   3. Wait for an upstream FAWE-Folia release
 
 FROM eclipse-temurin:21-jre-jammy
 LABEL org.opencontainers.image.title="MythicPvP Pterodactyl Folia"
@@ -105,7 +83,6 @@ COPY --from=plugin-build /build/mythic-suite/suite-plugin/target/suite-plugin-*.
 COPY --from=plugin-build /build/mythic-core/target/mythic-core-*.jar /opt/folia/plugins/
 COPY --from=plugin-build /build/mythic-hub/target/mythic-hub-*.jar /opt/folia/plugins/
 COPY --from=voice-plugin-fetch /voice-plugins/ /opt/folia/voice-plugins/
-COPY --from=worldedit-fetch /worldedit/fastasyncworldedit.jar /opt/folia/plugins/fastasyncworldedit.jar
 COPY tools/docker/folia/entrypoint.sh /opt/folia/entrypoint.sh
 COPY tools/docker/folia/eula.txt /opt/folia/defaults/eula.txt
 COPY tools/docker/folia/server.properties /opt/folia/defaults/server.properties
