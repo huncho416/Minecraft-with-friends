@@ -116,8 +116,6 @@ public final class GrantService {
     }
 
     public void applyGrant(@NotNull RankGrant grant) {
-        java.util.logging.Logger.getLogger("MythicCore").info("[grant-hydrate] applying id=" + grant.id()
-                + " target=" + grant.targetName() + " rank=" + grant.rankId() + " active=" + grant.active());
         grants.removeIf(existing -> existing.id() == grant.id());
         grants.add(grant);
 

@@ -243,7 +243,6 @@ public final class SpacetimeConnection implements WebSocket.Listener {
         } catch (IllegalStateException | JsonSyntaxException e) {
             return;
         }
-        java.util.logging.Logger.getLogger("STDB").info("[ws-recv] keys=" + root.keySet() + " len=" + message.length());
         if (root.has("requestId")) {
             String requestId = root.get("requestId").getAsString();
             CompletableFuture<ReducerResult> future = reducerCalls.remove(requestId);

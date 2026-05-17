@@ -178,6 +178,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         punishmentService.setPardonNoticeListener(punishmentEnforcer::onPardonNotice);
         punishmentService.setExpiryListener(punishmentEnforcer::onExpiry);
         new net.mythicpvp.core.punishment.PunishmentSqlRefresher(punishmentService, getLogger()).start();
+        new net.mythicpvp.core.rank.GrantSqlRefresher(grantService, getLogger()).start();
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
                 new net.mythicpvp.core.punishment.PunishmentMenuText(menusConfig);
         punishmentMenuService = new PunishmentMenuService(
@@ -253,7 +254,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 org.bukkit.plugin.ServicePriority.Normal);
         commandManager.register(new net.mythicpvp.core.command.ServerCommand(transferService, messages));
         commandManager.register(new net.mythicpvp.core.command.HubCommand(
-                transferService, messages, serverIdentity.id(), serverIdentity.type(), getLogger()));
+                transferService, messages, serverIdentity.id(), serverIdentity.type(), shardRegistry, getLogger()));
         commandManager.register(new net.mythicpvp.core.command.QueueCommand(transferQueueService));
         displayService.setQueuePositionLookup(transferQueueService::position);
         displayService.setQueueStatusLookup(transferQueueService::statusFor);

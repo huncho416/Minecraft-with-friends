@@ -383,11 +383,8 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
             @NotNull TableEvent event,
             @NotNull Consumer<D> onUpsert,
             @NotNull Consumer<D> onDelete) {
-        logger.info("[hydration] " + table + " event op=" + event.operation()
-                + " payloadHead=" + event.payload().substring(0, Math.min(80, event.payload().length())));
         D row = StdbRowParser.parse(event.payload(), dtoType);
         if (row == null) {
-            logger.warning("[hydration] " + table + " parse failed for payload=" + event.payload());
             return;
         }
         try {
@@ -436,7 +433,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     }
 
     @NotNull
-    static RankGrant toRankGrant(@NotNull RankGrantRow row) {
+    public static RankGrant toRankGrant(@NotNull RankGrantRow row) {
         return new RankGrant(
                 row.id(),
                 UUID.fromString(row.target_uuid()),
