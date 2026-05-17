@@ -429,7 +429,8 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
                 row.tab_prefix(),
                 row.tab_format(),
                 row.nametag_prefix(),
-                row.nametag_format());
+                row.nametag_format(),
+                net.mythicpvp.core.rank.CoreRank.SCOPE_GLOBAL);
     }
 
     @NotNull

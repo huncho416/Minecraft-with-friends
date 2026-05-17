@@ -22,5 +22,19 @@ public record CoreRank(
         @NotNull String tabPrefix,
         @NotNull String tabFormat,
         @NotNull String nametagPrefix,
-        @NotNull String nametagFormat
-) {}
+        @NotNull String nametagFormat,
+        @NotNull String scope
+) {
+    public static final String SCOPE_GLOBAL = "global";
+
+    public boolean matchesNetwork(@NotNull String networkType) {
+        return scope.equalsIgnoreCase(SCOPE_GLOBAL) || scope.equalsIgnoreCase(networkType);
+    }
+
+    @NotNull
+    public CoreRank withScope(@NotNull String newScope) {
+        return new CoreRank(id, name, color, dye, prefix, suffix, weight, staff, donator,
+                parent, permissions, chatPrefix, chatFormat, tabPrefix, tabFormat,
+                nametagPrefix, nametagFormat, newScope.isBlank() ? SCOPE_GLOBAL : newScope);
+    }
+}

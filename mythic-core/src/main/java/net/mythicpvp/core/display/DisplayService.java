@@ -318,7 +318,8 @@ public final class DisplayService {
                 List.of(),
                 "&#D2D8E0", "%chat_prefix%%player%&7: &#FFFFFF%message%",
                 "&#D2D8E0", "%tab_prefix%%player%",
-                "&#D2D8E0", "%nametag_prefix%%player%");
+                "&#D2D8E0", "%nametag_prefix%%player%",
+                CoreRank.SCOPE_GLOBAL);
     }
 
     @NotNull

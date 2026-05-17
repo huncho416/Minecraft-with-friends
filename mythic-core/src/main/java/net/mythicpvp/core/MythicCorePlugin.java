@@ -160,6 +160,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         chatPromptService = new ChatPromptService(this);
         grantService = new GrantService(rankService, Clock.systemUTC());
         grantService.setPersistence(persistenceGateway);
+        grantService.setLocalNetworkType(serverIdentity.type());
         socialService = new SocialService(persistenceGateway, Clock.systemUTC());
 
         net.mythicpvp.suite.config.MythicConfig menusConfig = configManager.getOrCreate("menus");

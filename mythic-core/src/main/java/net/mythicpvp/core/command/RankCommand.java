@@ -96,7 +96,8 @@ public final class RankCommand extends MythicCommand {
                 "&#D2D8E0",
                 "%chat_prefix%%player%&7: &#FFFFFF%message%",
                 "&#D2D8E0", "%tab_prefix%%player%",
-                "&#D2D8E0", "%nametag_prefix%%player%");
+                "&#D2D8E0", "%nametag_prefix%%player%",
+                CoreRank.SCOPE_GLOBAL);
         rankService.register(rank);
         sender.sendMessage(MythicHex.colorize(
                 "&#9CFF9CCreated rank &#FFFFFF" + id + " &7(&f" + name + "&7). "
@@ -144,6 +145,20 @@ public final class RankCommand extends MythicCommand {
         }
         sender.sendMessage(MythicHex.colorize(
                 "&#9CFF9CUpdated &#FFFFFF" + rankId + "&#9CFF9C: &7" + field + " = &f" + value));
+    }
+
+    @Subcommand("scope")
+    @Complete({"ranks", "rank-scopes"})
+    public void scope(@NotNull CommandSender sender, @NotNull String rankId, @NotNull String scope) {
+        if (!rankService.setField(rankId, "scope", scope)) {
+            sender.sendMessage(MythicHex.colorize(
+                    "&#FF8A8AFailed to set scope. Unknown rank: &#FFFFFF" + rankId));
+            return;
+        }
+        sender.sendMessage(MythicHex.colorize(
+                "&#9CFF9CRank &#FFFFFF" + rankId + " &#9CFF9Cscope is now &#FFFFFF" + scope
+                        + "&#9CFF9C. Use &fglobal&#9CFF9C to allow on every network or a network type "
+                        + "id (e.g. &fskyblock&#9CFF9C) to restrict to that network."));
     }
 
     @Subcommand("addperm")
