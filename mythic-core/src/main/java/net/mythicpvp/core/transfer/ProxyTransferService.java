@@ -8,6 +8,9 @@ import org.jetbrains.annotations.NotNull;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Transfers a player to another shard by issuing a Paper Server Transfer
@@ -29,6 +32,18 @@ public final class ProxyTransferService {
     private final JavaPlugin plugin;
     private volatile String proxyDomain = "";
     private volatile int proxyPort = 25565;
+    private final Map<UUID, Long> recentlyTransferred = new ConcurrentHashMap<>();
+    private static final long TRANSFER_WINDOW_MILLIS = 15_000L;
+
+    public boolean isTransferring(@NotNull UUID uuid) {
+        Long when = recentlyTransferred.get(uuid);
+        if (when == null) return false;
+        if (System.currentTimeMillis() - when > TRANSFER_WINDOW_MILLIS) {
+            recentlyTransferred.remove(uuid);
+            return false;
+        }
+        return true;
+    }
 
     public ProxyTransferService(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
@@ -51,6 +66,7 @@ public final class ProxyTransferService {
     public boolean transfer(@NotNull Player player, @NotNull String targetShardId) {
         String hostname = resolveHostname(targetShardId);
         try {
+            recentlyTransferred.put(player.getUniqueId(), System.currentTimeMillis());
             player.transfer(hostname, proxyPort);
             return true;
         } catch (Throwable t) {

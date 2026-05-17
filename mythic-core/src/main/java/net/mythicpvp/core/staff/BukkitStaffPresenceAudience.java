@@ -124,12 +124,9 @@ public final class BukkitStaffPresenceAudience implements Consumer<StaffPresence
     @NotNull
     private String templateFor(@NotNull StaffPresenceType type) {
         return switch (type) {
-            case JOIN -> messages.raw("messages.staff.join",
-                    "&#888888[%server%] &#888888[%rank_color%%rank%&#888888] %rank_color%%sender% &#9CFF9Cjoined.");
-            case QUIT -> messages.raw("messages.staff.quit",
-                    "&#888888[%server%] &#888888[%rank_color%%rank%&#888888] %rank_color%%sender% &#FF8A8Adisconnected.");
-            case SWITCH -> messages.raw("messages.staff.switch",
-                    "&#888888[%from% -> %to%] &#888888[%rank_color%%rank%&#888888] %rank_color%%sender% &#9CFF9Cswitched servers.");
+            case JOIN -> "&#9CC3FF[S] %rank_color%%sender% &#9CFF9Cjoined &#FFFFFF%server%&#9CFF9C.";
+            case QUIT -> "&#9CC3FF[S] %rank_color%%sender% &#FF8A8Aleft &#FFFFFF%server%&#FF8A8A.";
+            case SWITCH -> "&#9CC3FF[S] %rank_color%%sender% &7switched from &#FFFFFF%from% &7to &#FFFFFF%to%&7.";
         };
     }
 

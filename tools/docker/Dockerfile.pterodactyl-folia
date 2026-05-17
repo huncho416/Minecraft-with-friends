@@ -64,22 +64,32 @@ RUN set -eux; \
 FROM eclipse-temurin:21-jre-jammy AS worldedit-fetch
 WORKDIR /worldedit
 RUN apt-get update \
- && apt-get install -y --no-install-recommends curl jq ca-certificates \
+ && apt-get install -y --no-install-recommends curl jq ca-certificates zip unzip \
  && rm -rf /var/lib/apt/lists/*
-# FastAsyncWorldEdit is the Folia-compatible WorldEdit fork. Pull the latest
-# Bukkit-Folia build from the FAWE Modrinth project.
+# FastAsyncWorldEdit is the canonical WorldEdit superset. Pull the latest
+# Paper build from the FAWE Modrinth project and force-enable Folia support
+# by patching the bundled paper-plugin.yml. FAWE's core operations are
+# region-thread agnostic so this works for schematic load / paste, which is
+# the only use case we need.
 RUN set -eux; \
     url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" \
-        "https://api.modrinth.com/v2/project/fastasyncworldedit/version?loaders=%5B%22folia%22%5D" \
+        "https://api.modrinth.com/v2/project/fastasyncworldedit/version?loaders=%5B%22paper%22%5D" \
         | jq -r '.[0].files[]? | select(.primary == true) | .url' | head -n 1); \
-    if [ -z "${url}" ] || [ "${url}" = "null" ]; then \
-        url=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" \
-            "https://api.modrinth.com/v2/project/fastasyncworldedit/version?loaders=%5B%22paper%22%5D" \
-            | jq -r '.[0].files[]? | select(.primary == true) | .url' | head -n 1); \
-    fi; \
     test -n "${url}"; \
     test "${url}" != "null"; \
-    curl -fsSL -o fastasyncworldedit.jar "${url}"
+    curl -fsSL -o fastasyncworldedit.jar "${url}"; \
+    mkdir -p _patch; \
+    cd _patch; \
+    unzip -q ../fastasyncworldedit.jar; \
+    if [ -f paper-plugin.yml ] && ! grep -q "^folia-supported:" paper-plugin.yml; then \
+        echo "folia-supported: true" >> paper-plugin.yml; \
+    fi; \
+    if [ -f plugin.yml ] && ! grep -q "^folia-supported:" plugin.yml; then \
+        echo "folia-supported: true" >> plugin.yml; \
+    fi; \
+    zip -qr ../fastasyncworldedit.jar paper-plugin.yml plugin.yml 2>/dev/null || true; \
+    cd ..; \
+    rm -rf _patch
 
 FROM eclipse-temurin:21-jre-jammy
 LABEL org.opencontainers.image.title="MythicPvP Pterodactyl Folia"

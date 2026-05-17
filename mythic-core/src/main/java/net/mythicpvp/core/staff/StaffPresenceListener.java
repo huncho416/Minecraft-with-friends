@@ -2,6 +2,7 @@ package net.mythicpvp.core.staff;
 
 import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.core.rank.RankService;
+import net.mythicpvp.core.transfer.ProxyTransferService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,14 +18,17 @@ public final class StaffPresenceListener implements Listener {
     private final StaffPresenceService presence;
     private final RankService ranks;
     private final GrantService grants;
+    private final ProxyTransferService transferService;
 
     public StaffPresenceListener(
             @NotNull StaffPresenceService presence,
             @NotNull RankService ranks,
-            @NotNull GrantService grants) {
+            @NotNull GrantService grants,
+            @NotNull ProxyTransferService transferService) {
         this.presence = presence;
         this.ranks = ranks;
         this.grants = grants;
+        this.transferService = transferService;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -41,6 +45,9 @@ public final class StaffPresenceListener implements Listener {
     public void onQuit(@NotNull PlayerQuitEvent event) {
         Player player = event.getPlayer();
         if (!player.hasPermission(STAFF_PERMISSION)) {
+            return;
+        }
+        if (transferService.isTransferring(player.getUniqueId())) {
             return;
         }
         var snapshot = rankSnapshot(player);

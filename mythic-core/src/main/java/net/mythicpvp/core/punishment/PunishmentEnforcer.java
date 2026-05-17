@@ -37,9 +37,17 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
     }
 
     public void enforceTargetOnly(@NotNull PunishmentRecord record) {
+        plugin.getLogger().info("[punish-remote] received record id=" + record.id()
+                + " type=" + record.type() + " target=" + record.targetName());
         MythicScheduler.runSync(plugin, () -> {
             Player target = Bukkit.getPlayer(record.targetUuid());
-            if (target == null || !target.isOnline()) return;
+            if (target == null || !target.isOnline()) {
+                plugin.getLogger().info("[punish-remote] target " + record.targetName()
+                        + " not on this shard, skipping local action");
+                return;
+            }
+            plugin.getLogger().info("[punish-remote] enforcing " + record.type()
+                    + " against local player " + target.getName());
             switch (record.type()) {
                 case KICK, BAN, TEMP_BAN, BLACKLIST -> kick(target, record);
                 case MUTE, TEMP_MUTE -> notifyMuted(target, record);

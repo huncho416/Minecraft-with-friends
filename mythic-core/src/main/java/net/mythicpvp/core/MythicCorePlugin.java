@@ -266,6 +266,18 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new net.mythicpvp.core.command.ServerCommand(transferService, messages));
         commandManager.register(new net.mythicpvp.core.command.SendCommand(transferService, crossShardPresence));
         commandManager.register(new net.mythicpvp.core.command.SummonCommand(crossShardPresence, serverIdentity.id()));
+        net.mythicpvp.core.mode.PlayerModeService modeService = new net.mythicpvp.core.mode.PlayerModeService();
+        getServer().getPluginManager().registerEvents(
+                new net.mythicpvp.core.mode.BuildPvpListener(modeService), this);
+        commandManager.register(new net.mythicpvp.core.command.BuildModeCommand(modeService));
+        commandManager.register(new net.mythicpvp.core.command.PvpModeCommand(modeService));
+        if ("skyblock".equalsIgnoreCase(serverIdentity.type())) {
+            net.mythicpvp.core.world.SkyblockWorldRules skyblockRules =
+                    new net.mythicpvp.core.world.SkyblockWorldRules();
+            getServer().getPluginManager().registerEvents(skyblockRules, this);
+            skyblockRules.applyAll();
+            getLogger().info("[skyblock] world rules applied: no natural mob spawning, no weather, silent joins");
+        }
         commandManager.register(new net.mythicpvp.core.command.HubCommand(
                 transferService, messages, serverIdentity.id(), serverIdentity.type(), shardRegistry, getLogger()));
         commandManager.register(new net.mythicpvp.core.command.QueueCommand(transferQueueService));
@@ -337,7 +349,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new net.mythicpvp.suite.config.ConfigText(
                         configManager.getOrCreate("messages"), "messages")));
         getServer().getPluginManager().registerEvents(
-                new StaffPresenceListener(staffPresenceService, rankService, grantService), this);
+                new StaffPresenceListener(staffPresenceService, rankService, grantService, transferService), this);
 
         staffModeService = new StaffModeService();
         staffModeService.load(configManager.getOrCreate("staff-mode"));
