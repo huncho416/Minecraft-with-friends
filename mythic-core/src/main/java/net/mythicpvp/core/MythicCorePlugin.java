@@ -188,9 +188,6 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new net.mythicpvp.core.session.CrossShardPresenceService(
                         rankService, grantService, serverIdentity.id(), getLogger());
         crossShardPresence.start();
-        net.mythicpvp.core.transfer.TransferRequestService transferDispatch =
-                new net.mythicpvp.core.transfer.TransferRequestService(this, transferService, getLogger());
-        transferDispatch.start();
         getServer().getPluginManager().registerEvents(
                 new net.mythicpvp.core.session.SessionPresenceListener(serverIdentity.id()), this);
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
@@ -253,6 +250,9 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         transferService.setProxyDomain(proxyDomain, proxyPort);
         getLogger().info("[transfer] using proxy domain " + proxyDomain + ":" + proxyPort
                 + " for cross-shard transfers");
+        net.mythicpvp.core.transfer.TransferRequestService transferDispatch =
+                new net.mythicpvp.core.transfer.TransferRequestService(this, transferService, getLogger());
+        transferDispatch.start();
         getServer().getServicesManager().register(
                 net.mythicpvp.core.transfer.ProxyTransferService.class,
                 transferService,
