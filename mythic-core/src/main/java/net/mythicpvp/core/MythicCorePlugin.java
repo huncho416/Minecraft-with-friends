@@ -184,6 +184,12 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         punishmentRefresher.start();
         new net.mythicpvp.core.rank.GrantSqlRefresher(grantService, getLogger()).start();
         new net.mythicpvp.core.social.SocialSqlRefresher(socialService, getLogger()).start();
+        net.mythicpvp.core.session.CrossShardPresenceService crossShardPresence =
+                new net.mythicpvp.core.session.CrossShardPresenceService(
+                        rankService, grantService, serverIdentity.id(), getLogger());
+        crossShardPresence.start();
+        getServer().getPluginManager().registerEvents(
+                new net.mythicpvp.core.session.SessionPresenceListener(serverIdentity.id()), this);
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
                 new net.mythicpvp.core.punishment.PunishmentMenuText(menusConfig);
         punishmentMenuService = new PunishmentMenuService(
@@ -258,6 +264,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 this,
                 org.bukkit.plugin.ServicePriority.Normal);
         commandManager.register(new net.mythicpvp.core.command.ServerCommand(transferService, messages));
+        commandManager.register(new net.mythicpvp.core.command.SendCommand(transferService, crossShardPresence));
+        commandManager.register(new net.mythicpvp.core.command.SummonCommand(crossShardPresence, serverIdentity.id()));
         commandManager.register(new net.mythicpvp.core.command.HubCommand(
                 transferService, messages, serverIdentity.id(), serverIdentity.type(), shardRegistry, getLogger()));
         commandManager.register(new net.mythicpvp.core.command.QueueCommand(transferQueueService));
