@@ -49,7 +49,7 @@ class GrantServiceTest {
     @Test
     void displayKeepsChatTabAndNametagFormatsSeparate() {
         RankService rankService = new RankService();
-        rankService.register(new CoreRank("owner", "Owner", "#DE2222", Material.RED_DYE, "&c", "", 1, true, false, "", List.of("*"), "chat", "chat-format", "tab", "tab-format", "name", "name-format"));
+        rankService.register(new CoreRank("owner", "Owner", "#DE2222", Material.RED_DYE, "&c", "", 1, true, false, "", List.of("*"), "chat", "chat-format", "tab", "tab-format", "name", "name-format", CoreRank.SCOPE_GLOBAL));
 
         RankDisplay display = rankService.display("owner");
 
@@ -127,6 +127,6 @@ class GrantServiceTest {
     }
 
     private static CoreRank rank(String id, int weight) {
-        return new CoreRank(id, id, "#808080", Material.LIGHT_GRAY_DYE, "&7", "", weight, false, false, "", List.of(), "&7", "%chat_prefix%%player%: %message%", "&7", "%tab_prefix%%player%", "&7", "%nametag_prefix%%player%");
+        return new CoreRank(id, id, "#808080", Material.LIGHT_GRAY_DYE, "&7", "", weight, false, false, "", List.of(), "&7", "%chat_prefix%%player%: %message%", "&7", "%tab_prefix%%player%", "&7", "%nametag_prefix%%player%", CoreRank.SCOPE_GLOBAL);
     }
 }
