@@ -18,6 +18,7 @@ public final class GrantService {
     private final Clock clock;
     private final AtomicLong ids = new AtomicLong();
     private final List<RankGrant> grants = new CopyOnWriteArrayList<>();
+    private volatile String localNetworkType = CoreRank.SCOPE_GLOBAL;
 
     private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
 
@@ -28,6 +29,10 @@ public final class GrantService {
     public GrantService(@NotNull RankService rankService, @NotNull Clock clock) {
         this.rankService = rankService;
         this.clock = clock;
+    }
+
+    public void setLocalNetworkType(@NotNull String networkType) {
+        this.localNetworkType = networkType.isBlank() ? CoreRank.SCOPE_GLOBAL : networkType;
     }
 
     public void setPersistence(@NotNull PersistenceGateway persistence) {
@@ -144,10 +149,12 @@ public final class GrantService {
 
     @NotNull
     public String activeRank(@NotNull UUID targetUuid) {
+        String network = localNetworkType;
         return active(targetUuid).stream()
                 .map(grant -> rankService.get(grant.rankId()))
                 .filter(rank -> rank != null)
-                .min(Comparator.comparingInt(CoreRank::weight))
+                .filter(rank -> rank.matchesNetwork(network))
+                .max(Comparator.comparingInt(CoreRank::weight))
                 .map(CoreRank::id)
                 .orElse("default");
     }

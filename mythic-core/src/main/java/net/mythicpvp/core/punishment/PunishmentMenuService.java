@@ -107,14 +107,70 @@ public final class PunishmentMenuService {
     }
 
     public void openHistory(@NotNull Player viewer, @NotNull String targetName, @NotNull List<PunishmentRecord> history) {
+        openHistoryFiltered(viewer, targetName, history, null, ActivityFilter.ALL);
+    }
+
+    private void openHistoryFiltered(@NotNull Player viewer, @NotNull String targetName,
+                                     @NotNull List<PunishmentRecord> history,
+                                     PunishmentType typeFilter,
+                                     @NotNull ActivityFilter activityFilter) {
         PaginatedMenu menu = PaginatedMenu.create(6, text.historyTitle(targetName));
+        long now = System.currentTimeMillis();
         for (PunishmentRecord record : history) {
+            if (typeFilter != null && record.type() != typeFilter) continue;
+            if (!activityFilter.matches(record, now)) continue;
             menu.addItem(MythicItem.create(record.pardoned() ? Material.GRAY_DYE : Material.RED_DYE)
                     .name("&#F529BE" + record.type().name())
                     .lore(recordLore(record))
                     .build());
         }
+        String typeLabel = typeFilter == null ? "All types" : typeFilter.name();
+        menu.staticSlot(47, MythicItem.create(Material.HOPPER)
+                        .name("&#FFEC8AFilter: type &7— &#FFFFFF" + typeLabel)
+                        .lore(
+                                "&7Cycle through punishment types.",
+                                "&#9CFF9CClick to change.")
+                        .build(),
+                event -> openHistoryFiltered(viewer, targetName, history, cycleType(typeFilter), activityFilter));
+        menu.staticSlot(51, MythicItem.create(Material.COMPARATOR)
+                        .name("&#FFEC8AFilter: status &7— &#FFFFFF" + activityFilter.label)
+                        .lore(
+                                "&7Toggle active / inactive / all.",
+                                "&#9CFF9CClick to change.")
+                        .build(),
+                event -> openHistoryFiltered(viewer, targetName, history, typeFilter, activityFilter.next()));
         menu.open(viewer);
+    }
+
+    private static PunishmentType cycleType(PunishmentType current) {
+        PunishmentType[] order = PunishmentType.values();
+        if (current == null) return order[0];
+        int idx = current.ordinal() + 1;
+        return idx >= order.length ? null : order[idx];
+    }
+
+    public enum ActivityFilter {
+        ALL("All"),
+        ACTIVE("Active only"),
+        INACTIVE("Inactive only");
+
+        public final String label;
+
+        ActivityFilter(String label) {
+            this.label = label;
+        }
+
+        ActivityFilter next() {
+            return values()[(ordinal() + 1) % values().length];
+        }
+
+        boolean matches(@NotNull PunishmentRecord record, long now) {
+            return switch (this) {
+                case ALL -> true;
+                case ACTIVE -> record.active(now);
+                case INACTIVE -> !record.active(now);
+            };
+        }
     }
 
     private void execute(@NotNull Player staff, @NotNull PunishmentFlow flow) {

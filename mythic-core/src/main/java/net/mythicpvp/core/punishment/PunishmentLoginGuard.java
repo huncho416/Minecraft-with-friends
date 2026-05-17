@@ -68,7 +68,7 @@ public final class PunishmentLoginGuard implements Listener {
                     "<red><bold>YOU ARE BLACKLISTED</bold>\n\n"
                     + "<white>You are blacklisted from this network.\n\n"
                     + "<white>You can appeal this punishment by joining our Discord:\n"
-                    + "<#9CC3FF><hover:show_text:'<#9CC3FF>Click to open Discord'><click:open_url:'https://discord.gg/mythicpvp'><underlined>discord.gg/mythicpvp</underlined></click></hover>");
+                    + "<#9CC3FF><underlined>discord.gg/mythicpvp</underlined>");
         }
         for (PunishmentRecord record : punishments.active(uuid)) {
             if (record.type().loginBlocking()) {
@@ -150,7 +150,7 @@ public final class PunishmentLoginGuard implements Listener {
                 + "<white>Expires: <gray>%expiry%\n"
                 + "<white>Unbanned in: <gray>%remaining%\n\n"
                 + "<white>You can appeal this punishment by joining our Discord:\n"
-                + "<#9CC3FF><hover:show_text:'<#9CC3FF>Click to open Discord'><click:open_url:'https://discord.gg/mythicpvp'><underlined>discord.gg/mythicpvp</underlined></click></hover>",
+                + "<#9CC3FF><underlined>discord.gg/mythicpvp</underlined>",
                 Map.of(
                         "type", typeLabel,
                         "reason", reasonText,

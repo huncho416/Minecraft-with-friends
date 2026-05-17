@@ -34,9 +34,14 @@ gamemodes:
   skyblock:
     title: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP"
     lines:
+      - " "
       - "&#F529BE&lR&#FD37F0&la&#F639EA&ln&#DD35C4&lk&8: &#FFFFFF%rank%"
+      - "  "
       - "&#F529BE&lI&#FD37F0&ls&#F639EA&ll&#DD35C4&la&#F63DF1&ln&#EA21FF&ld&8: &#D2D8E0%server%"
+      - "   "
       - "&#F529BE&lO&#FD37F0&ln&#F639EA&ll&#DD35C4&li&#F63DF1&ln&#EA21FF&le&8: &#FFFFFF%online%"
+      - "    "
+      - "&#D2D8E0mythicpvp.net"
   practice:
     title: "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lP&#D2D8E0&lv&#DDDBD9&lP"
     lines:

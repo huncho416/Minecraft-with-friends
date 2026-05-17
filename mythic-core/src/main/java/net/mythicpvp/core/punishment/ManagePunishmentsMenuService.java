@@ -94,24 +94,95 @@ public final class ManagePunishmentsMenuService {
     }
 
     public void openPlayerHistory(@NotNull Player viewer, @NotNull UUID targetUuid, @NotNull String targetName) {
+        openPlayerHistory(viewer, targetUuid, targetName, null, ActivityFilter.ALL);
+    }
+
+    public void openPlayerHistory(@NotNull Player viewer, @NotNull UUID targetUuid, @NotNull String targetName,
+                                   PunishmentType typeFilter, @NotNull ActivityFilter activityFilter) {
         PaginatedMenu menu = PaginatedMenu.create(6, "&#F529BEHistory &7— &#FFFFFF" + targetName);
         long now = System.currentTimeMillis();
         List<ItemStack> entries = new ArrayList<>();
         for (PunishmentRecord record : punishmentService.history(targetUuid)) {
+            if (typeFilter != null && record.type() != typeFilter) continue;
+            if (!activityFilter.matches(record, now)) continue;
             entries.add(buildRecordItem(record, now));
         }
-        for (PlayerNote note : noteService.notesFor(targetUuid)) {
-            entries.add(buildNoteItem(note));
-        }
-        if (entries.isEmpty()) {
-            viewer.sendMessage(MythicHex.colorize(
-                    "&#FFEC8ANo punishments or notes recorded for &#FFFFFF" + targetName + "&#FFEC8A."));
-            return;
+        if (typeFilter == null) {
+            for (PlayerNote note : noteService.notesFor(targetUuid)) {
+                if (!activityFilter.matchesNote(note)) continue;
+                entries.add(buildNoteItem(note));
+            }
         }
         menu.addItems(entries);
+
+        String typeLabel = typeFilter == null ? "All types" : displayName(typeFilter);
+        menu.staticSlot(47, MythicItem.create(Material.HOPPER)
+                        .name("&#FFEC8AFilter: type &7— &#FFFFFF" + typeLabel)
+                        .lore(
+                                "&7Cycle through punishment types.",
+                                "&#9CFF9CClick to change.")
+                        .build(),
+                event -> openPlayerHistory(viewer, targetUuid, targetName, cycleType(typeFilter), activityFilter));
+        menu.staticSlot(51, MythicItem.create(Material.COMPARATOR)
+                        .name("&#FFEC8AFilter: status &7— &#FFFFFF" + activityFilter.label)
+                        .lore(
+                                "&7Toggle active / inactive / all.",
+                                "&#9CFF9CClick to change.")
+                        .build(),
+                event -> openPlayerHistory(viewer, targetUuid, targetName, typeFilter, activityFilter.next()));
         menu.staticSlot(49, MythicItem.create(Material.BARRIER).name("&#FF8A8ABack").build(),
                 event -> openOverview(viewer));
+
+        if (entries.isEmpty()) {
+            menu.staticSlot(22, MythicItem.create(Material.PAPER)
+                    .name("&#FFEC8ANo entries match the current filters")
+                    .lore(
+                            "&7Adjust the filters below to broaden the view.",
+                            "",
+                            "&7Type filter: &f" + typeLabel,
+                            "&7Status filter: &f" + activityFilter.label)
+                    .build(), event -> {});
+        }
         menu.open(viewer, 0);
+    }
+
+    private static PunishmentType cycleType(PunishmentType current) {
+        PunishmentType[] order = PunishmentType.values();
+        if (current == null) return order[0];
+        int idx = current.ordinal() + 1;
+        return idx >= order.length ? null : order[idx];
+    }
+
+    public enum ActivityFilter {
+        ALL("All"),
+        ACTIVE("Active only"),
+        INACTIVE("Inactive only");
+
+        public final String label;
+
+        ActivityFilter(String label) {
+            this.label = label;
+        }
+
+        ActivityFilter next() {
+            return values()[(ordinal() + 1) % values().length];
+        }
+
+        boolean matches(@NotNull PunishmentRecord record, long now) {
+            return switch (this) {
+                case ALL -> true;
+                case ACTIVE -> record.active(now);
+                case INACTIVE -> !record.active(now);
+            };
+        }
+
+        boolean matchesNote(@NotNull PlayerNote note) {
+            return switch (this) {
+                case ALL -> true;
+                case ACTIVE -> note.active();
+                case INACTIVE -> !note.active();
+            };
+        }
     }
 
     @NotNull

@@ -111,6 +111,7 @@ class DisplayRefresherWiringTest {
                 List.of(),
                 "&7", "%chat_prefix%%player%: %message%",
                 "&7", "%tab_prefix%%player%",
-                "&7", "%nametag_prefix%%player%");
+                "&7", "%nametag_prefix%%player%",
+                CoreRank.SCOPE_GLOBAL);
     }
 }

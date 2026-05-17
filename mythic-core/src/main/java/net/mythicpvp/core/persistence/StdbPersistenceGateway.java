@@ -429,11 +429,12 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
                 row.tab_prefix(),
                 row.tab_format(),
                 row.nametag_prefix(),
-                row.nametag_format());
+                row.nametag_format(),
+                net.mythicpvp.core.rank.CoreRank.SCOPE_GLOBAL);
     }
 
     @NotNull
-    static RankGrant toRankGrant(@NotNull RankGrantRow row) {
+    public static RankGrant toRankGrant(@NotNull RankGrantRow row) {
         return new RankGrant(
                 row.id(),
                 UUID.fromString(row.target_uuid()),
@@ -502,7 +503,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     }
 
     @NotNull
-    static FriendLink toFriendLink(@NotNull FriendRow row) {
+    public static FriendLink toFriendLink(@NotNull FriendRow row) {
         return new FriendLink(
                 row.id(),
                 UUID.fromString(row.owner_uuid()),
@@ -511,7 +512,7 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     }
 
     @NotNull
-    static FriendRequest toFriendRequest(@NotNull FriendRequestRow row) {
+    public static FriendRequest toFriendRequest(@NotNull FriendRequestRow row) {
         return new FriendRequest(
                 row.id(),
                 UUID.fromString(row.from_uuid()),
@@ -520,12 +521,12 @@ public final class StdbPersistenceGateway implements PersistenceGateway {
     }
 
     @NotNull
-    static Party toParty(@NotNull PartyRow row) {
+    public static Party toParty(@NotNull PartyRow row) {
         return new Party(row.id(), UUID.fromString(row.leader_uuid()), microsToMillis(row.created_at()));
     }
 
     @NotNull
-    static PartyMember toPartyMember(@NotNull PartyMemberRow row) {
+    public static PartyMember toPartyMember(@NotNull PartyMemberRow row) {
         return new PartyMember(
                 row.id(),
                 row.party_id(),

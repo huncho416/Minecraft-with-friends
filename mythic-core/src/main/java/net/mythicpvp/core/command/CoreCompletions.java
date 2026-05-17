@@ -21,7 +21,8 @@ public final class CoreCompletions {
         commandManager.registerCompletion("shards", context -> shardRegistry.shardIds());
         commandManager.registerCompletion("grant-durations", context -> List.of("1d", "7d", "30d", "90d", "365d", "permanent"));
         commandManager.registerCompletion("grant-reasons", context -> List.of("Staff", "Rank", "Upgrade", "Purchased"));
-        commandManager.registerCompletion("rank-fields", context -> List.of("name", "color", "dye", "prefix", "suffix", "weight", "staff", "donator", "parent", "chat-prefix", "chat-format", "tab-prefix", "tab-format", "nametag-prefix", "nametag-format"));
+        commandManager.registerCompletion("rank-fields", context -> List.of("name", "color", "dye", "prefix", "suffix", "weight", "staff", "donator", "parent", "chat-prefix", "chat-format", "tab-prefix", "tab-format", "nametag-prefix", "nametag-format", "scope"));
+        commandManager.registerCompletion("rank-scopes", context -> List.of("global", "hub", "skyblock"));
         commandManager.registerCompletion("booleans", context -> List.of("true", "false"));
         commandManager.registerCompletion("punishment-categories", context -> java.util.Arrays.stream(PunishmentCategory.values()).map(Enum::name).toList());
         commandManager.registerCompletion("punishment-durations", context -> List.of("15m", "30m", "1h", "3h", "6h", "12h", "1d", "3d", "7d", "14d", "30d", "90d", "365d", "permanent"));

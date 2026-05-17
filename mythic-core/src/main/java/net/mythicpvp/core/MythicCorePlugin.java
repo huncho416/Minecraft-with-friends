@@ -160,6 +160,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         chatPromptService = new ChatPromptService(this);
         grantService = new GrantService(rankService, Clock.systemUTC());
         grantService.setPersistence(persistenceGateway);
+        grantService.setLocalNetworkType(serverIdentity.type());
         socialService = new SocialService(persistenceGateway, Clock.systemUTC());
 
         net.mythicpvp.suite.config.MythicConfig menusConfig = configManager.getOrCreate("menus");
@@ -169,13 +170,26 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         ProtocolManager protocolManager = ProtocolManager.getInstance();
         punishmentService = new PunishmentService(protocolManager, Clock.systemUTC());
         punishmentService.setPersistence(persistenceGateway);
+        net.mythicpvp.core.rank.PlayerNameColor playerNameColor =
+                new net.mythicpvp.core.rank.PlayerNameColor(rankService, grantService);
         net.mythicpvp.core.punishment.PunishmentEnforcer punishmentEnforcer =
-                new net.mythicpvp.core.punishment.PunishmentEnforcer(this, messages);
+                new net.mythicpvp.core.punishment.PunishmentEnforcer(this, messages, playerNameColor);
         punishmentService.setEnforcer(punishmentEnforcer);
         punishmentService.setPardonListener(punishmentEnforcer::onPardon);
         punishmentService.setPardonNoticeListener(punishmentEnforcer::onPardonNotice);
         punishmentService.setExpiryListener(punishmentEnforcer::onExpiry);
-        new net.mythicpvp.core.punishment.PunishmentSqlRefresher(punishmentService, getLogger()).start();
+        net.mythicpvp.core.punishment.PunishmentSqlRefresher punishmentRefresher =
+                new net.mythicpvp.core.punishment.PunishmentSqlRefresher(punishmentService, getLogger());
+        punishmentRefresher.setRemoteEnforcer(punishmentEnforcer::enforceTargetOnly);
+        punishmentRefresher.start();
+        new net.mythicpvp.core.rank.GrantSqlRefresher(grantService, getLogger()).start();
+        new net.mythicpvp.core.social.SocialSqlRefresher(socialService, getLogger()).start();
+        net.mythicpvp.core.session.CrossShardPresenceService crossShardPresence =
+                new net.mythicpvp.core.session.CrossShardPresenceService(
+                        rankService, grantService, serverIdentity.id(), getLogger());
+        crossShardPresence.start();
+        getServer().getPluginManager().registerEvents(
+                new net.mythicpvp.core.session.SessionPresenceListener(serverIdentity.id()), this);
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
                 new net.mythicpvp.core.punishment.PunishmentMenuText(menusConfig);
         punishmentMenuService = new PunishmentMenuService(
@@ -250,8 +264,10 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 this,
                 org.bukkit.plugin.ServicePriority.Normal);
         commandManager.register(new net.mythicpvp.core.command.ServerCommand(transferService, messages));
+        commandManager.register(new net.mythicpvp.core.command.SendCommand(transferService, crossShardPresence));
+        commandManager.register(new net.mythicpvp.core.command.SummonCommand(crossShardPresence, serverIdentity.id()));
         commandManager.register(new net.mythicpvp.core.command.HubCommand(
-                transferService, messages, serverIdentity.id(), serverIdentity.type(), getLogger()));
+                transferService, messages, serverIdentity.id(), serverIdentity.type(), shardRegistry, getLogger()));
         commandManager.register(new net.mythicpvp.core.command.QueueCommand(transferQueueService));
         displayService.setQueuePositionLookup(transferQueueService::position);
         displayService.setQueueStatusLookup(transferQueueService::statusFor);

@@ -204,7 +204,9 @@ public final class BukkitPacketRenderer implements PacketRenderer {
 
     @NotNull
     private String teamName(int sortWeight, @NotNull UUID uuid) {
-        return ("%03d_%s".formatted(Math.max(0, Math.min(sortWeight, 999)), uuid.toString().replace("-", ""))).substring(0, 16);
+        int clamped = Math.max(0, Math.min(sortWeight, 999));
+        int inverted = 999 - clamped;
+        return ("%03d_%s".formatted(inverted, uuid.toString().replace("-", ""))).substring(0, 16);
     }
 
     private void warnOnce(@NotNull String key, @NotNull Exception failure) {
