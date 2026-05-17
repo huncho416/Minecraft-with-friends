@@ -28,6 +28,10 @@ public final class SummonCommand extends MythicCommand {
     @Default
     @Complete({"players"})
     public void execute(@NotNull Player sender, @NotNull String targetName) {
+        if (sender.getName().equalsIgnoreCase(targetName)) {
+            sender.sendMessage(MythicHex.colorize("&#FF8A8AYou cannot summon yourself."));
+            return;
+        }
         Player target = Bukkit.getPlayerExact(targetName);
         if (target != null && target.isOnline()) {
             target.teleport(sender.getLocation());

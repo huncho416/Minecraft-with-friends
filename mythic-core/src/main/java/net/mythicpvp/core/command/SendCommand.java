@@ -30,6 +30,10 @@ public final class SendCommand extends MythicCommand {
     @Default
     @Complete({"players", "shards"})
     public void execute(@NotNull CommandSender sender, @NotNull String targetName, @NotNull String shardId) {
+        if (sender instanceof Player player && player.getName().equalsIgnoreCase(targetName)) {
+            sender.sendMessage(MythicHex.colorize("&#FF8A8AYou cannot send yourself."));
+            return;
+        }
         Player target = Bukkit.getPlayerExact(targetName);
         if (target != null && target.isOnline()) {
             if (transferService.transfer(target, shardId)) {
