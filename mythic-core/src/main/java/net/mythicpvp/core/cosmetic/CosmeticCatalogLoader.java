@@ -49,9 +49,10 @@ public final class CosmeticCatalogLoader {
                 String rarity = entry.getString("rarity", "COMMON");
                 boolean tradable = entry.getBoolean("tradable", true);
                 boolean limited = entry.getBoolean("limited", false);
+                String format = entry.getString("format");
 
                 manager.register(new CosmeticManager.Cosmetic(
-                        id, displayName, type, description, itemModel, rarity, tradable, limited));
+                        id, displayName, type, description, itemModel, rarity, tradable, limited, format));
                 count++;
             }
         }

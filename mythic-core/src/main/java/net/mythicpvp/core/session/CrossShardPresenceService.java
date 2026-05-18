@@ -168,6 +168,10 @@ public final class CrossShardPresenceService {
         return null;
     }
 
+    public int totalOnline() {
+        return previous.size();
+    }
+
     private record SessionSnapshot(@NotNull String username, @NotNull String shardId) {}
 
     private record StaffLabel(@NotNull String colorTag) {}

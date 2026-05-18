@@ -101,6 +101,11 @@ public final class ReportService {
         }
         report.markResolved(resolverUuid, resolverName, resolution, System.currentTimeMillis());
         flush();
+        try {
+            SpacetimeConnection connection = DatabaseManager.getInstance().getPrimary();
+            new MythicSchema(connection).reportResolve(id, resolverUuid, resolverName, resolution);
+        } catch (IllegalStateException ignored) {
+        }
         return true;
     }
 

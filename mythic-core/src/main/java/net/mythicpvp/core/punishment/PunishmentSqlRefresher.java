@@ -28,7 +28,7 @@ public final class PunishmentSqlRefresher {
     private final Map<Long, Boolean> wasActive = new HashMap<>();
     private volatile boolean firstPollComplete = false;
     private volatile Consumer<PunishmentRecord> remoteEnforcer = record -> {};
-    private volatile Consumer<PunishmentRecord> remotePardon = record -> {};
+    private volatile java.util.function.BiConsumer<PunishmentRecord, String> remotePardon = (r, s) -> {};
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = new Thread(r, "mythic-punishment-refresh");
         t.setDaemon(true);
@@ -44,7 +44,7 @@ public final class PunishmentSqlRefresher {
         this.remoteEnforcer = enforcer;
     }
 
-    public void setRemotePardon(@NotNull Consumer<PunishmentRecord> pardon) {
+    public void setRemotePardon(@NotNull java.util.function.BiConsumer<PunishmentRecord, String> pardon) {
         this.remotePardon = pardon;
     }
 
@@ -103,9 +103,24 @@ public final class PunishmentSqlRefresher {
             }
             if (previously != null && previously && !isActive && record.pardoned() && baselineDone
                     && !punishments.wasPardonedLocallyRecently(record.targetUuid())) {
-                remotePardon.accept(record);
+                String pardonerName = pardonerNameFor(row);
+                remotePardon.accept(record, pardonerName);
             }
         }
         firstPollComplete = true;
+    }
+
+    private static String pardonerNameFor(@NotNull PunishmentRow row) {
+        String pardonedBy = row.pardoned_by();
+        if (pardonedBy == null || pardonedBy.isBlank()) return "Console";
+        if ("SYSTEM".equalsIgnoreCase(pardonedBy)) return "Console";
+        try {
+            java.util.UUID uuid = java.util.UUID.fromString(pardonedBy);
+            org.bukkit.OfflinePlayer op = org.bukkit.Bukkit.getOfflinePlayer(uuid);
+            String name = op.getName();
+            return name == null ? "Staff" : name;
+        } catch (RuntimeException e) {
+            return pardonedBy;
+        }
     }
 }

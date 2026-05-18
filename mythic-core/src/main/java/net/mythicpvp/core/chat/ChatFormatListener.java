@@ -7,6 +7,8 @@ import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.suite.config.MythicConfig;
+import net.mythicpvp.suite.cosmetic.CosmeticManager;
+import net.mythicpvp.suite.cosmetic.CosmeticType;
 import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -48,14 +50,59 @@ public final class ChatFormatListener implements Listener {
         String messageColor = effectiveMessageColor(sender, rank, chosenColor);
         String prefix = rankPrefix(rank);
         String playerColor = playerNameColor(rank);
+        String cleanMessage = stripColorCodes(sanitize(message));
+        String chatTagSegment = cosmeticTagSegment(uuid);
+        String renderedMessage = cosmeticColorMessage(uuid, cleanMessage);
+        if (renderedMessage == null) {
+            renderedMessage = messageColor + cleanMessage;
+        }
         String rendered = template
-                .replace("%player%", prefix + playerColor + sender.getName())
-                .replace("%message%", messageColor + stripColorCodes(sanitize(message)))
+                .replace("%player%", chatTagSegment + prefix + playerColor + sender.getName())
+                .replace("%message%", renderedMessage)
                 .replace("%chat_prefix%", sanitize(prefix))
+                .replace("%chat_tag%", chatTagSegment)
                 .replace("%rank%", rank == null ? "" : rank.name())
                 .replace("%rank_color%", playerColor);
         Component component = MythicHex.colorize(rendered);
         event.renderer((source, displayName, msg, viewer) -> component);
+    }
+
+    @NotNull
+    private String cosmeticTagSegment(@NotNull UUID uuid) {
+        String format = equippedFormat(uuid, CosmeticType.CHAT_TAG);
+        if (format == null || format.isBlank()) {
+            return "";
+        }
+        return format + " ";
+    }
+
+    @Nullable
+    private String cosmeticColorMessage(@NotNull UUID uuid, @NotNull String cleanMessage) {
+        String format = equippedFormat(uuid, CosmeticType.CHAT_COLOR);
+        if (format == null || format.isBlank()) {
+            return null;
+        }
+        if (!format.contains("%message%")) {
+            return format + cleanMessage;
+        }
+        return format.replace("%message%", cleanMessage);
+    }
+
+    @Nullable
+    private String equippedFormat(@NotNull UUID uuid, @NotNull CosmeticType type) {
+        CosmeticManager manager = CosmeticManager.getInstance();
+        String equippedId = manager.getEquipped(uuid, type);
+        if (equippedId == null) {
+            return null;
+        }
+        if (!manager.ownsCosmetic(uuid, equippedId)) {
+            return null;
+        }
+        CosmeticManager.Cosmetic cosmetic = manager.get(equippedId);
+        if (cosmetic == null) {
+            return null;
+        }
+        return cosmetic.format();
     }
 
     @NotNull

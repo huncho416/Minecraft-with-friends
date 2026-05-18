@@ -19,11 +19,13 @@ where
     #[serde(untagged)]
     enum TimestampRaw {
         Int(i64),
+        Arr(Vec<i64>),
         Map { __timestamp_micros_since_unix_epoch__: i64 },
     }
 
     match TimestampRaw::deserialize(deserializer)? {
         TimestampRaw::Int(i) => Ok(i),
+        TimestampRaw::Arr(v) => Ok(v.into_iter().next().unwrap_or(0)),
         TimestampRaw::Map { __timestamp_micros_since_unix_epoch__ } => Ok(__timestamp_micros_since_unix_epoch__),
     }
 }
@@ -117,6 +119,92 @@ pub fn spawn(handle: StdbHandle, view: RegistryView) -> tokio::task::JoinHandle<
         }
         debug!("registry_view: stream ended");
     })
+}
+
+/// Polls the STDB HTTP SQL endpoint every 5 seconds and refreshes the view.
+/// Runs alongside the WebSocket subscription as a safety net: the WS
+/// initial-state replay sometimes silently drops rows on this build of
+/// SpacetimeDB, so we re-establish ground truth from SQL on every tick.
+pub fn spawn_http_poll(stdb_http_url: String, view: RegistryView) -> tokio::task::JoinHandle<()> {
+    tokio::spawn(async move {
+        let client = match reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(3))
+            .build()
+        {
+            Ok(c) => c,
+            Err(e) => {
+                warn!("registry_view http poll: client build failed: {e}");
+                return;
+            }
+        };
+        let endpoint = format!("{}/v1/database/mythicpvp/sql", stdb_http_url.trim_end_matches('/'));
+        let mut tick = tokio::time::interval(std::time::Duration::from_secs(5));
+        loop {
+            tick.tick().await;
+            match client.post(&endpoint)
+                .header("Content-Type", "text/plain")
+                .body("SELECT * FROM server_registry")
+                .send()
+                .await
+            {
+                Ok(resp) => match resp.text().await {
+                    Ok(body) => apply_sql_snapshot(&body, &view),
+                    Err(e) => debug!("registry_view http poll: body read failed: {e}"),
+                },
+                Err(e) => debug!("registry_view http poll: request failed: {e}"),
+            }
+        }
+    })
+}
+
+fn apply_sql_snapshot(body: &str, view: &RegistryView) {
+    let root = match serde_json::from_str::<serde_json::Value>(body) {
+        Ok(v) => v,
+        Err(e) => {
+            debug!("registry_view http poll: parse failed: {e}");
+            return;
+        }
+    };
+    let table = match root.get(0).and_then(|t| t.get("rows")).and_then(|r| r.as_array()) {
+        Some(r) => r,
+        None => return,
+    };
+    let columns = match root.get(0).and_then(|t| t.get("schema")).and_then(|s| s.get("elements")).and_then(|e| e.as_array()) {
+        Some(c) => c,
+        None => return,
+    };
+    let mut seen = std::collections::HashSet::new();
+    for row_val in table {
+        let row_arr = match row_val.as_array() {
+            Some(a) => a,
+            None => continue,
+        };
+        let mut obj = serde_json::Map::new();
+        for (i, col) in columns.iter().enumerate() {
+            let name = col.get("name").and_then(|n| n.get("some")).and_then(|s| s.as_str());
+            if let (Some(name), Some(value)) = (name, row_arr.get(i)) {
+                obj.insert(name.to_string(), value.clone());
+            }
+        }
+        let payload = serde_json::Value::Object(obj).to_string();
+        match serde_json::from_str::<ServerEntry>(&payload) {
+            Ok(entry) => {
+                seen.insert(entry.shard_id.clone());
+                if entry.status.eq_ignore_ascii_case("HEALTHY") {
+                    view.insert_entry(entry);
+                } else {
+                    view.remove_entry(&entry.shard_id);
+                }
+            }
+            Err(e) => debug!("registry_view http poll: row decode failed: {e}"),
+        }
+    }
+    let known: Vec<String> = view.snapshot().into_iter().map(|e| e.shard_id).collect();
+    for id in known {
+        if !seen.contains(&id) {
+            view.remove_entry(&id);
+        }
+    }
 }
 
 #[cfg(test)]

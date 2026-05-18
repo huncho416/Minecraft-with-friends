@@ -37,10 +37,10 @@ public final class CosmeticMenuService {
 
         Material[] typeMaterials = {
                 Material.LEATHER_HELMET, Material.NAME_TAG, Material.BLAZE_POWDER,
-                Material.DIAMOND_SWORD, Material.FIREWORK_ROCKET, Material.PAPER
+                Material.DIAMOND_SWORD, Material.FIREWORK_ROCKET, Material.PAPER, Material.INK_SAC
         };
         CosmeticType[] types = CosmeticType.values();
-        int[] slots = {10, 11, 12, 13, 14, 15};
+        int[] slots = {10, 11, 12, 13, 14, 15, 16};
 
         for (int i = 0; i < types.length && i < slots.length; i++) {
             CosmeticType type = types[i];
@@ -110,14 +110,22 @@ public final class CosmeticMenuService {
             boolean isEquipped = cosmetic.id().equalsIgnoreCase(equippedId);
 
             String status = isEquipped ? text.equipped() : (owns ? text.owned() : text.notOwned());
+            String preview = previewFor(cosmetic);
+
+            List<String> lore = new java.util.ArrayList<>();
+            lore.add("&7Rarity: &f" + cosmetic.rarity());
+            lore.add("&7" + cosmetic.description());
+            if (preview != null) {
+                lore.add("&7Preview: " + preview);
+            }
+            lore.add("&7Status: " + status);
+            if (owns) {
+                lore.add(text.clickToView());
+            }
 
             menu.addItem(MythicItem.create(owns ? Material.LIME_DYE : Material.GRAY_DYE)
                     .name("&#F529BE" + cosmetic.displayName())
-                    .lore(List.of(
-                            "&7Rarity: &f" + cosmetic.rarity(),
-                            "&7" + cosmetic.description(),
-                            "&7Status: " + status,
-                            owns ? text.clickToView() : ""))
+                    .lore(lore)
                     .build(), event -> {
                 if (owns) openDetail(player, cosmetic);
             });
@@ -158,14 +166,20 @@ public final class CosmeticMenuService {
 
         MythicMenu menu = MythicMenu.create(3, text.detailTitle(cosmetic.displayName()));
 
+        String preview = previewFor(cosmetic);
+        List<String> infoLore = new java.util.ArrayList<>();
+        infoLore.add("&7Type: &f" + cosmetic.type().getDisplayName());
+        infoLore.add("&7Rarity: &f" + cosmetic.rarity());
+        infoLore.add("&7" + cosmetic.description());
+        if (preview != null) {
+            infoLore.add("&7Preview: " + preview);
+        }
+        infoLore.add("&7Tradable: &f" + (cosmetic.tradable() ? "Yes" : "No"));
+        infoLore.add("&7Limited: &f" + (cosmetic.limited() ? "Yes" : "No"));
+
         menu.slot(11, MythicItem.create(Material.BOOK)
                 .name("&#F529BE" + cosmetic.displayName())
-                .lore(List.of(
-                        "&7Type: &f" + cosmetic.type().getDisplayName(),
-                        "&7Rarity: &f" + cosmetic.rarity(),
-                        "&7" + cosmetic.description(),
-                        "&7Tradable: &f" + (cosmetic.tradable() ? "Yes" : "No"),
-                        "&7Limited: &f" + (cosmetic.limited() ? "Yes" : "No")))
+                .lore(infoLore)
                 .build());
 
         if (isEquipped) {
@@ -253,6 +267,18 @@ public final class CosmeticMenuService {
                 .build(), event -> openCrates(player));
 
         menu.open(player);
+    }
+
+    @org.jetbrains.annotations.Nullable
+    private String previewFor(@NotNull CosmeticManager.Cosmetic cosmetic) {
+        String format = cosmetic.format();
+        if (format == null || format.isBlank()) {
+            return null;
+        }
+        if (cosmetic.type() == CosmeticType.CHAT_COLOR) {
+            return format.replace("%message%", "Hello world");
+        }
+        return format;
     }
 
     public enum BrowseFilter {

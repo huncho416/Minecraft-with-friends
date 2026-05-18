@@ -181,8 +181,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         net.mythicpvp.core.punishment.PunishmentSqlRefresher punishmentRefresher =
                 new net.mythicpvp.core.punishment.PunishmentSqlRefresher(punishmentService, getLogger());
         punishmentRefresher.setRemoteEnforcer(punishmentEnforcer::enforceTargetOnly);
-        punishmentRefresher.setRemotePardon(record -> punishmentEnforcer.onPardonNotice(
-                new net.mythicpvp.core.punishment.PardonNotice(record, record.staffName(), record.silent())));
+        punishmentRefresher.setRemotePardon((record, pardonerName) -> punishmentEnforcer.onPardonNotice(
+                new net.mythicpvp.core.punishment.PardonNotice(record, pardonerName, record.silent())));
         punishmentRefresher.start();
         new net.mythicpvp.core.rank.GrantSqlRefresher(grantService, getLogger()).start();
         new net.mythicpvp.core.social.SocialSqlRefresher(socialService, getLogger()).start();
@@ -225,6 +225,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         displayService.loadTemplates(
                 configManager.getOrCreate("tablist"),
                 configManager.getOrCreate("scoreboard"));
+        displayService.setPresenceCounter(crossShardPresence::totalOnline);
         rankService.setDisplayRefresher(displayService::applyAll);
         grantService.setDisplayRefresher(displayService::refresh);
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(displayService), this);
@@ -236,6 +237,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         net.mythicpvp.core.transfer.ShardRegistry shardRegistry =
                 new net.mythicpvp.core.transfer.ShardRegistry(getLogger());
         shardRegistry.subscribe();
+        displayService.setShardRegistry(shardRegistry);
         getServer().getServicesManager().register(
                 net.mythicpvp.core.transfer.ShardRegistry.class,
                 shardRegistry,
@@ -324,15 +326,6 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new HelpCommand(essentialsService));
         commandManager.register(new net.mythicpvp.core.command.ListCommand(rankService, grantService));
         commandManager.register(new DiscordCommand(essentialsService));
-        commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry));
-        commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
-        commandManager.register(new MailCommand(socialService, messages));
-        PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
-        commandManager.register(privateMessages);
-        commandManager.register(new PrivateMessageCommand.Reply(privateMessages));
-        getServer().getPluginManager().registerEvents(new MailLoginListener(socialService, messages), this);
-        getServer().getPluginManager().registerEvents(new FriendLoginListener(socialService, messages), this);
-        getServer().getPluginManager().registerEvents(new OfflineRewardService(socialService, messages), this);
         staffChannelService = new StaffChannelService(protocolManager, serverIdentity.id());
 
         String staffFormat = messages.raw(
@@ -346,6 +339,20 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                         staffChannelService, serverIdentity.id(), getLogger());
         staffChannelService.setRelay(staffChatRelay);
         staffChatRelay.start();
+
+        commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry, staffChatRelay));
+        net.mythicpvp.core.command.DisguiseMenuService disguiseMenuService =
+                new net.mythicpvp.core.command.DisguiseMenuService(this, rankService, chatPromptService);
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand(disguiseMenuService));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand.Undisguise());
+        commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
+        commandManager.register(new MailCommand(socialService, messages));
+        PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
+        commandManager.register(privateMessages);
+        commandManager.register(new PrivateMessageCommand.Reply(privateMessages));
+        getServer().getPluginManager().registerEvents(new MailLoginListener(socialService, messages), this);
+        getServer().getPluginManager().registerEvents(new FriendLoginListener(socialService, messages), this);
+        getServer().getPluginManager().registerEvents(new OfflineRewardService(socialService, messages), this);
 
         commandManager.register(new StaffChatCommand.Staff(staffChannelService, rankService, grantService));
         commandManager.register(new StaffChatCommand.Builder(staffChannelService, rankService, grantService));
@@ -438,6 +445,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new java.io.File(getDataFolder(), "reports-data.yml"), getLogger()));
         net.mythicpvp.core.report.ReportMenuService reportMenuService =
                 new net.mythicpvp.core.report.ReportMenuService(reportService, chatPromptService, serverIdentity.id());
+        reportMenuService.setPresence(crossShardPresence);
+        reportMenuService.setShardRegistry(shardRegistry);
         net.mythicpvp.core.command.ReportConfig reportConfig =
                 new net.mythicpvp.core.command.ReportConfig(configManager.getOrCreate("reports"));
         commandManager.register(new net.mythicpvp.core.command.ReportCommand(

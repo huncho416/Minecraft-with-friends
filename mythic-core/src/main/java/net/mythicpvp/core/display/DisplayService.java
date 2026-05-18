@@ -40,6 +40,10 @@ public final class DisplayService {
     private Function<UUID, Integer> queuePositionLookup;
     private Function<UUID, net.mythicpvp.core.transfer.TransferQueueService.QueueStatus> queueStatusLookup;
 
+    public void setShardRegistry(@NotNull net.mythicpvp.core.transfer.ShardRegistry registry) {
+        // legacy hook; presence counter takes precedence
+    }
+
     public DisplayService(
             @NotNull JavaPlugin plugin,
             @NotNull RankService rankService,
@@ -298,7 +302,21 @@ public final class DisplayService {
 
     @NotNull
     IntSupplier onlineCounter() {
-        return () -> Bukkit.getOnlinePlayers().size();
+        return () -> {
+            if (presenceCounter != null) {
+                int network = presenceCounter.getAsInt();
+                if (network > 0) {
+                    return network;
+                }
+            }
+            return Bukkit.getOnlinePlayers().size();
+        };
+    }
+
+    private IntSupplier presenceCounter;
+
+    public void setPresenceCounter(@NotNull IntSupplier counter) {
+        this.presenceCounter = counter;
     }
 
     private int onlineCount() {

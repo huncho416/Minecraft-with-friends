@@ -115,15 +115,24 @@ public class MythicBoard {
 
     private void rebuild() {
         if (scoreboard != null && objective != null) {
-            for (String entry : scoreboard.getEntries()) {
-                scoreboard.resetScores(entry);
-            }
+            java.util.LinkedHashMap<String, Integer> desired = new java.util.LinkedHashMap<>();
             for (int i = 0; i < lines.size(); i++) {
                 String entry = MythicHex.toLegacy(MythicHex.font(fontKey, lines.get(i)));
                 if (entry.isBlank()) {
                     entry = " ".repeat(i + 1);
                 }
-                objective.getScore(entry).setScore(lines.size() - i);
+                desired.put(entry, lines.size() - i);
+            }
+            for (String existing : new java.util.ArrayList<>(scoreboard.getEntries())) {
+                if (!desired.containsKey(existing)) {
+                    scoreboard.resetScores(existing);
+                }
+            }
+            for (var e : desired.entrySet()) {
+                org.bukkit.scoreboard.Score score = objective.getScore(e.getKey());
+                if (!score.isScoreSet() || score.getScore() != e.getValue()) {
+                    score.setScore(e.getValue());
+                }
             }
         }
         emit();
