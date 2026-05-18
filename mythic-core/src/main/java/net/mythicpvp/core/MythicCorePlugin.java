@@ -326,17 +326,6 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new HelpCommand(essentialsService));
         commandManager.register(new net.mythicpvp.core.command.ListCommand(rankService, grantService));
         commandManager.register(new DiscordCommand(essentialsService));
-        commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry, staffChatRelay));
-        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand());
-        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand.Undisguise());
-        commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
-        commandManager.register(new MailCommand(socialService, messages));
-        PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
-        commandManager.register(privateMessages);
-        commandManager.register(new PrivateMessageCommand.Reply(privateMessages));
-        getServer().getPluginManager().registerEvents(new MailLoginListener(socialService, messages), this);
-        getServer().getPluginManager().registerEvents(new FriendLoginListener(socialService, messages), this);
-        getServer().getPluginManager().registerEvents(new OfflineRewardService(socialService, messages), this);
         staffChannelService = new StaffChannelService(protocolManager, serverIdentity.id());
 
         String staffFormat = messages.raw(
@@ -350,6 +339,18 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                         staffChannelService, serverIdentity.id(), getLogger());
         staffChannelService.setRelay(staffChatRelay);
         staffChatRelay.start();
+
+        commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry, staffChatRelay));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand());
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand.Undisguise());
+        commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
+        commandManager.register(new MailCommand(socialService, messages));
+        PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
+        commandManager.register(privateMessages);
+        commandManager.register(new PrivateMessageCommand.Reply(privateMessages));
+        getServer().getPluginManager().registerEvents(new MailLoginListener(socialService, messages), this);
+        getServer().getPluginManager().registerEvents(new FriendLoginListener(socialService, messages), this);
+        getServer().getPluginManager().registerEvents(new OfflineRewardService(socialService, messages), this);
 
         commandManager.register(new StaffChatCommand.Staff(staffChannelService, rankService, grantService));
         commandManager.register(new StaffChatCommand.Builder(staffChannelService, rankService, grantService));
