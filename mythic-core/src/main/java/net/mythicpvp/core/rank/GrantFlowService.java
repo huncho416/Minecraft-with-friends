@@ -31,7 +31,7 @@ public final class GrantFlowService {
     }
 
     public void openRankSelection(@NotNull Player executor, @NotNull GrantFlow flow) {
-        PaginatedMenu menu = PaginatedMenu.create(6, text.grantRankTitle(flow.targetName()));
+        PaginatedMenu menu = PaginatedMenu.create(5, text.grantRankTitle(flow.targetName()));
         for (CoreRank rank : rankService.all()) {
             menu.addItem(MythicItem.create(rank.dye())
                     .name(asAmpHex(rank.color()) + rank.name())

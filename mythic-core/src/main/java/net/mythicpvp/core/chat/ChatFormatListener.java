@@ -159,7 +159,12 @@ public final class ChatFormatListener implements Listener {
         if (prefix == null || prefix.isBlank()) {
             return "";
         }
-        return MythicHex.normalizeBareHex(prefix.stripTrailing()) + " ";
+        return MythicHex.normalizeBareHex(collapseTrailingSpacing(prefix)) + " ";
+    }
+
+    @NotNull
+    private static String collapseTrailingSpacing(@NotNull String prefix) {
+        return prefix.replaceAll("(\\s+)((?:&?#[0-9A-Fa-f]{6}|&[0-9a-fk-orK-OR])+)\\s*$", "$2").stripTrailing();
     }
 
     @NotNull
