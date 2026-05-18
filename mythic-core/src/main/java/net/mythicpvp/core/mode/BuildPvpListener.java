@@ -19,9 +19,15 @@ public final class BuildPvpListener implements Listener {
     public static final String PVP_BYPASS = "mythic.core.pvp";
 
     private final PlayerModeService modes;
+    private final boolean enforcePvpToggle;
 
     public BuildPvpListener(@NotNull PlayerModeService modes) {
+        this(modes, true);
+    }
+
+    public BuildPvpListener(@NotNull PlayerModeService modes, boolean enforcePvpToggle) {
         this.modes = modes;
+        this.enforcePvpToggle = enforcePvpToggle;
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -46,6 +52,7 @@ public final class BuildPvpListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onDamage(@NotNull EntityDamageByEntityEvent event) {
+        if (!enforcePvpToggle) return;
         Player attacker = resolveAttacker(event.getDamager());
         Player victim = event.getEntity() instanceof Player p ? p : null;
         if (attacker == null || victim == null) return;

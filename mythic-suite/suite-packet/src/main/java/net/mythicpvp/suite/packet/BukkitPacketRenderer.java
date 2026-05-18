@@ -92,7 +92,12 @@ public final class BukkitPacketRenderer implements PacketRenderer {
             throws ReflectiveOperationException {
         Object team = newPlayerTeam(teamName(state.sortWeight(), state.target()), state.prefix(), state.suffix());
         Player target = Bukkit.getPlayer(state.target());
-        addPlayerToTeam(team, target == null ? state.displayName() : target.getName());
+        String entryName = state.displayName();
+        if ((entryName == null || entryName.isBlank()) && target != null) {
+            entryName = target.getName();
+        }
+        if (entryName == null) entryName = state.target().toString();
+        addPlayerToTeam(team, entryName);
         send(viewer, playerTeamPacket(team, true));
     }
 
