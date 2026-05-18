@@ -105,6 +105,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private GrantService grantService;
     private GrantFlowService grantFlowService;
     private ChatPromptService chatPromptService;
+    private net.mythicpvp.core.staff.AdminNotifyService adminNotifyService;
     private CoreMessages messages;
     private CoreEssentialsService essentialsService;
     private PersistenceGateway persistenceGateway;
@@ -339,12 +340,30 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                         staffChannelService, serverIdentity.id(), getLogger());
         staffChannelService.setRelay(staffChatRelay);
         staffChatRelay.start();
+        adminNotifyService = new net.mythicpvp.core.staff.AdminNotifyService(staffChatRelay, serverIdentity.id());
+        net.mythicpvp.suite.scheduler.MythicScheduler.runLater(this, () -> adminNotifyService.announceStartup(), 40L);
 
         commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry, staffChatRelay));
+        net.mythicpvp.core.disguise.DisguiseApplier disguiseApplier =
+                new net.mythicpvp.core.disguise.DisguiseApplier(this);
+        getServer().getPluginManager().registerEvents(disguiseApplier, this);
+        net.mythicpvp.core.disguise.MojangSkinService mojangSkinService =
+                new net.mythicpvp.core.disguise.MojangSkinService(this);
+        net.mythicpvp.core.disguise.DisguiseTypeRegistry disguiseTypeRegistry =
+                new net.mythicpvp.core.disguise.DisguiseTypeRegistry();
         net.mythicpvp.core.command.DisguiseMenuService disguiseMenuService =
-                new net.mythicpvp.core.command.DisguiseMenuService(this, rankService, chatPromptService);
-        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand(disguiseMenuService));
-        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand.Undisguise());
+                new net.mythicpvp.core.command.DisguiseMenuService(this, rankService, chatPromptService, disguiseApplier);
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand(disguiseMenuService, disguiseApplier));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand.Undisguise(disguiseApplier));
+        commandManager.register(new net.mythicpvp.core.command.DisguisePlayerCommand(disguiseApplier, disguiseTypeRegistry, mojangSkinService, this));
+        commandManager.register(new net.mythicpvp.core.command.UndisguisePlayerCommand(disguiseApplier));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseRadiusCommand(disguiseApplier, disguiseTypeRegistry, mojangSkinService, this));
+        commandManager.register(new net.mythicpvp.core.command.UndisguiseRadiusCommand(disguiseApplier));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCloneCommand(disguiseApplier, mojangSkinService, this));
+        commandManager.register(new net.mythicpvp.core.command.CopyDisguiseCommand(disguiseApplier));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseModifyCommand(disguiseApplier, mojangSkinService, this));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseHelpCommand());
+        commandManager.register(new net.mythicpvp.core.command.DisguiseViewSelfCommand());
         commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
         commandManager.register(new MailCommand(socialService, messages));
         PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
@@ -363,9 +382,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new StaffChatToggleListener(staffChannelService, rankService, grantService), this);
         staffPresenceService = new StaffPresenceService(protocolManager, serverIdentity.id());
 
-        staffPresenceService.addAudience(new BukkitStaffPresenceAudience(this,
-                new net.mythicpvp.suite.config.ConfigText(
-                        configManager.getOrCreate("messages"), "messages")));
+        staffPresenceService.addAudience(new BukkitStaffPresenceAudience(this));
         getServer().getPluginManager().registerEvents(
                 new StaffPresenceListener(staffPresenceService, rankService, grantService, transferService), this);
 
@@ -403,6 +420,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         net.mythicpvp.core.cosmetic.CosmeticMenuService cosmeticMenuService =
                 new net.mythicpvp.core.cosmetic.CosmeticMenuService(cosmeticService, crateService, cosmeticMenuText);
         commandManager.register(new net.mythicpvp.core.command.CosmeticsCommand(cosmeticMenuService));
+        commandManager.register(new net.mythicpvp.core.command.CosmeticCommand(cosmeticService));
         getServer().getPluginManager().registerEvents(
                 new net.mythicpvp.core.cosmetic.CosmeticRedeemListener(cosmeticService), this);
 
@@ -524,6 +542,14 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
     @Override
     public void disable() {
+
+        if (adminNotifyService != null) {
+            try {
+                adminNotifyService.announceShutdown();
+            } catch (RuntimeException e) {
+                getLogger().warning("[admin-notify] shutdown announce failed: " + e.getMessage());
+            }
+        }
 
         if (persistenceSchema != null && serverIdentity != null) {
             try {

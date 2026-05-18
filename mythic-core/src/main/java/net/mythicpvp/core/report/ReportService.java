@@ -22,6 +22,12 @@ public final class ReportService {
 
     public void applyRemote(@NotNull Report report) {
         long id = report.id();
+        reports.values().removeIf(existing ->
+                existing.id() != id
+                        && existing.reporterUuid().equals(report.reporterUuid())
+                        && existing.targetUuid().equals(report.targetUuid())
+                        && existing.category() == report.category()
+                        && Math.abs(existing.submittedAt() - report.submittedAt()) < 10_000L);
         reports.put(id, report);
         if (id > sequence.get()) {
             sequence.set(id);

@@ -7,6 +7,7 @@ import net.mythicpvp.core.rank.GrantDuration;
 import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.suite.cosmetic.CosmeticManager;
 import net.mythicpvp.suite.config.MythicConfig;
+import net.mythicpvp.suite.hex.MythicHex;
 import net.mythicpvp.suite.item.MythicItem;
 import net.mythicpvp.suite.menu.MythicMenu;
 import net.mythicpvp.suite.menu.PaginatedMenu;
@@ -168,9 +169,9 @@ public final class CreditShopService {
             boolean success = executePurchase(player, item);
             player.closeInventory();
             if (success) {
-                player.sendMessage("&#9CFF9CPurchased " + item.displayName() + "!");
+                player.sendMessage(MythicHex.colorize("&#9CFF9CPurchased " + item.displayName() + "!"));
             } else {
-                player.sendMessage("&#FF8A8APurchase failed. Check your credits or requirements.");
+                player.sendMessage(MythicHex.colorize("&#FF8A8APurchase failed. Check your credits or requirements."));
             }
         });
 

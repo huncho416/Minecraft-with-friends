@@ -207,7 +207,7 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
                     : "<#F529BE>[Punishment]</#F529BE> ";
             String body = prefix
                     + targetColor + escape(record.targetName()) + "</" + tagName(targetColor) + "> "
-                    + "<#D2D8E0>was <#9CFF9C>" + actionLabel + "</#9CFF9C> by </#D2D8E0>"
+                    + "<#D2D8E0><#9CFF9C>" + actionLabel + "</#9CFF9C> by </#D2D8E0>"
                     + staffColor + escape(notice.staffName()) + "</" + tagName(staffColor) + ">"
                     + "<#D2D8E0>.</#D2D8E0>";
             Component line = messages.codeOwned(body);
@@ -229,8 +229,8 @@ public final class PunishmentEnforcer implements Consumer<PunishmentNotice> {
     @NotNull
     private static String pardonActionLabel(@NotNull PunishmentType type) {
         return switch (type) {
-            case BAN, TEMP_BAN, BLACKLIST -> "unbanned";
-            case MUTE, TEMP_MUTE -> "unmuted";
+            case BAN, TEMP_BAN, BLACKLIST -> "was unbanned";
+            case MUTE, TEMP_MUTE -> "was unmuted";
             case WARN -> "had a warning cleared";
             case KICK -> "had a kick cleared";
         };

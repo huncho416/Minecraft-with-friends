@@ -1,10 +1,10 @@
 package net.mythicpvp.core.command;
 
+import net.mythicpvp.core.disguise.DisguiseApplier;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.CommandPermission;
 import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
-import net.mythicpvp.suite.disguise.DisguiseManager;
 import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -14,9 +14,11 @@ import org.jetbrains.annotations.NotNull;
 public final class DisguiseCommand extends MythicCommand {
 
     private final DisguiseMenuService menuService;
+    private final DisguiseApplier applier;
 
-    public DisguiseCommand(@NotNull DisguiseMenuService menuService) {
+    public DisguiseCommand(@NotNull DisguiseMenuService menuService, @NotNull DisguiseApplier applier) {
         this.menuService = menuService;
+        this.applier = applier;
     }
 
     @Default
@@ -26,7 +28,7 @@ public final class DisguiseCommand extends MythicCommand {
             return;
         }
         String name = words[0];
-        DisguiseManager.getInstance().disguiseAs(player.getUniqueId(), name, null, null);
+        applier.apply(player, name, null, null, null);
         player.sendMessage(MythicHex.colorize(
                 "&#9CFF9CDisguised as &#FFFFFF" + name + "&#9CFF9C."));
     }
@@ -34,9 +36,16 @@ public final class DisguiseCommand extends MythicCommand {
     @CommandAlias("undisguise|ud")
     @CommandPermission("mythic.core.disguise")
     public static final class Undisguise extends MythicCommand {
+
+        private final DisguiseApplier applier;
+
+        public Undisguise(@NotNull DisguiseApplier applier) {
+            this.applier = applier;
+        }
+
         @Default
         public void execute(@NotNull Player player) {
-            DisguiseManager.getInstance().undisguise(player.getUniqueId());
+            applier.undisguise(player);
             player.sendMessage(MythicHex.colorize("&#9CFF9CDisguise cleared."));
         }
     }

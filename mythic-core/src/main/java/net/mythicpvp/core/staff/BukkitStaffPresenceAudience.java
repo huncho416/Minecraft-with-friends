@@ -1,7 +1,6 @@
 package net.mythicpvp.core.staff;
 
 import net.kyori.adventure.text.Component;
-import net.mythicpvp.suite.config.ConfigText;
 import net.mythicpvp.suite.hex.MythicHex;
 import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.Bukkit;
@@ -20,12 +19,10 @@ public final class BukkitStaffPresenceAudience implements Consumer<StaffPresence
     private static final long SWITCH_WINDOW_TICKS = SWITCH_WINDOW_MILLIS / 50 + 5;
 
     private final JavaPlugin plugin;
-    private final ConfigText messages;
     private final Map<UUID, PendingQuit> pendingQuits = new ConcurrentHashMap<>();
 
-    public BukkitStaffPresenceAudience(@NotNull JavaPlugin plugin, @NotNull ConfigText messages) {
+    public BukkitStaffPresenceAudience(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
-        this.messages = messages;
     }
 
     @Override

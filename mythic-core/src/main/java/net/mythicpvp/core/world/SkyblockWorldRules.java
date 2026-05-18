@@ -69,6 +69,7 @@ public final class SkyblockWorldRules implements Listener {
         Bukkit.getGlobalRegionScheduler().execute(plugin, () -> applyRulesUnsafe(world));
     }
 
+    @SuppressWarnings("removal")
     private void applyRulesUnsafe(@NotNull World world) {
         world.setStorm(false);
         world.setThundering(false);

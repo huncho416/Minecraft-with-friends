@@ -1,4 +1,4 @@
-# Cosmetic catalog — loaded by CosmeticCatalogLoader at startup.
+﻿# Cosmetic catalog — loaded by CosmeticCatalogLoader at startup.
 # Each entry under a type key becomes a registered Cosmetic in CosmeticManager.
 # The optional `format` field is a MiniMessage-friendly string (supports <gradient>
 # tags and &#RRGGBB hex codes). For CHAT_TAG entries it is rendered before the
@@ -68,6 +68,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#00008b:#800080>[✪GALACTIC✪]</gradient>"
+      animated: true
     tag_garden:
       display-name: "Garden"
       description: "Bloom-fresh greens for nature lovers."
@@ -110,6 +111,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#4b0082:#ffffff>[★STARBOUND★]</gradient>"
+      animated: true
     tag_rainbow:
       display-name: "Rainbow"
       description: "Every color of the spectrum, all at once."
@@ -117,6 +119,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ff0000:#ffff00:#00ff00:#0000ff:#ff00ff>[☄RAINBOW☄]</gradient>"
+      animated: true
     tag_christmas:
       display-name: "Christmas"
       description: "Festive red and green for the holidays."
@@ -138,6 +141,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ff00ff:#00ffff>[✦SYBAU✦]</gradient>"
+      animated: true
     tag_rogue:
       display-name: "Rogue"
       description: "Step from the shadows."
@@ -152,6 +156,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ff1493:#9370db>[♫BEATOPIA♫]</gradient>"
+      animated: true
     tag_strike_wars:
       display-name: "Strike Wars"
       description: "For champions of the arena."
@@ -180,6 +185,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#00ffff:#ffff00>[⚡ELECTRIC⚡]</gradient>"
+      animated: true
     tag_ocean:
       display-name: "Ocean"
       description: "Wash your words in deep blue."
@@ -222,6 +228,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#800080:#ff0000>[✦CHAOTIC✦]</gradient>"
+      animated: true
     tag_flower:
       display-name: "Flower"
       description: "Petals in pink and gold."
@@ -257,6 +264,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ffff00:#ffffff>[✦SPARK✦]</gradient>"
+      animated: true
     tag_rush:
       display-name: "Rush"
       description: "Heat and speed in one tag."
@@ -271,6 +279,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#00ffff:#ff00ff>[✦NEON✦]</gradient>"
+      animated: true
     tag_volcano:
       display-name: "Volcano"
       description: "Magma rising through the cracks."
@@ -299,6 +308,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#87ceeb:#dda0dd>[☁DREAM☁]</gradient>"
+      animated: true
     tag_lunar:
       display-name: "Lunar"
       description: "Cool moonlight in every line."
@@ -306,6 +316,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#f0f8ff:#4169e1>[☽LUNAR☽]</gradient>"
+      animated: true
     tag_spring:
       display-name: "Spring"
       description: "New growth and soft blossoms."
@@ -320,6 +331,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ffffff:#87ceeb>[✦SPIRIT✦]</gradient>"
+      animated: true
     tag_blush:
       display-name: "Blush"
       description: "Sweet pinks for sweet talkers."
@@ -341,6 +353,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ffff00:#ffffff>[✦GLOW✦]</gradient>"
+      animated: true
     tag_clover_symbol:
       display-name: "Clover Trio"
       description: "Three clovers for three times the luck."
@@ -348,6 +361,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#006400:#00ff00:#006400>[♣☘♣]</gradient>"
+      animated: true
     tag_yin_yang:
       display-name: "Yin Yang"
       description: "Balance of dark and light."
@@ -362,6 +376,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#4169e1:#87ceeb>[☽☽☽]</gradient>"
+      animated: true
   CHAT_COLOR:
     color_bloodyred:
       display-name: "Bloodyred"
@@ -419,6 +434,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ffd700:#ffff00>%message%</gradient>"
+      animated: true
     color_halloweennight:
       display-name: "Halloween Night"
       description: "Pumpkin orange against indigo dusk."
@@ -468,6 +484,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#0077be:#00ffff>%message%</gradient>"
+      animated: true
     color_mintdelight:
       display-name: "Mint Delight"
       description: "Fresh mint into cool cyan."
@@ -489,6 +506,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#00ffff:#ffff00>%message%</gradient>"
+      animated: true
     color_magicalrainbow:
       display-name: "Magical Rainbow"
       description: "Every color, in full flight."
@@ -496,6 +514,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ff0000:#ffff00:#00ff00:#0000ff:#ff00ff>%message%</gradient>"
+      animated: true
     color_pastelblossom:
       display-name: "Pastel Blossom"
       description: "Pink and lilac in soft bloom."
@@ -538,6 +557,7 @@ cosmetics:
       tradable: true
       limited: true
       format: "<gradient:#ff0000:#00ff00>%message%</gradient>"
+      animated: true
     color_icyaurora:
       display-name: "Icy Aurora"
       description: "Cyan flares against pure white."
@@ -545,6 +565,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#00ffff:#ffffff>%message%</gradient>"
+      animated: true
     color_summerflames:
       display-name: "Summer Flames"
       description: "Hot orange fading into gold."
@@ -552,6 +573,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ff4500:#ffd700>%message%</gradient>"
+      animated: true
     color_cherryblossom:
       display-name: "Cherry Blossom"
       description: "Two whispers of soft pink."
@@ -566,6 +588,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ff00ff:#00ffff>%message%</gradient>"
+      animated: true
     color_mysticalspace:
       display-name: "Mystical Space"
       description: "Indigo collapsing into the void."
@@ -573,6 +596,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#4b0082:#000000>%message%</gradient>"
+      animated: true
     color_peachysun:
       display-name: "Peachy Sun"
       description: "Peach fuzz catching afternoon light."
@@ -608,6 +632,7 @@ cosmetics:
       tradable: true
       limited: false
       format: "<gradient:#ff0000:#00ff00:#0000ff>%message%</gradient>"
+      animated: true
     color_dewhaze:
       display-name: "Dew Haze"
       description: "Almost-white pale cyan and blue."
