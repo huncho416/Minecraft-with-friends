@@ -28,6 +28,8 @@ public final class ReportMenuService {
     private final ReportService reportService;
     private final ChatPromptService prompts;
     private final String localShardId;
+    private net.mythicpvp.core.session.CrossShardPresenceService presence;
+    private net.mythicpvp.core.transfer.ShardRegistry shardRegistry;
 
     public ReportMenuService(@NotNull ReportService reportService,
                              @NotNull ChatPromptService prompts,
@@ -35,6 +37,14 @@ public final class ReportMenuService {
         this.reportService = reportService;
         this.prompts = prompts;
         this.localShardId = localShardId;
+    }
+
+    public void setPresence(@NotNull net.mythicpvp.core.session.CrossShardPresenceService presence) {
+        this.presence = presence;
+    }
+
+    public void setShardRegistry(@NotNull net.mythicpvp.core.transfer.ShardRegistry registry) {
+        this.shardRegistry = registry;
     }
 
     public void openCategoryPicker(@NotNull Player reporter,
@@ -121,13 +131,14 @@ public final class ReportMenuService {
 
     @NotNull
     private ItemStack buildActiveReportItem(@NotNull Report report) {
-        String targetServer = lookupServerFor(report.targetUuid(), report.targetServerCache(), localShardId);
+        String targetServer = lookupServerFor(report.targetUuid(), report.targetName(),
+                report.targetServerCache(), localShardId);
         return MythicItem.create(Material.PAPER)
                 .name("&#FF8A8A" + report.targetName() + " &7— &#FFFFFF" + report.category().displayName())
                 .lore(
                         "&7Reported by: &f" + report.reporterName(),
                         "&7Submitted: &f" + TIME_FORMAT.format(Instant.ofEpochMilli(report.submittedAt())),
-                        "&7Reporter server: &f" + report.reporterServer(),
+                        "&7Reporter server: &f" + networkLabel(report.reporterServer()),
                         "&7Target server: &f" + targetServer,
                         "&7Report id: &f#" + report.id(),
                         "",
@@ -170,16 +181,47 @@ public final class ReportMenuService {
             }
             p.sendMessage(MythicHex.colorize(
                     "&#9CFF9CReport &#FFFFFF#" + report.id() + " &#9CFF9Cmarked resolved."));
+            var plug = (org.bukkit.plugin.java.JavaPlugin) org.bukkit.Bukkit.getPluginManager().getPlugin("MythicCore");
+            if (plug != null) {
+                net.mythicpvp.suite.scheduler.MythicScheduler.runLater(plug, () -> openActive(p, 0), 5L);
+            }
         });
     }
 
     @NotNull
-    private static String lookupServerFor(@NotNull UUID targetUuid, String fallback, @NotNull String localShardId) {
+    private String lookupServerFor(@NotNull UUID targetUuid, @NotNull String targetName,
+                                    String fallback, @NotNull String localShardId) {
         Player online = Bukkit.getPlayer(targetUuid);
         if (online != null && online.isOnline()) {
-            return localShardId;
+            return networkLabel(localShardId);
+        }
+        if (presence != null) {
+            String shardId = presence.shardOf(targetName);
+            if (shardId != null) {
+                return networkLabel(shardId);
+            }
         }
         return fallback == null ? "offline" : fallback;
+    }
+
+    @NotNull
+    private String networkLabel(@NotNull String shardId) {
+        if (shardRegistry != null) {
+            for (var row : shardRegistry.all()) {
+                if (shardId.equalsIgnoreCase(row.shard_id())) {
+                    String role = row.role();
+                    if (role != null && !role.isEmpty()) {
+                        String lower = role.toLowerCase(java.util.Locale.ROOT);
+                        return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
+                    }
+                }
+            }
+        }
+        int dash = shardId.indexOf('-');
+        String stem = dash > 0 ? shardId.substring(0, dash) : shardId;
+        if (stem.isEmpty()) return shardId;
+        String lower = stem.toLowerCase(java.util.Locale.ROOT);
+        return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
     }
 
 }

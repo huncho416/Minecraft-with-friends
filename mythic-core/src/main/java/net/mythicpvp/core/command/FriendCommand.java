@@ -153,13 +153,13 @@ public final class FriendCommand extends MythicCommand {
         }
         for (UUID friendUuid : friends) {
             String name = resolveName(friendUuid, null);
-            Player online = Bukkit.getPlayer(friendUuid);
-            boolean isOnline = online != null && online.isOnline();
+            String shardId = presence != null ? presence.shardOf(name) : null;
+            Player local = Bukkit.getPlayer(friendUuid);
+            boolean isOnline = (local != null && local.isOnline()) || shardId != null;
             String status = isOnline ? "&#9CFF9COnline" : "&#FF8A8AOffline";
 
             String hoverText;
             if (isOnline) {
-                String shardId = presence != null ? presence.shardOf(name) : null;
                 String network = networkLabelFor(shardId);
                 hoverText = "&#9CFF9COnline on &#FFFFFF" + (network != null ? network : "the network");
             } else {

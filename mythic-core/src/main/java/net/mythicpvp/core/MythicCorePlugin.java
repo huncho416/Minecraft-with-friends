@@ -236,6 +236,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         net.mythicpvp.core.transfer.ShardRegistry shardRegistry =
                 new net.mythicpvp.core.transfer.ShardRegistry(getLogger());
         shardRegistry.subscribe();
+        displayService.setShardRegistry(shardRegistry);
         getServer().getServicesManager().register(
                 net.mythicpvp.core.transfer.ShardRegistry.class,
                 shardRegistry,
@@ -438,6 +439,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new java.io.File(getDataFolder(), "reports-data.yml"), getLogger()));
         net.mythicpvp.core.report.ReportMenuService reportMenuService =
                 new net.mythicpvp.core.report.ReportMenuService(reportService, chatPromptService, serverIdentity.id());
+        reportMenuService.setPresence(crossShardPresence);
+        reportMenuService.setShardRegistry(shardRegistry);
         net.mythicpvp.core.command.ReportConfig reportConfig =
                 new net.mythicpvp.core.command.ReportConfig(configManager.getOrCreate("reports"));
         commandManager.register(new net.mythicpvp.core.command.ReportCommand(
