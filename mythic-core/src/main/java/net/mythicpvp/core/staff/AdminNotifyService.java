@@ -42,12 +42,12 @@ public final class AdminNotifyService {
 
     @NotNull
     private static String formatOnline(@NotNull String shard) {
-        return "&#7A8AA0[Server] &#9CFF9C" + shard + " &#7A8AA0is now &#9CFF9Conline&#7A8AA0.";
+        return "&#7A8AA0[&#9CFF9C" + shard + "&#7A8AA0] is now &#9CFF9Conline&#7A8AA0.";
     }
 
     @NotNull
     private static String formatOffline(@NotNull String shard) {
-        return "&#7A8AA0[Server] &#FF8A8A" + shard + " &#7A8AA0is now &#FF8A8Aoffline&#7A8AA0.";
+        return "&#7A8AA0[&#FF8A8A" + shard + "&#7A8AA0] is now &#FF8A8Aoffline&#7A8AA0.";
     }
 
     private static void broadcastLocal(@NotNull String text) {

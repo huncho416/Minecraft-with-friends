@@ -137,9 +137,12 @@ public final class CosmeticMenuService {
 
     private void addFilterBar(@NotNull PaginatedMenu menu, @NotNull Player player,
                               @NotNull CosmeticType type, @NotNull Set<BrowseFilter> active) {
-        int slot = 45;
-        for (BrowseFilter filter : BrowseFilter.values()) {
-            if (slot > 52) break;
+        BrowseFilter[] toggles = {
+                BrowseFilter.OWNED, BrowseFilter.NOT_OWNED, BrowseFilter.EQUIPPED,
+                BrowseFilter.TRADABLE, BrowseFilter.LIMITED
+        };
+        int slot = 46;
+        for (BrowseFilter filter : toggles) {
             boolean on = active.contains(filter);
             Material mat = on ? Material.LIME_STAINED_GLASS_PANE : Material.GRAY_STAINED_GLASS_PANE;
             String toggle = on ? "&aON" : "&7OFF";
@@ -157,6 +160,52 @@ public final class CosmeticMenuService {
             });
             slot++;
         }
+
+        BrowseFilter currentRarity = activeRarity(active);
+        BrowseFilter nextRarity = nextRarityInCycle(currentRarity);
+        Material rarityMat = currentRarity == null ? Material.GRAY_STAINED_GLASS_PANE : Material.LIME_STAINED_GLASS_PANE;
+        menu.staticSlot(51, MythicItem.create(rarityMat)
+                .name("&#F529BERarity: &f" + (currentRarity == null ? "Any" : currentRarity.displayName))
+                .lore(List.of(
+                        "&#D2D8E0Click to cycle: Any → Common → Rare → Epic → Legendary",
+                        "&7Next: " + (nextRarity == null ? "Any" : nextRarity.displayName)))
+                .build(), event -> {
+            Set<BrowseFilter> next = EnumSet.copyOf(active.isEmpty() ? EnumSet.noneOf(BrowseFilter.class) : active);
+            next.remove(BrowseFilter.COMMON);
+            next.remove(BrowseFilter.RARE);
+            next.remove(BrowseFilter.EPIC);
+            next.remove(BrowseFilter.LEGENDARY);
+            if (nextRarity != null) {
+                next.add(nextRarity);
+            }
+            openBrowse(player, type, next);
+        });
+
+        menu.staticSlot(52, MythicItem.create(Material.ARROW)
+                .name("&#F529BEBack to Categories")
+                .lore(List.of("&#D2D8E0Return to the main cosmetics menu"))
+                .build(), event -> openMain(player));
+    }
+
+    @org.jetbrains.annotations.Nullable
+    private static BrowseFilter activeRarity(@NotNull Set<BrowseFilter> active) {
+        for (BrowseFilter rarity : new BrowseFilter[]{
+                BrowseFilter.COMMON, BrowseFilter.RARE, BrowseFilter.EPIC, BrowseFilter.LEGENDARY}) {
+            if (active.contains(rarity)) return rarity;
+        }
+        return null;
+    }
+
+    @org.jetbrains.annotations.Nullable
+    private static BrowseFilter nextRarityInCycle(@org.jetbrains.annotations.Nullable BrowseFilter current) {
+        if (current == null) return BrowseFilter.COMMON;
+        return switch (current) {
+            case COMMON -> BrowseFilter.RARE;
+            case RARE -> BrowseFilter.EPIC;
+            case EPIC -> BrowseFilter.LEGENDARY;
+            case LEGENDARY -> null;
+            default -> BrowseFilter.COMMON;
+        };
     }
 
     public void openDetail(@NotNull Player player, @NotNull CosmeticManager.Cosmetic cosmetic) {

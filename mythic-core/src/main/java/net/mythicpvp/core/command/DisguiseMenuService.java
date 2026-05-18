@@ -13,14 +13,12 @@ import net.mythicpvp.suite.scheduler.MythicScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.profile.PlayerProfile;
-import org.bukkit.profile.PlayerTextures;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.URL;
-import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -277,15 +275,14 @@ public final class DisguiseMenuService {
             try {
                 PlayerProfile profile = Bukkit.createProfile(name);
                 profile = profile.update().get();
-                if (profile.getUniqueId() == null) {
+                if (profile.getId() == null) {
                     MythicScheduler.runSync(plugin, () -> rollRandomRealAccount(player, attempt + 1));
                     return;
                 }
-                PlayerTextures textures = profile.getTextures();
-                URL skinUrl = textures.getSkin();
+                ProfileProperty textures = findTextures(profile);
                 String resolvedName = profile.getName() == null ? name : profile.getName();
-                String skinValue = skinUrl == null ? null : encodeTextureValue(skinUrl.toString());
-                String skinSig = skinValue == null ? null : "";
+                String skinValue = textures == null ? null : textures.getValue();
+                String skinSig = textures == null ? null : (textures.getSignature() == null ? "" : textures.getSignature());
                 MythicScheduler.runSync(plugin, () -> {
                     applier.apply(player, resolvedName, skinValue, skinSig, null);
                     player.sendMessage(MythicHex.colorize(
@@ -297,6 +294,16 @@ public final class DisguiseMenuService {
                 MythicScheduler.runSync(plugin, () -> rollRandomRealAccount(player, attempt + 1));
             }
         });
+    }
+
+    @Nullable
+    private static ProfileProperty findTextures(@NotNull PlayerProfile profile) {
+        for (ProfileProperty property : profile.getProperties()) {
+            if (property.getName().equalsIgnoreCase("textures")) {
+                return property;
+            }
+        }
+        return null;
     }
 
     private static final List<String> RANDOM_REAL_USERNAMES = List.of(
@@ -330,7 +337,7 @@ public final class DisguiseMenuService {
             try {
                 PlayerProfile profile = Bukkit.createProfile(name);
                 profile = profile.update().get();
-                if (profile.getUniqueId() == null) {
+                if (profile.getId() == null) {
                     MythicScheduler.runSync(plugin, () -> {
                         requester.sendMessage(MythicHex.colorize(
                                 "&#FF8A8AUnknown player &#FFFFFF" + name + "&#FF8A8A."));
@@ -338,9 +345,8 @@ public final class DisguiseMenuService {
                     });
                     return;
                 }
-                PlayerTextures textures = profile.getTextures();
-                URL skinUrl = textures.getSkin();
-                if (skinUrl == null) {
+                ProfileProperty textures = findTextures(profile);
+                if (textures == null) {
                     MythicScheduler.runSync(plugin, () -> {
                         requester.sendMessage(MythicHex.colorize(
                                 "&#FF8A8AThat player has no skin set."));
@@ -349,11 +355,12 @@ public final class DisguiseMenuService {
                     return;
                 }
                 String resolvedName = profile.getName() == null ? name : profile.getName();
-                String value = encodeTextureValue(skinUrl.toString());
+                String value = textures.getValue();
+                String signature = textures.getSignature() == null ? "" : textures.getSignature();
                 MythicScheduler.runSync(plugin, () -> {
                     PendingDisguise pd = session(requester);
                     pd.skinValue = value;
-                    pd.skinSignature = "";
+                    pd.skinSignature = signature;
                     pd.skinSource = resolvedName + "'s skin";
                     openNamePicker(requester);
                 });
@@ -370,7 +377,7 @@ public final class DisguiseMenuService {
     @NotNull
     private static String encodeTextureValue(@NotNull String skinUrl) {
         String json = "{\"textures\":{\"SKIN\":{\"url\":\"" + skinUrl + "\"}}}";
-        return Base64.getEncoder().encodeToString(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        return java.util.Base64.getEncoder().encodeToString(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     @NotNull

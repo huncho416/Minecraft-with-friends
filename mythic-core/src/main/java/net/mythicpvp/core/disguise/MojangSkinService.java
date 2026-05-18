@@ -24,7 +24,7 @@ public final class MojangSkinService {
             try {
                 PlayerProfile profile = Bukkit.createProfile(name);
                 profile = profile.update().get();
-                if (profile.getUniqueId() == null) {
+                if (profile.getId() == null) {
                     future.complete(Result.unknown(name));
                     return;
                 }

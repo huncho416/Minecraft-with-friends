@@ -382,9 +382,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new StaffChatToggleListener(staffChannelService, rankService, grantService), this);
         staffPresenceService = new StaffPresenceService(protocolManager, serverIdentity.id());
 
-        staffPresenceService.addAudience(new BukkitStaffPresenceAudience(this,
-                new net.mythicpvp.suite.config.ConfigText(
-                        configManager.getOrCreate("messages"), "messages")));
+        staffPresenceService.addAudience(new BukkitStaffPresenceAudience(this));
         getServer().getPluginManager().registerEvents(
                 new StaffPresenceListener(staffPresenceService, rankService, grantService, transferService), this);
 

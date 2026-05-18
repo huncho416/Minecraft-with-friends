@@ -42,8 +42,7 @@ public final class DisguiseApplier implements Listener {
                 : null;
         DisguiseManager.getInstance().disguiseAs(uuid, displayName, skin, rankOverride);
 
-        applyProfile(player, displayName, skinValue, skinSignature);
-        refreshObservers(player);
+        applyProfileAndRefresh(player, displayName, skinValue, skinSignature);
     }
 
     public void undisguise(@NotNull Player player) {
@@ -51,9 +50,8 @@ public final class DisguiseApplier implements Listener {
         OriginalIdentity original = originals.remove(uuid);
         DisguiseManager.getInstance().undisguise(uuid);
         if (original != null) {
-            applyProfile(player, original.name(), original.skinValue(), original.skinSignature());
+            applyProfileAndRefresh(player, original.name(), original.skinValue(), original.skinSignature());
         }
-        refreshObservers(player);
     }
 
     public boolean isDisguised(@NotNull UUID uuid) {
@@ -80,28 +78,33 @@ public final class DisguiseApplier implements Listener {
         originals.remove(event.getPlayer().getUniqueId());
     }
 
-    private void applyProfile(@NotNull Player player,
-                              @NotNull String displayName,
-                              @Nullable String skinValue,
-                              @Nullable String skinSignature) {
+    private void applyProfileAndRefresh(@NotNull Player player,
+                                        @NotNull String displayName,
+                                        @Nullable String skinValue,
+                                        @Nullable String skinSignature) {
         MythicScheduler.runOnEntity(plugin, player, () -> {
             try {
-                PlayerProfile profile = player.getPlayerProfile();
-                profile.setName(displayName);
-                Set<ProfileProperty> properties = profile.getProperties();
-                properties.removeIf(prop -> prop.getName().equalsIgnoreCase("textures"));
+                PlayerProfile fresh = Bukkit.createProfile(player.getUniqueId(), displayName);
+                Set<ProfileProperty> existing = player.getPlayerProfile().getProperties();
+                Set<ProfileProperty> next = new java.util.HashSet<>();
+                for (ProfileProperty property : existing) {
+                    if (!property.getName().equalsIgnoreCase("textures")) {
+                        next.add(property);
+                    }
+                }
                 if (skinValue != null) {
-                    properties.add(new ProfileProperty("textures", skinValue,
+                    next.add(new ProfileProperty("textures", skinValue,
                             skinSignature == null ? "" : skinSignature));
                 }
-                profile.setProperties(properties);
-                player.setPlayerProfile(profile);
+                fresh.setProperties(next);
+                player.setPlayerProfile(fresh);
                 player.displayName(MythicHex.colorize("&#FFFFFF" + displayName));
                 player.playerListName(MythicHex.colorize("&#FFFFFF" + displayName));
             } catch (Throwable t) {
                 plugin.getLogger().warning("[disguise] failed to apply profile for "
                         + player.getName() + ": " + t.getClass().getSimpleName() + ": " + t.getMessage());
             }
+            MythicScheduler.runLater(plugin, () -> refreshObservers(player), 5L);
         });
     }
 
@@ -118,15 +121,15 @@ public final class DisguiseApplier implements Listener {
         MythicScheduler.runOnEntity(plugin, viewer, () -> {
             try {
                 viewer.hidePlayer(plugin, target);
-                MythicScheduler.runLater(plugin, () -> {
-                    try {
-                        viewer.showPlayer(plugin, target);
-                    } catch (Throwable ignored) {
-                    }
-                }, 2L);
             } catch (Throwable ignored) {
             }
         });
+        MythicScheduler.runLater(plugin, () -> MythicScheduler.runOnEntity(plugin, viewer, () -> {
+            try {
+                viewer.showPlayer(plugin, target);
+            } catch (Throwable ignored) {
+            }
+        }), 6L);
     }
 
     private record OriginalIdentity(@NotNull String name,
