@@ -101,6 +101,7 @@ public final class CommandBlocker implements Listener {
         if (!remaining.contains(" ")) {
             List<String> filtered = new ArrayList<>();
             for (String completion : completions) {
+                if (completion.indexOf(':') >= 0) continue;
                 if (canSee(sender, completion)) {
                     filtered.add(completion);
                 }
@@ -118,7 +119,8 @@ public final class CommandBlocker implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerCommandSend(@NotNull PlayerCommandSendEvent event) {
-        event.getCommands().removeIf(command -> !canSee(event.getPlayer(), command));
+        event.getCommands().removeIf(command ->
+                command.indexOf(':') >= 0 || !canSee(event.getPlayer(), command));
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
