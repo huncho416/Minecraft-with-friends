@@ -72,6 +72,14 @@ public final class StaffChatSqlRelay {
                 localShardId, message);
     }
 
+    public void publishHelpop(@NotNull UUID senderUuid, @NotNull String senderName, @NotNull String message) {
+        publish("HELPOP_NOTIFY", senderUuid, senderName, "", "", "", message);
+    }
+
+    public void publishRequest(@NotNull UUID senderUuid, @NotNull String senderName, @NotNull String message) {
+        publish("REQUEST_NOTIFY", senderUuid, senderName, "", "", "", message);
+    }
+
     private void poll(@NotNull SpacetimeConnection connection) {
         connection.sql("SELECT * FROM " + TableNames.STAFF_CHAT_EVENTS).thenAccept(body -> {
             try {

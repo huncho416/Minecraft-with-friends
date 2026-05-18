@@ -1,10 +1,12 @@
 package net.mythicpvp.core.command;
 
+import net.mythicpvp.core.staff.StaffChatSqlRelay;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @CommandAlias("request")
 public final class RequestCommand extends MythicCommand {
@@ -13,14 +15,17 @@ public final class RequestCommand extends MythicCommand {
 
     private final ReportConfig config;
     private final String localShardId;
+    @Nullable private final StaffChatSqlRelay relay;
 
-    public RequestCommand(@NotNull ReportConfig config, @NotNull String localShardId) {
+    public RequestCommand(@NotNull ReportConfig config, @NotNull String localShardId,
+                          @Nullable StaffChatSqlRelay relay) {
         this.config = config;
         this.localShardId = localShardId;
+        this.relay = relay;
     }
 
     @Default
     public void execute(@NotNull Player player, String[] words) {
-        HelpopCommand.HelpopSupport.execute(player, words, config, localShardId, COOLDOWN_KEY, "/request");
+        HelpopCommand.HelpopSupport.execute(player, words, config, localShardId, COOLDOWN_KEY, "/request", relay);
     }
 }

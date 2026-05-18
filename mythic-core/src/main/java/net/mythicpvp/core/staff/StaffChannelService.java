@@ -55,6 +55,14 @@ public final class StaffChannelService {
         if (originShard.equalsIgnoreCase(serverId)) {
             return;
         }
+        if ("HELPOP_NOTIFY".equalsIgnoreCase(channelName)) {
+            net.mythicpvp.core.report.StaffNotifier.notifyHelpopByName(senderName, originShard, message);
+            return;
+        }
+        if ("REQUEST_NOTIFY".equalsIgnoreCase(channelName)) {
+            net.mythicpvp.core.report.StaffNotifier.notifyHelpopByName(senderName, originShard, message);
+            return;
+        }
         StaffChannel channel;
         try {
             channel = StaffChannel.valueOf(channelName);

@@ -1,6 +1,7 @@
 package net.mythicpvp.core.command;
 
 import net.mythicpvp.core.report.StaffNotifier;
+import net.mythicpvp.core.staff.StaffChatSqlRelay;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
@@ -8,6 +9,7 @@ import net.mythicpvp.suite.cooldown.CooldownManager;
 import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,15 +20,18 @@ public final class HelpopCommand extends MythicCommand {
 
     private final ReportConfig config;
     private final String localShardId;
+    @Nullable private final StaffChatSqlRelay relay;
 
-    public HelpopCommand(@NotNull ReportConfig config, @NotNull String localShardId) {
+    public HelpopCommand(@NotNull ReportConfig config, @NotNull String localShardId,
+                         @Nullable StaffChatSqlRelay relay) {
         this.config = config;
         this.localShardId = localShardId;
+        this.relay = relay;
     }
 
     @Default
     public void execute(@NotNull Player player, String[] words) {
-        HelpopSupport.execute(player, words, config, localShardId, COOLDOWN_KEY, "/helpop");
+        HelpopSupport.execute(player, words, config, localShardId, COOLDOWN_KEY, "/helpop", relay);
     }
 
     static final class HelpopSupport {
@@ -38,7 +43,8 @@ public final class HelpopCommand extends MythicCommand {
                             @NotNull ReportConfig config,
                             @NotNull String localShardId,
                             @NotNull String cooldownKey,
-                            @NotNull String label) {
+                            @NotNull String label,
+                            @Nullable StaffChatSqlRelay relay) {
             if (words == null || words.length == 0) {
                 sendUsage(player, config, label);
                 return;
@@ -58,6 +64,13 @@ public final class HelpopCommand extends MythicCommand {
             }
             cd.set(player.getUniqueId(), cooldownKey, config.helpopCooldownSeconds(), TimeUnit.SECONDS);
             StaffNotifier.notifyHelpop(player, localShardId, message);
+            if (relay != null) {
+                if ("/request".equalsIgnoreCase(label)) {
+                    relay.publishRequest(player.getUniqueId(), player.getName(), message);
+                } else {
+                    relay.publishHelpop(player.getUniqueId(), player.getName(), message);
+                }
+            }
             player.sendMessage(MythicHex.colorize(
                     "&#9CFF9CHelpop request sent. Online staff have been notified."));
         }

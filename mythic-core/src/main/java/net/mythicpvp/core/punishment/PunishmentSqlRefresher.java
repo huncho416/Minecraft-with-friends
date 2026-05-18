@@ -28,6 +28,7 @@ public final class PunishmentSqlRefresher {
     private final Map<Long, Boolean> wasActive = new HashMap<>();
     private volatile boolean firstPollComplete = false;
     private volatile Consumer<PunishmentRecord> remoteEnforcer = record -> {};
+    private volatile Consumer<PunishmentRecord> remotePardon = record -> {};
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = new Thread(r, "mythic-punishment-refresh");
         t.setDaemon(true);
@@ -41,6 +42,10 @@ public final class PunishmentSqlRefresher {
 
     public void setRemoteEnforcer(@NotNull Consumer<PunishmentRecord> enforcer) {
         this.remoteEnforcer = enforcer;
+    }
+
+    public void setRemotePardon(@NotNull Consumer<PunishmentRecord> pardon) {
+        this.remotePardon = pardon;
     }
 
     public void start() {
@@ -95,6 +100,10 @@ public final class PunishmentSqlRefresher {
             }
             if (previously != null && previously && !isActive && !record.pardoned()) {
                 punishments.fireExpiry(record);
+            }
+            if (previously != null && previously && !isActive && record.pardoned() && baselineDone
+                    && !punishments.wasPardonedLocallyRecently(record.targetUuid())) {
+                remotePardon.accept(record);
             }
         }
         firstPollComplete = true;

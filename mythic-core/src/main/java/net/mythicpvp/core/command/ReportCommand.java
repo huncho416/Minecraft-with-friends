@@ -1,9 +1,7 @@
 package net.mythicpvp.core.command;
 
-import net.mythicpvp.core.report.Report;
 import net.mythicpvp.core.report.ReportMenuService;
 import net.mythicpvp.core.report.ReportService;
-import net.mythicpvp.core.report.StaffNotifier;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.Complete;
 import net.mythicpvp.suite.command.Default;
@@ -63,7 +61,7 @@ public final class ReportCommand extends MythicCommand {
             if (cd.isOnCooldown(player.getUniqueId(), cooldownKey)) {
                 return;
             }
-            Report report = reportService.submit(
+            reportService.submit(
                     player.getUniqueId(),
                     player.getName(),
                     targetUuid,
@@ -75,7 +73,6 @@ public final class ReportCommand extends MythicCommand {
                     "&#9CFF9CReport submitted against &#FFFFFF" + finalName
                             + "&#9CFF9C for &#FFFFFF" + category.displayName()
                             + "&#9CFF9C. Staff have been notified."));
-            StaffNotifier.notifyReport(report);
         });
     }
 

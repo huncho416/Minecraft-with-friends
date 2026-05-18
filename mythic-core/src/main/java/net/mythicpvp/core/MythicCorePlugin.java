@@ -181,6 +181,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         net.mythicpvp.core.punishment.PunishmentSqlRefresher punishmentRefresher =
                 new net.mythicpvp.core.punishment.PunishmentSqlRefresher(punishmentService, getLogger());
         punishmentRefresher.setRemoteEnforcer(punishmentEnforcer::enforceTargetOnly);
+        punishmentRefresher.setRemotePardon(record -> punishmentEnforcer.onPardonNotice(
+                new net.mythicpvp.core.punishment.PardonNotice(record, record.staffName(), record.silent())));
         punishmentRefresher.start();
         new net.mythicpvp.core.rank.GrantSqlRefresher(grantService, getLogger()).start();
         new net.mythicpvp.core.social.SocialSqlRefresher(socialService, getLogger()).start();
@@ -322,7 +324,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new HelpCommand(essentialsService));
         commandManager.register(new net.mythicpvp.core.command.ListCommand(rankService, grantService));
         commandManager.register(new DiscordCommand(essentialsService));
-        commandManager.register(new FriendCommand(socialService));
+        commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry));
         commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
         commandManager.register(new MailCommand(socialService, messages));
         PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
@@ -445,8 +447,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new net.mythicpvp.core.report.ReportSqlRefresher(reportService, getLogger());
         reportRefresher.setNewReportListener(net.mythicpvp.core.report.StaffNotifier::notifyReport);
         reportRefresher.start();
-        commandManager.register(new net.mythicpvp.core.command.HelpopCommand(reportConfig, serverIdentity.id()));
-        commandManager.register(new net.mythicpvp.core.command.RequestCommand(reportConfig, serverIdentity.id()));
+        commandManager.register(new net.mythicpvp.core.command.HelpopCommand(reportConfig, serverIdentity.id(), staffChatRelay));
+        commandManager.register(new net.mythicpvp.core.command.RequestCommand(reportConfig, serverIdentity.id(), staffChatRelay));
 
         net.mythicpvp.core.note.NoteService noteService = new net.mythicpvp.core.note.NoteService();
         noteService.setStore(new net.mythicpvp.core.note.NoteStore(

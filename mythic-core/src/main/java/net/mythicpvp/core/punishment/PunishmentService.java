@@ -41,6 +41,22 @@ public final class PunishmentService {
         return true;
     }
 
+    private final java.util.Map<UUID, Long> recentlyPardonedLocal = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public boolean wasPardonedLocallyRecently(@NotNull UUID targetUuid) {
+        Long when = recentlyPardonedLocal.get(targetUuid);
+        if (when == null) return false;
+        if (System.currentTimeMillis() - when > LOCAL_ISSUE_WINDOW_MILLIS) {
+            recentlyPardonedLocal.remove(targetUuid);
+            return false;
+        }
+        return true;
+    }
+
+    public void markPardonedLocally(@NotNull UUID targetUuid) {
+        recentlyPardonedLocal.put(targetUuid, System.currentTimeMillis());
+    }
+
     private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
     private volatile Consumer<PunishmentNotice> enforcer = notice -> {};
     private volatile Consumer<PunishmentRecord> pardonListener = record -> {};
@@ -93,6 +109,7 @@ public final class PunishmentService {
             }
         }
         if (firstPardoned != null) {
+            markPardonedLocally(targetUuid);
             pardonNoticeListener.accept(new PardonNotice(firstPardoned, staffName, silent));
         }
         return pardoned;

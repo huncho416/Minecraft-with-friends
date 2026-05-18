@@ -121,7 +121,14 @@ public final class GrantService {
     }
 
     public void applyGrant(@NotNull RankGrant grant) {
-        grants.removeIf(existing -> existing.id() == grant.id());
+        RankGrant existing = grants.stream()
+                .filter(g -> g.id() == grant.id())
+                .findFirst()
+                .orElse(null);
+        boolean unchanged = existing != null && existing.equals(grant);
+        if (existing != null) {
+            grants.remove(existing);
+        }
         grants.add(grant);
 
         long observed = grant.id();
@@ -129,8 +136,10 @@ public final class GrantService {
         if (observed > current) {
             ids.compareAndSet(current, observed);
         }
+        if (unchanged) {
+            return;
+        }
         PermissionManager.getInstance().setPlayerRank(grant.targetUuid(), activeRank(grant.targetUuid()));
-
         displayRefresher.accept(grant.targetUuid());
     }
 

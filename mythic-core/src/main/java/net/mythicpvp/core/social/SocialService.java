@@ -235,6 +235,11 @@ public final class SocialService {
         return loginStreaks.get(player);
     }
 
+    public Long lastSeen(@NotNull UUID player) {
+        LoginStreak streak = loginStreaks.get(player);
+        return streak == null ? null : streak.lastLoginMillis();
+    }
+
     public void applyLoginStreak(@NotNull LoginStreak streak) {
         loginStreaks.put(streak.player(), streak);
     }
