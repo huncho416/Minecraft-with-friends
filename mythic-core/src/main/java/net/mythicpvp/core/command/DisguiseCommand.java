@@ -13,13 +13,16 @@ import org.jetbrains.annotations.NotNull;
 @CommandPermission("mythic.core.disguise")
 public final class DisguiseCommand extends MythicCommand {
 
+    private final DisguiseMenuService menuService;
+
+    public DisguiseCommand(@NotNull DisguiseMenuService menuService) {
+        this.menuService = menuService;
+    }
+
     @Default
     public void execute(@NotNull Player player, @NotNull String[] words) {
         if (words.length == 0) {
-            player.sendMessage(MythicHex.colorize(
-                    "&#FF8A8AUsage: &f/disguise <name> &7— quick disguise with the given player name."));
-            player.sendMessage(MythicHex.colorize(
-                    "&7Full menu (rank/skin/name picker) coming in a follow-up batch."));
+            menuService.openMain(player);
             return;
         }
         String name = words[0];

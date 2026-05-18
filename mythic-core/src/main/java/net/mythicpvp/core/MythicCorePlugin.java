@@ -341,7 +341,9 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         staffChatRelay.start();
 
         commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry, staffChatRelay));
-        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand());
+        net.mythicpvp.core.command.DisguiseMenuService disguiseMenuService =
+                new net.mythicpvp.core.command.DisguiseMenuService(this, rankService, chatPromptService);
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand(disguiseMenuService));
         commandManager.register(new net.mythicpvp.core.command.DisguiseCommand.Undisguise());
         commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
         commandManager.register(new MailCommand(socialService, messages));

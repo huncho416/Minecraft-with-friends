@@ -68,5 +68,13 @@ public final class CosmeticManager {
 
     public record Cosmetic(@NotNull String id, @NotNull String displayName, @NotNull CosmeticType type,
                            @NotNull String description, @Nullable org.bukkit.NamespacedKey itemModel,
-                           @NotNull String rarity, boolean tradable, boolean limited) {}
+                           @NotNull String rarity, boolean tradable, boolean limited,
+                           @Nullable String format) {
+
+        public Cosmetic(@NotNull String id, @NotNull String displayName, @NotNull CosmeticType type,
+                        @NotNull String description, @Nullable org.bukkit.NamespacedKey itemModel,
+                        @NotNull String rarity, boolean tradable, boolean limited) {
+            this(id, displayName, type, description, itemModel, rarity, tradable, limited, null);
+        }
+    }
 }

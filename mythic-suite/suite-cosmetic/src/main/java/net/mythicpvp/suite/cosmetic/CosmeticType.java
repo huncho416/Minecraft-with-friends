@@ -8,7 +8,8 @@ public enum CosmeticType {
     PARTICLE("Particles"),
     KILL_EFFECT("Kill Effects"),
     WIN_EFFECT("Win Effects"),
-    CHAT_TAG("Chat Tags");
+    CHAT_TAG("Chat Tags"),
+    CHAT_COLOR("Chat Colors");
 
     private final String displayName;
 

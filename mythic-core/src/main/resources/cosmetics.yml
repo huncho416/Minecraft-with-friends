@@ -1,5 +1,9 @@
 # Cosmetic catalog — loaded by CosmeticCatalogLoader at startup.
 # Each entry under a type key becomes a registered Cosmetic in CosmeticManager.
+# The optional `format` field is a MiniMessage-friendly string (supports <gradient>
+# tags and &#RRGGBB hex codes). For CHAT_TAG entries it is rendered before the
+# player name in chat. For CHAT_COLOR entries it must contain the literal token
+# %message% — the player's chat body is substituted in at render time.
 cosmetics:
   HAT:
     hat_crown:
@@ -57,15 +61,585 @@ cosmetics:
       tradable: true
       limited: false
   CHAT_TAG:
-    tag_vip:
-      display-name: "VIP"
-      description: "Show off your VIP status."
-      rarity: "COMMON"
+    tag_galactic:
+      display-name: "Galactic"
+      description: "Stardust streaks across the chat."
+      rarity: "LEGENDARY"
       tradable: true
       limited: false
-    tag_mvp:
-      display-name: "MVP"
-      description: "The most valuable player tag."
+      format: "<gradient:#00008b:#800080>[✪GALACTIC✪]</gradient>"
+    tag_garden:
+      display-name: "Garden"
+      description: "Bloom-fresh greens for nature lovers."
       rarity: "RARE"
       tradable: true
       limited: false
+      format: "<gradient:#2bf556:#a9c656>[✿GARDEN✿]</gradient>"
+    tag_jailbreak:
+      display-name: "Jailbreak"
+      description: "Forged in the shadow of the cell block."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff8c00:#1a1a1a>[⛓JAILBREAK⛓]</gradient>"
+    tag_ufo:
+      display-name: "UFO"
+      description: "Beam your messages in from orbit."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#00ff66:#0066ff>[◉UFO◉]</gradient>"
+    tag_hellraisin:
+      display-name: "Hellraisin"
+      description: "Smoulder with infernal fury."
+      rarity: "LEGENDARY"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff2a00:#800000>[☠HELLRAISIN☠]</gradient>"
+    tag_sunrise:
+      display-name: "Sunrise"
+      description: "Warm dawn hues across every word."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff6600:#ffd700>[☀SUNRISE☀]</gradient>"
+    tag_starbound:
+      display-name: "Starbound"
+      description: "Bound for the farthest constellations."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#4b0082:#ffffff>[★STARBOUND★]</gradient>"
+    tag_rainbow:
+      display-name: "Rainbow"
+      description: "Every color of the spectrum, all at once."
+      rarity: "LEGENDARY"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff0000:#ffff00:#00ff00:#0000ff:#ff00ff>[☄RAINBOW☄]</gradient>"
+    tag_christmas:
+      display-name: "Christmas"
+      description: "Festive red and green for the holidays."
+      rarity: "EPIC"
+      tradable: true
+      limited: true
+      format: "<gradient:#ff0000:#00ff00>[❄CHRISTMAS❄]</gradient>"
+    tag_clover:
+      display-name: "Clover"
+      description: "Lucky shamrock greens."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#00ff00:#006400>[☘CLOVER☘]</gradient>"
+    tag_sybau:
+      display-name: "Sybau"
+      description: "Loud, electric, unapologetic."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff00ff:#00ffff>[✦SYBAU✦]</gradient>"
+    tag_rogue:
+      display-name: "Rogue"
+      description: "Step from the shadows."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#2f4f4f:#000000>[⚔ROGUE⚔]</gradient>"
+    tag_beatopia:
+      display-name: "Beatopia"
+      description: "A skip in every syllable."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff1493:#9370db>[♫BEATOPIA♫]</gradient>"
+    tag_strike_wars:
+      display-name: "Strike Wars"
+      description: "For champions of the arena."
+      rarity: "LEGENDARY"
+      tradable: true
+      limited: true
+      format: "<gradient:#ff0000:#ffd700>[⚡STRIKE WARS⚡]</gradient>"
+    tag_donut:
+      display-name: "Donut"
+      description: "Pink frosting, gold sprinkles."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff69b4:#ffd700>[●DONUT●]</gradient>"
+    tag_bunny:
+      display-name: "Bunny"
+      description: "Hop into the conversation."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffc0cb:#ffffff>[✿BUNNY✿]</gradient>"
+    tag_electric:
+      display-name: "Electric"
+      description: "High-voltage cyan and yellow."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#00ffff:#ffff00>[⚡ELECTRIC⚡]</gradient>"
+    tag_ocean:
+      display-name: "Ocean"
+      description: "Wash your words in deep blue."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#0077be:#00ffff>[☸OCEAN☸]</gradient>"
+    tag_meadow:
+      display-name: "Meadow"
+      description: "Soft pinks across green grass."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#98fb98:#ffb6c1>[✿MEADOW✿]</gradient>"
+    tag_pumpkin:
+      display-name: "Pumpkin"
+      description: "Autumn carved in chat."
+      rarity: "EPIC"
+      tradable: true
+      limited: true
+      format: "<gradient:#ff7518:#8b4513>[☠PUMPKIN☠]</gradient>"
+    tag_vampire:
+      display-name: "Vampire"
+      description: "A crimson hunger after dark."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#8b0000:#000000>[☠VAMPIRE☠]</gradient>"
+    tag_danger:
+      display-name: "Danger"
+      description: "Approach with extreme caution."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff0000:#000000>[⚠DANGER⚠]</gradient>"
+    tag_chaotic:
+      display-name: "Chaotic"
+      description: "Beautifully unstable."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#800080:#ff0000>[✦CHAOTIC✦]</gradient>"
+    tag_flower:
+      display-name: "Flower"
+      description: "Petals in pink and gold."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff69b4:#ffd700>[✿FLOWER✿]</gradient>"
+    tag_mommy:
+      display-name: "Mommy"
+      description: "Warm and fierce all at once."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff1493:#ffc0cb>[♥MOMMY♥]</gradient>"
+    tag_sunset:
+      display-name: "Sunset"
+      description: "Orange skies bleeding into purple."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff4500:#800080>[☀SUNSET☀]</gradient>"
+    tag_gold:
+      display-name: "Gold"
+      description: "Solid, unmistakable gold."
+      rarity: "LEGENDARY"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffd700:#ffa500>[✦GOLD✦]</gradient>"
+    tag_spark:
+      display-name: "Spark"
+      description: "A flicker of pure yellow light."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffff00:#ffffff>[✦SPARK✦]</gradient>"
+    tag_rush:
+      display-name: "Rush"
+      description: "Heat and speed in one tag."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff0000:#ffa500>[⚡RUSH⚡]</gradient>"
+    tag_neon:
+      display-name: "Neon"
+      description: "Late-night arcade glow."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#00ffff:#ff00ff>[✦NEON✦]</gradient>"
+    tag_volcano:
+      display-name: "Volcano"
+      description: "Magma rising through the cracks."
+      rarity: "LEGENDARY"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff4500:#8b0000>[☠VOLCANO☠]</gradient>"
+    tag_dust:
+      display-name: "Dust"
+      description: "Warm desert tones."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#d2b48c:#8b7355>[✦DUST✦]</gradient>"
+    tag_six_six_six:
+      display-name: "666"
+      description: "A mark of the cursed."
+      rarity: "LEGENDARY"
+      tradable: true
+      limited: true
+      format: "<gradient:#8b0000:#000000>[666]</gradient>"
+    tag_dream:
+      display-name: "Dream"
+      description: "Pastel skies and faraway clouds."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#87ceeb:#dda0dd>[☁DREAM☁]</gradient>"
+    tag_lunar:
+      display-name: "Lunar"
+      description: "Cool moonlight in every line."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#f0f8ff:#4169e1>[☽LUNAR☽]</gradient>"
+    tag_spring:
+      display-name: "Spring"
+      description: "New growth and soft blossoms."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#98fb98:#ffb6c1>[✿SPRING✿]</gradient>"
+    tag_spirit:
+      display-name: "Spirit"
+      description: "An airy, ghostly glow."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffffff:#87ceeb>[✦SPIRIT✦]</gradient>"
+    tag_blush:
+      display-name: "Blush"
+      description: "Sweet pinks for sweet talkers."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffc0cb:#ff69b4>[♥BLUSH♥]</gradient>"
+    tag_sweet:
+      display-name: "Sweet"
+      description: "Candied pinks and golds."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff69b4:#ffd700>[♥SWEET♥]</gradient>"
+    tag_glow:
+      display-name: "Glow"
+      description: "A warm halo around every word."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffff00:#ffffff>[✦GLOW✦]</gradient>"
+    tag_clover_symbol:
+      display-name: "Clover Trio"
+      description: "Three clovers for three times the luck."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#006400:#00ff00:#006400>[♣☘♣]</gradient>"
+    tag_yin_yang:
+      display-name: "Yin Yang"
+      description: "Balance of dark and light."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#000000:#ffffff>[☯☯]</gradient>"
+    tag_moon_trio:
+      display-name: "Moon Trio"
+      description: "A row of crescent moons."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#4169e1:#87ceeb>[☽☽☽]</gradient>"
+  CHAT_COLOR:
+    color_bloodyred:
+      display-name: "Bloodyred"
+      description: "Crimson deepening to bright red."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#8b0000:#ff0000>%message%</gradient>"
+    color_junglelake:
+      display-name: "Jungle Lake"
+      description: "Teal to cyan to vibrant green."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#008080:#00ffff:#00ff00>%message%</gradient>"
+    color_goldencrown:
+      display-name: "Golden Crown"
+      description: "Royal gold flowing into bronze."
+      rarity: "LEGENDARY"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffd700:#b8860b>%message%</gradient>"
+    color_mysticalmagic:
+      display-name: "Mystical Magic"
+      description: "Arcane violet to deep indigo."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#9400d3:#4b0082>%message%</gradient>"
+    color_magmaspirit:
+      display-name: "Magma Spirit"
+      description: "Liquid fire pouring through your words."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff4500:#8b0000>%message%</gradient>"
+    color_shimmeringblood:
+      display-name: "Shimmering Blood"
+      description: "Glistening crimson with a darker edge."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#dc143c:#8b0000>%message%</gradient>"
+    color_midnightcurse:
+      display-name: "Midnight Curse"
+      description: "Midnight blue swallowed by black."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#191970:#000000>%message%</gradient>"
+    color_goldensparkle:
+      display-name: "Golden Sparkle"
+      description: "Gold catching morning sunlight."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffd700:#ffff00>%message%</gradient>"
+    color_halloweennight:
+      display-name: "Halloween Night"
+      description: "Pumpkin orange against indigo dusk."
+      rarity: "EPIC"
+      tradable: true
+      limited: true
+      format: "<gradient:#ff7518:#4b0082>%message%</gradient>"
+    color_loveletter:
+      display-name: "Love Letter"
+      description: "A handwritten pink, sealed in rose."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff1493:#ffc0cb>%message%</gradient>"
+    color_duckplushie:
+      display-name: "Duck Plushie"
+      description: "Cheerful gold tumbling into orange."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffd700:#ffa500>%message%</gradient>"
+    color_valentineflower:
+      display-name: "Valentine Flower"
+      description: "Bold pink for a bold heart."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff69b4:#ff1493>%message%</gradient>"
+    color_snowmanplushie:
+      display-name: "Snowman Plushie"
+      description: "Pure white melting into icy sky."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffffff:#87ceeb>%message%</gradient>"
+    color_witchbrew:
+      display-name: "Witch Brew"
+      description: "Purple cauldron bubbling green."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#800080:#006400>%message%</gradient>"
+    color_oceanblue:
+      display-name: "Ocean Blue"
+      description: "Deep blue lapping into cyan."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#0077be:#00ffff>%message%</gradient>"
+    color_mintdelight:
+      display-name: "Mint Delight"
+      description: "Fresh mint into cool cyan."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#98ff98:#00ffff>%message%</gradient>"
+    color_vampireblood:
+      display-name: "Vampire Blood"
+      description: "Two shades of cursed crimson."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#8b0000:#4b0000>%message%</gradient>"
+    color_electricpulse:
+      display-name: "Electric Pulse"
+      description: "Cyan crackling into yellow."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#00ffff:#ffff00>%message%</gradient>"
+    color_magicalrainbow:
+      display-name: "Magical Rainbow"
+      description: "Every color, in full flight."
+      rarity: "LEGENDARY"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff0000:#ffff00:#00ff00:#0000ff:#ff00ff>%message%</gradient>"
+    color_pastelblossom:
+      display-name: "Pastel Blossom"
+      description: "Pink and lilac in soft bloom."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffb6c1:#dda0dd>%message%</gradient>"
+    color_pumpkinpatch:
+      display-name: "Pumpkin Patch"
+      description: "Bright orange settling into bark."
+      rarity: "RARE"
+      tradable: true
+      limited: true
+      format: "<gradient:#ff7518:#8b4513>%message%</gradient>"
+    color_pinkfractal:
+      display-name: "Pink Fractal"
+      description: "Geometric pinks repeating endlessly."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff69b4:#ff1493>%message%</gradient>"
+    color_redfractal:
+      display-name: "Red Fractal"
+      description: "Brilliant red into a darker echo."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff0000:#8b0000>%message%</gradient>"
+    color_springmeadow:
+      display-name: "Spring Meadow"
+      description: "Soft greens, soft pinks."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#98fb98:#ffb6c1>%message%</gradient>"
+    color_christmasday:
+      display-name: "Christmas Day"
+      description: "Festive red into festive green."
+      rarity: "EPIC"
+      tradable: true
+      limited: true
+      format: "<gradient:#ff0000:#00ff00>%message%</gradient>"
+    color_icyaurora:
+      display-name: "Icy Aurora"
+      description: "Cyan flares against pure white."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#00ffff:#ffffff>%message%</gradient>"
+    color_summerflames:
+      display-name: "Summer Flames"
+      description: "Hot orange fading into gold."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff4500:#ffd700>%message%</gradient>"
+    color_cherryblossom:
+      display-name: "Cherry Blossom"
+      description: "Two whispers of soft pink."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffb6c1:#ffc0cb>%message%</gradient>"
+    color_neonblossom:
+      display-name: "Neon Blossom"
+      description: "Magenta blazing into cyan."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff00ff:#00ffff>%message%</gradient>"
+    color_mysticalspace:
+      display-name: "Mystical Space"
+      description: "Indigo collapsing into the void."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#4b0082:#000000>%message%</gradient>"
+    color_peachysun:
+      display-name: "Peachy Sun"
+      description: "Peach fuzz catching afternoon light."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffdab9:#ffa500>%message%</gradient>"
+    color_eastergarden:
+      display-name: "Easter Garden"
+      description: "Pastel pink wandering into mint."
+      rarity: "RARE"
+      tradable: true
+      limited: true
+      format: "<gradient:#ffb6c1:#98fb98>%message%</gradient>"
+    color_breezywind:
+      display-name: "Breezy Wind"
+      description: "Cool sky dissolving into white."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#87ceeb:#ffffff>%message%</gradient>"
+    color_tropicalsummer:
+      display-name: "Tropical Summer"
+      description: "Lagoon cyan into citrus yellow."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#00ffff:#ffff00>%message%</gradient>"
+    color_rainbowfractal:
+      display-name: "Rainbow Fractal"
+      description: "Primary colors looping in pattern."
+      rarity: "LEGENDARY"
+      tradable: true
+      limited: false
+      format: "<gradient:#ff0000:#00ff00:#0000ff>%message%</gradient>"
+    color_dewhaze:
+      display-name: "Dew Haze"
+      description: "Almost-white pale cyan and blue."
+      rarity: "COMMON"
+      tradable: true
+      limited: false
+      format: "<gradient:#e0ffff:#f0f8ff>%message%</gradient>"
+    color_wintercamo:
+      display-name: "Winter Camo"
+      description: "Snow blending into steel."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#ffffff:#708090>%message%</gradient>"
+    color_stormyheart:
+      display-name: "Stormy Heart"
+      description: "Dark grey heading toward black."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#4b4b4b:#000000>%message%</gradient>"
+    color_midnightdarkness:
+      display-name: "Midnight Darkness"
+      description: "Deep navy crashing into night."
+      rarity: "EPIC"
+      tradable: true
+      limited: false
+      format: "<gradient:#191970:#000000>%message%</gradient>"
+    color_phantomecho:
+      display-name: "Phantom Echo"
+      description: "Two ghostly shades of grey."
+      rarity: "RARE"
+      tradable: true
+      limited: false
+      format: "<gradient:#2f4f4f:#696969>%message%</gradient>"
