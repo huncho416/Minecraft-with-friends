@@ -5,6 +5,8 @@
 # the second line through promos / events.
 #
 # Color tags follow MythicHex (&#RRGGBB, &l for bold, &o italic, etc).
+# Only the "MythicPvP" wordmark is bolded; &r is used to reset bold
+# before the trailing flavour text so it renders as a regular weight.
 #
 # Set hide-player-count: true to hide the X/Y player count entirely on
 # the server list. Set max-players-override to a positive number to
@@ -12,12 +14,12 @@
 
 motd:
   line1:
-    - "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lPvP &#D2D8E0&o— A new era of Minecraft —"
-    - "&#F529BE&lMythicPvP &#9CC3FF&l⚔ &#D2D8E0&o— Forge your legend —"
-    - "&#F529BE&lMythicPvP &#FFEC8A&l✦ &#D2D8E0&onow live"
+    - "&#F529BE&lM&#FD37F0&ly&#F639EA&lt&#DD35C4&lh&#F63DF1&li&#EA21FF&lc&#FFFFFF&lPvP&r &#D2D8E0&o— A new era of Minecraft —"
+    - "&#F529BE&lMythicPvP&r &#9CC3FF⚔ &#D2D8E0&o— Forge your legend —"
+    - "&#F529BE&lMythicPvP&r &#FFEC8A✦ &#D2D8E0&onow live"
   line2:
     - "&#9CC3FFplay.mythicpvp.net &8| &#FFEC8ASkyblock &8• &#FF8A8APvP &8• &#9CFF9CHub"
     - "&#9CC3FFplay.mythicpvp.net &8| &#FFEC8AJoin our Discord: &#9CC3FFdiscord.gg/mythicpvp"
-    - "&#9CFF9C&l⟶ &#FFFFFFNew season &#9CFF9Cstarts &#FFEC8AThis Weekend &#9CFF9C&l⟵"
+    - "&#9CFF9C⟶ &#FFFFFFNew season &#9CFF9Cstarts &#FFEC8AThis Weekend &#9CFF9C⟵"
   hide-player-count: false
   max-players-override: 0
