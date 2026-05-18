@@ -190,7 +190,6 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new net.mythicpvp.core.session.CrossShardPresenceService(
                         rankService, grantService, serverIdentity.id(), getLogger());
         crossShardPresence.start();
-        displayService.setPresenceCounter(crossShardPresence::totalOnline);
         getServer().getPluginManager().registerEvents(
                 new net.mythicpvp.core.session.SessionPresenceListener(serverIdentity.id()), this);
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
@@ -226,6 +225,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         displayService.loadTemplates(
                 configManager.getOrCreate("tablist"),
                 configManager.getOrCreate("scoreboard"));
+        displayService.setPresenceCounter(crossShardPresence::totalOnline);
         rankService.setDisplayRefresher(displayService::applyAll);
         grantService.setDisplayRefresher(displayService::refresh);
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(displayService), this);
