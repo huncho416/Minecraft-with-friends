@@ -28,6 +28,34 @@ public final class PunishmentService {
     private final List<PunishmentRecord> records = new CopyOnWriteArrayList<>();
     private final List<PunishmentNotice> notices = new CopyOnWriteArrayList<>();
     private final List<PunishmentTemplate> templates = new CopyOnWriteArrayList<>();
+    private final java.util.Map<UUID, Long> recentlyIssuedLocal = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long LOCAL_ISSUE_WINDOW_MILLIS = 10_000L;
+
+    public boolean wasIssuedLocallyRecently(@NotNull UUID targetUuid) {
+        Long when = recentlyIssuedLocal.get(targetUuid);
+        if (when == null) return false;
+        if (System.currentTimeMillis() - when > LOCAL_ISSUE_WINDOW_MILLIS) {
+            recentlyIssuedLocal.remove(targetUuid);
+            return false;
+        }
+        return true;
+    }
+
+    private final java.util.Map<UUID, Long> recentlyPardonedLocal = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public boolean wasPardonedLocallyRecently(@NotNull UUID targetUuid) {
+        Long when = recentlyPardonedLocal.get(targetUuid);
+        if (when == null) return false;
+        if (System.currentTimeMillis() - when > LOCAL_ISSUE_WINDOW_MILLIS) {
+            recentlyPardonedLocal.remove(targetUuid);
+            return false;
+        }
+        return true;
+    }
+
+    public void markPardonedLocally(@NotNull UUID targetUuid) {
+        recentlyPardonedLocal.put(targetUuid, System.currentTimeMillis());
+    }
 
     private volatile PersistenceGateway persistence = NoopPersistenceGateway.INSTANCE;
     private volatile Consumer<PunishmentNotice> enforcer = notice -> {};
@@ -81,6 +109,7 @@ public final class PunishmentService {
             }
         }
         if (firstPardoned != null) {
+            markPardonedLocally(targetUuid);
             pardonNoticeListener.accept(new PardonNotice(firstPardoned, staffName, silent));
         }
         return pardoned;
@@ -100,6 +129,7 @@ public final class PunishmentService {
         long expiresAtMillis = request.expiresAt() == null ? 0L : request.expiresAt().toEpochMilli();
         PunishmentRecord record = new PunishmentRecord(ids.incrementAndGet(), request.targetUuid(), request.targetName(), request.staffUuid(), request.staffName(), request.type(), request.reason(), request.proof(), now.toEpochMilli(), expiresAtMillis, request.silent(), request.clearInventory(), false, request.server());
         records.add(record);
+        recentlyIssuedLocal.put(request.targetUuid(), System.currentTimeMillis());
         PunishmentNotice notice = new PunishmentNotice(record, !request.silent());
         protocolManager.publish(CHANNEL, notice);
         persistence.punishIssue(record);

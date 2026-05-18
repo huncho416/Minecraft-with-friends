@@ -41,7 +41,23 @@ public final class PrivateMessageCommand extends MythicCommand {
             sender.sendMessage(MythicHex.colorize("&#FF8A8AThat player is not online."));
             return;
         }
+        if (!canInitiateMessage(sender, target)) {
+            sender.sendMessage(MythicHex.colorize(
+                    "&#FF8A8AYou can only message staff after they message you first."));
+            return;
+        }
         send(sender, target, String.join(" ", words));
+    }
+
+    private boolean canInitiateMessage(@NotNull Player sender, @NotNull Player target) {
+        CoreRank senderRank = ranks.get(grants.activeRank(sender.getUniqueId()));
+        CoreRank targetRank = ranks.get(grants.activeRank(target.getUniqueId()));
+        boolean senderIsStaff = senderRank != null && senderRank.staff();
+        boolean targetIsStaff = targetRank != null && targetRank.staff();
+        if (senderIsStaff) return true;
+        if (!targetIsStaff) return true;
+        UUID lastReplyTarget = replies.get(sender.getUniqueId());
+        return lastReplyTarget != null && lastReplyTarget.equals(target.getUniqueId());
     }
 
     void send(@NotNull Player sender, @NotNull Player target, @NotNull String message) {

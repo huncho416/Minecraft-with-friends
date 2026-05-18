@@ -17,6 +17,7 @@ public final class StaffChannelService {
     private final List<StaffAudience> audiences = new CopyOnWriteArrayList<>();
     private final List<StaffMessage> history = new CopyOnWriteArrayList<>();
     private final Map<UUID, StaffChannel> toggles = new ConcurrentHashMap<>();
+    private volatile StaffChatSqlRelay relay = null;
 
     public StaffChannelService(@NotNull ProtocolManager protocolManager, @NotNull String serverId) {
         this.protocolManager = protocolManager;
@@ -34,6 +35,43 @@ public final class StaffChannelService {
         StaffMessage staffMessage = new StaffMessage(channel, serverId, senderUuid, senderName,
                 rank, rankColor, chatPrefix, message, System.currentTimeMillis());
         protocolManager.publish(CHANNEL, staffMessage);
+        if (relay != null) {
+            relay.publish(channel.name(), senderUuid, senderName, rank, rankColor, chatPrefix, message);
+        }
+    }
+
+    public void setRelay(@NotNull StaffChatSqlRelay relay) {
+        this.relay = relay;
+    }
+
+    public void deliverRemote(@NotNull String channelName,
+                               @NotNull String originShard,
+                               @NotNull UUID senderUuid,
+                               @NotNull String senderName,
+                               @NotNull String rank,
+                               @NotNull String rankColor,
+                               @NotNull String chatPrefix,
+                               @NotNull String message) {
+        if (originShard.equalsIgnoreCase(serverId)) {
+            return;
+        }
+        if ("HELPOP_NOTIFY".equalsIgnoreCase(channelName)) {
+            net.mythicpvp.core.report.StaffNotifier.notifyHelpopByName(senderName, originShard, message);
+            return;
+        }
+        if ("REQUEST_NOTIFY".equalsIgnoreCase(channelName)) {
+            net.mythicpvp.core.report.StaffNotifier.notifyHelpopByName(senderName, originShard, message);
+            return;
+        }
+        StaffChannel channel;
+        try {
+            channel = StaffChannel.valueOf(channelName);
+        } catch (IllegalArgumentException e) {
+            return;
+        }
+        StaffMessage staffMessage = new StaffMessage(channel, originShard, senderUuid, senderName,
+                rank, rankColor, chatPrefix, message, System.currentTimeMillis());
+        receive(staffMessage);
     }
 
     public boolean toggle(@NotNull UUID playerUuid, @NotNull StaffChannel channel) {

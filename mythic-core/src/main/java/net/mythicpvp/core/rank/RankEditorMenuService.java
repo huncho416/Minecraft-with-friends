@@ -26,7 +26,7 @@ public final class RankEditorMenuService {
     }
 
     public void openRankList(@NotNull Player viewer) {
-        PaginatedMenu menu = PaginatedMenu.create(6, "&#F529BERank Editor");
+        PaginatedMenu menu = PaginatedMenu.create(5, "&#F529BERank Editor");
         for (CoreRank rank : rankService.all()) {
             menu.addItem(MythicItem.create(rank.dye())
                     .name(asAmpHex(rank.color()) + rank.name())
@@ -34,6 +34,7 @@ public final class RankEditorMenuService {
                             "&7Id: &f" + rank.id(),
                             "&7Weight: &f" + rank.weight(),
                             "&7Staff: &f" + (rank.staff() ? "Yes" : "No"),
+                            "&7Scope: &f" + rank.scope(),
                             "&#F529BEClick to edit"))
                     .build(), event -> openOverview(viewer, rank.id()));
         }
@@ -68,13 +69,41 @@ public final class RankEditorMenuService {
                         .name(text.editorPermissions())
                         .lore(loreWithCount(rank.permissions()))
                         .build(), event -> openPermissionMenu(viewer, rankId))
-                .slot(16, MythicItem.create(Material.BARRIER)
-                        .name(text.editorClose()).build(),
-                        event -> viewer.closeInventory())
+                .slot(16, MythicItem.create(Material.COMPASS)
+                        .name("&#9CC3FFScope: &#FFFFFF" + rank.scope())
+                        .lore(List.of(
+                                "&7Controls which network this rank applies on.",
+                                "&7• &fglobal &7— takes effect on every shard",
+                                "&7• &f<network> &7— only on that network (hub, skyblock, ...)",
+                                "",
+                                "&#9CFF9CClick to cycle to the next scope."))
+                        .build(),
+                        event -> cycleScope(viewer, rankId))
                 .slot(18, MythicItem.create(Material.ARROW)
                         .name("&#FFEC8A<- Back to rank list").build(),
                         event -> openRankList(viewer))
                 .open(viewer);
+    }
+
+    private void cycleScope(@NotNull Player viewer, @NotNull String rankId) {
+        CoreRank rank = rankService.get(rankId);
+        if (rank == null) return;
+        List<String> options = scopeOptions();
+        int idx = options.indexOf(rank.scope().toLowerCase());
+        String next = options.get((idx + 1) % options.size());
+        rankService.setField(rankId, "scope", next);
+        viewer.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize(
+                "&#9CFF9CScope for &#FFFFFF" + rankId + " &#9CFF9Cnow &#FFFFFF" + next));
+        openOverview(viewer, rankId);
+    }
+
+    @NotNull
+    private List<String> scopeOptions() {
+        java.util.LinkedHashSet<String> opts = new java.util.LinkedHashSet<>();
+        opts.add(CoreRank.SCOPE_GLOBAL);
+        opts.add("hub");
+        opts.add("skyblock");
+        return new java.util.ArrayList<>(opts);
     }
 
     public void openFieldEditor(@NotNull Player viewer, @NotNull String rankId) {

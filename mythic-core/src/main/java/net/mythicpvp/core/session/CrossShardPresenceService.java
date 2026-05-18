@@ -125,22 +125,21 @@ public final class CrossShardPresenceService {
         if (snap.shardId.equalsIgnoreCase(localShardId)) return;
         StaffLabel label = labelFor(uuid, snap.username);
         if (label == null) return;
-        broadcast("&#9CFF9C+ " + label.colorTag + snap.username + " &7joined &#FFFFFF" + snap.shardId);
+        broadcast("&#9CC3FF[S] " + label.colorTag + snap.username + " &#9CFF9Cjoined &#FFFFFF" + snap.shardId + "&#9CFF9C.");
     }
 
     private void notifyQuit(@NotNull UUID uuid, @NotNull SessionSnapshot snap) {
         if (snap.shardId.equalsIgnoreCase(localShardId)) return;
         StaffLabel label = labelFor(uuid, snap.username);
         if (label == null) return;
-        broadcast("&#FF8A8A- " + label.colorTag + snap.username + " &7left &#FFFFFF" + snap.shardId);
+        broadcast("&#9CC3FF[S] " + label.colorTag + snap.username + " &#FF8A8Aleft &#FFFFFF" + snap.shardId + "&#FF8A8A.");
     }
 
     private void notifyMove(@NotNull UUID uuid, @NotNull SessionSnapshot before, @NotNull SessionSnapshot after) {
-        if (after.shardId.equalsIgnoreCase(localShardId)) return;
         StaffLabel label = labelFor(uuid, after.username);
         if (label == null) return;
-        broadcast("&#FFEC8A» " + label.colorTag + after.username
-                + " &7moved &#FFFFFF" + before.shardId + " &7→ &#FFFFFF" + after.shardId);
+        broadcast("&#9CC3FF[S] " + label.colorTag + after.username
+                + " &7switched from &#FFFFFF" + before.shardId + " &7to &#FFFFFF" + after.shardId + "&7.");
     }
 
     private void broadcast(@NotNull String message) {

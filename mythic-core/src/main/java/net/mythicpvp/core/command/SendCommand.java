@@ -2,6 +2,7 @@ package net.mythicpvp.core.command;
 
 import net.mythicpvp.core.session.CrossShardPresenceService;
 import net.mythicpvp.core.transfer.ProxyTransferService;
+import net.mythicpvp.core.transfer.TransferRequestService;
 import net.mythicpvp.suite.command.CommandAlias;
 import net.mythicpvp.suite.command.CommandPermission;
 import net.mythicpvp.suite.command.Complete;
@@ -9,22 +10,30 @@ import net.mythicpvp.suite.command.Default;
 import net.mythicpvp.suite.command.MythicCommand;
 import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.UUID;
 
 @net.mythicpvp.suite.command.Usage("&#FF8A8AUsage: &#FFFFFF/send <player> <shard-id>")
 @CommandAlias("send")
 @CommandPermission("mythic.core.server.transfer")
 public final class SendCommand extends MythicCommand {
 
+    private static final UUID CONSOLE_UUID = new UUID(0L, 0L);
+
     private final ProxyTransferService transferService;
     private final CrossShardPresenceService presence;
+    private final TransferRequestService dispatch;
 
     public SendCommand(@NotNull ProxyTransferService transferService,
-                       @NotNull CrossShardPresenceService presence) {
+                       @NotNull CrossShardPresenceService presence,
+                       @NotNull TransferRequestService dispatch) {
         this.transferService = transferService;
         this.presence = presence;
+        this.dispatch = dispatch;
     }
 
     @Default
@@ -48,14 +57,21 @@ public final class SendCommand extends MythicCommand {
             return;
         }
         String remoteShard = presence.shardOf(targetName);
-        if (remoteShard != null) {
-            sender.sendMessage(MythicHex.colorize(
-                    "&#FFEC8A" + targetName + " &7is on &#FFFFFF" + remoteShard
-                            + "&7. Use &f/server " + remoteShard + " &7then &f/send " + targetName
-                            + " " + shardId + "&7."));
-        } else {
+        if (remoteShard == null) {
             sender.sendMessage(MythicHex.colorize(
                     "&#FF8A8APlayer not online: &#FFFFFF" + targetName));
+            return;
+        }
+        OfflinePlayer offline = Bukkit.getOfflinePlayer(targetName);
+        UUID targetUuid = offline.getUniqueId();
+        UUID requesterUuid = sender instanceof Player p ? p.getUniqueId() : CONSOLE_UUID;
+        if (dispatch.dispatch(targetUuid, targetName, shardId, requesterUuid, sender.getName())) {
+            sender.sendMessage(MythicHex.colorize(
+                    "&#9CFF9CDispatched send request: &#FFFFFF" + targetName
+                            + " &#9CFF9C(on &#FFFFFF" + remoteShard + "&#9CFF9C) → &#FFFFFF" + shardId));
+        } else {
+            sender.sendMessage(MythicHex.colorize(
+                    "&#FF8A8ACould not dispatch send request (STDB unavailable)."));
         }
     }
 }

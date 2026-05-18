@@ -22,6 +22,7 @@ public final class StaffNotifier {
                 "&#FF8A8A[REPORT] &#FFFFFF" + report.reporterName()
                         + " &#FF8A8Areported &#FFFFFF" + report.targetName()
                         + " &#FF8A8Afor &#FFFFFF" + report.category().displayName()
+                        + " &#FF8A8Afrom &#FFFFFF" + report.reporterServer()
                         + " &8(report #" + report.id() + ")");
         broadcast(REPORT_NOTIFY_PERMISSION, msg);
     }
@@ -29,10 +30,16 @@ public final class StaffNotifier {
     public static void notifyHelpop(@NotNull Player sender,
                                     @NotNull String serverId,
                                     @NotNull String message) {
-        Component nameClickable = MythicHex.colorize("&#FFFFFF" + sender.getName())
+        notifyHelpopByName(sender.getName(), serverId, message);
+    }
+
+    public static void notifyHelpopByName(@NotNull String senderName,
+                                          @NotNull String serverId,
+                                          @NotNull String message) {
+        Component nameClickable = MythicHex.colorize("&#FFFFFF" + senderName)
                 .hoverEvent(HoverEvent.showText(MythicHex.colorize(
-                        "&#9CFF9CClick to teleport to &#FFFFFF" + sender.getName())))
-                .clickEvent(ClickEvent.runCommand("/tp " + sender.getName()));
+                        "&#9CFF9CClick to teleport to &#FFFFFF" + senderName)))
+                .clickEvent(ClickEvent.runCommand("/tp " + senderName));
         Component header = MythicHex.colorize("&#9CFF9C[HELPOP] ");
         Component server = MythicHex.colorize(" &8(" + serverId + ") &7» &#FFFFFF");
         Component body = MythicHex.colorize(message);

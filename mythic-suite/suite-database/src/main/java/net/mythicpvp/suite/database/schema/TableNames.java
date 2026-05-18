@@ -33,6 +33,10 @@ public final class TableNames {
     public static final String MAIL = "mail";
     public static final String LOGIN_STREAKS = "login_streaks";
 
+    public static final String STAFF_CHAT_EVENTS = "staff_chat_events";
+    public static final String TRANSFER_REQUESTS = "transfer_requests";
+    public static final String REPORTS = "reports";
+
     public static final String ISLANDS = "islands";
     public static final String ISLAND_MEMBERS = "island_members";
     public static final String SKILLS = "skills";

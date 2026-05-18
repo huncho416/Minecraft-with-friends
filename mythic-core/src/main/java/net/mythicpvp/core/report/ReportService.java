@@ -1,5 +1,8 @@
 package net.mythicpvp.core.report;
 
+import net.mythicpvp.suite.database.DatabaseManager;
+import net.mythicpvp.suite.database.SpacetimeConnection;
+import net.mythicpvp.suite.database.schema.MythicSchema;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,6 +19,14 @@ public final class ReportService {
     private final Map<Long, Report> reports = new ConcurrentHashMap<>();
     private final AtomicLong sequence = new AtomicLong();
     private volatile ReportStore store;
+
+    public void applyRemote(@NotNull Report report) {
+        long id = report.id();
+        reports.put(id, report);
+        if (id > sequence.get()) {
+            sequence.set(id);
+        }
+    }
 
     public void setStore(@NotNull ReportStore store) {
         this.store = store;
@@ -38,6 +49,12 @@ public final class ReportService {
                 category, reporterServer, System.currentTimeMillis());
         reports.put(id, report);
         flush();
+        try {
+            SpacetimeConnection connection = DatabaseManager.getInstance().getPrimary();
+            new MythicSchema(connection).reportCreate(reporterUuid, reporterName,
+                    targetUuid, targetName, category.name(), reporterServer);
+        } catch (IllegalStateException ignored) {
+        }
         return report;
     }
 

@@ -406,6 +406,77 @@ public final class MythicSchema {
     }
 
     @NotNull
+    public CompletableFuture<ReducerResult> staffChatSend(
+            @NotNull String channel,
+            @NotNull UUID senderUuid,
+            @NotNull String senderName,
+            @NotNull String senderRank,
+            @NotNull String senderRankColor,
+            @NotNull String senderChatPrefix,
+            @NotNull String originShard,
+            @NotNull String message) {
+        return call(
+                ReducerNames.STAFF_CHAT_SEND,
+                channel, hyphenated(senderUuid), senderName,
+                senderRank, senderRankColor, senderChatPrefix,
+                originShard, message);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> staffChatPrune(long olderThanMicros) {
+        return call(ReducerNames.STAFF_CHAT_PRUNE, olderThanMicros);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> transferRequestCreate(
+            @NotNull UUID targetUuid,
+            @NotNull String targetName,
+            @NotNull String destinationShard,
+            @NotNull UUID requesterUuid,
+            @NotNull String requesterName) {
+        return call(
+                ReducerNames.TRANSFER_REQUEST_CREATE,
+                hyphenated(targetUuid), targetName, destinationShard,
+                hyphenated(requesterUuid), requesterName);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> transferRequestComplete(long requestId) {
+        return call(ReducerNames.TRANSFER_REQUEST_COMPLETE, requestId);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> transferRequestPrune(long olderThanMicros) {
+        return call(ReducerNames.TRANSFER_REQUEST_PRUNE, olderThanMicros);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> reportCreate(
+            @NotNull UUID reporterUuid,
+            @NotNull String reporterName,
+            @NotNull UUID targetUuid,
+            @NotNull String targetName,
+            @NotNull String category,
+            @NotNull String reporterShard) {
+        return call(
+                ReducerNames.REPORT_CREATE,
+                hyphenated(reporterUuid), reporterName,
+                hyphenated(targetUuid), targetName,
+                category, reporterShard);
+    }
+
+    @NotNull
+    public CompletableFuture<ReducerResult> reportResolve(
+            long reportId,
+            @NotNull UUID resolverUuid,
+            @NotNull String resolverName,
+            @NotNull String resolution) {
+        return call(
+                ReducerNames.REPORT_RESOLVE,
+                reportId, hyphenated(resolverUuid), resolverName, resolution);
+    }
+
+    @NotNull
     public CompletableFuture<ReducerResult> islandCreate(
             @NotNull String islandId,
             @NotNull UUID owner,

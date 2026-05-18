@@ -55,6 +55,14 @@ public final class ReducerNames {
     public static final String MAIL_MARK_READ = "mail_mark_read";
     public static final String LOGIN_STREAK_RECORD = "login_streak_record";
 
+    public static final String STAFF_CHAT_SEND = "staff_chat_send";
+    public static final String STAFF_CHAT_PRUNE = "staff_chat_prune";
+    public static final String TRANSFER_REQUEST_CREATE = "transfer_request_create";
+    public static final String TRANSFER_REQUEST_COMPLETE = "transfer_request_complete";
+    public static final String TRANSFER_REQUEST_PRUNE = "transfer_request_prune";
+    public static final String REPORT_CREATE = "report_create";
+    public static final String REPORT_RESOLVE = "report_resolve";
+
     public static final String ISLAND_CREATE = "island_create";
     public static final String SKILL_GRANT_XP = "skill_grant_xp";
     public static final String STAT_INCREMENT = "stat_increment";

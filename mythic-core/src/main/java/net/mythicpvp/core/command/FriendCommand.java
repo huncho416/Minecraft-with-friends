@@ -25,9 +25,19 @@ import java.util.UUID;
 public final class FriendCommand extends MythicCommand {
 
     private final SocialService social;
+    @Nullable private final net.mythicpvp.core.session.CrossShardPresenceService presence;
+    @Nullable private final net.mythicpvp.core.transfer.ShardRegistry shardRegistry;
+
+    public FriendCommand(@NotNull SocialService social,
+                          @Nullable net.mythicpvp.core.session.CrossShardPresenceService presence,
+                          @Nullable net.mythicpvp.core.transfer.ShardRegistry shardRegistry) {
+        this.social = social;
+        this.presence = presence;
+        this.shardRegistry = shardRegistry;
+    }
 
     public FriendCommand(@NotNull SocialService social) {
-        this.social = social;
+        this(social, null, null);
     }
 
     @Default
@@ -144,9 +154,61 @@ public final class FriendCommand extends MythicCommand {
         for (UUID friendUuid : friends) {
             String name = resolveName(friendUuid, null);
             Player online = Bukkit.getPlayer(friendUuid);
-            String status = online != null && online.isOnline() ? "&#9CFF9COnline" : "&#FF8A8AOffline";
-            player.sendMessage(MythicHex.colorize("&8• &#FFFFFF" + name + " " + status));
+            boolean isOnline = online != null && online.isOnline();
+            String status = isOnline ? "&#9CFF9COnline" : "&#FF8A8AOffline";
+
+            String hoverText;
+            if (isOnline) {
+                String shardId = presence != null ? presence.shardOf(name) : null;
+                String network = networkLabelFor(shardId);
+                hoverText = "&#9CFF9COnline on &#FFFFFF" + (network != null ? network : "the network");
+            } else {
+                Long lastSeen = social.lastSeen(friendUuid);
+                hoverText = lastSeen != null && lastSeen > 0
+                        ? "&#FFEC8ALast seen: &#FFFFFF" + relativeTime(System.currentTimeMillis() - lastSeen) + " ago"
+                        : "&#FFEC8AHas never logged in";
+            }
+            Component nameComponent = MythicHex.colorize("&#FFFFFF" + name)
+                    .hoverEvent(HoverEvent.showText(MythicHex.colorize(hoverText)));
+            Component line = MythicHex.colorize("&8• ")
+                    .append(nameComponent)
+                    .append(MythicHex.colorize(" " + status));
+            player.sendMessage(line);
         }
+    }
+
+    @Nullable
+    private String networkLabelFor(@Nullable String shardId) {
+        if (shardId == null) return null;
+        if (shardRegistry != null) {
+            for (var row : shardRegistry.all()) {
+                if (shardId.equalsIgnoreCase(row.shard_id())) {
+                    return capitalize(row.role());
+                }
+            }
+        }
+        int dash = shardId.indexOf('-');
+        return capitalize(dash > 0 ? shardId.substring(0, dash) : shardId);
+    }
+
+    @NotNull
+    private static String capitalize(@NotNull String input) {
+        if (input.isEmpty()) return input;
+        String lower = input.toLowerCase(java.util.Locale.ROOT);
+        return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
+    }
+
+    @NotNull
+    private static String relativeTime(long millis) {
+        if (millis <= 0) return "moments";
+        long seconds = millis / 1000L;
+        if (seconds < 60) return seconds + "s";
+        long minutes = seconds / 60L;
+        if (minutes < 60) return minutes + "m";
+        long hours = minutes / 60L;
+        if (hours < 24) return hours + "h";
+        long days = hours / 24L;
+        return days + "d";
     }
 
     @Subcommand("requests")
