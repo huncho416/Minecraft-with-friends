@@ -63,6 +63,23 @@ public final class StaffChannelService {
             net.mythicpvp.core.report.StaffNotifier.notifyHelpopByName(senderName, originShard, message);
             return;
         }
+        if ("FRIEND_DM".equalsIgnoreCase(channelName)) {
+            int sep = message.indexOf("::");
+            if (sep < 0) return;
+            UUID targetUuid;
+            try {
+                targetUuid = UUID.fromString(message.substring(0, sep));
+            } catch (IllegalArgumentException e) {
+                return;
+            }
+            String body = message.substring(sep + 2);
+            org.bukkit.entity.Player target = org.bukkit.Bukkit.getPlayer(targetUuid);
+            if (target != null && target.isOnline()) {
+                target.sendMessage(net.mythicpvp.suite.hex.MythicHex.colorize(
+                        "&#F529BE[Friend] &#FFFFFF" + senderName + " &8» &#FFFFFF" + body));
+            }
+            return;
+        }
         StaffChannel channel;
         try {
             channel = StaffChannel.valueOf(channelName);

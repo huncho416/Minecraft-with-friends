@@ -27,17 +27,20 @@ public final class FriendCommand extends MythicCommand {
     private final SocialService social;
     @Nullable private final net.mythicpvp.core.session.CrossShardPresenceService presence;
     @Nullable private final net.mythicpvp.core.transfer.ShardRegistry shardRegistry;
+    @Nullable private final net.mythicpvp.core.staff.StaffChatSqlRelay relay;
 
     public FriendCommand(@NotNull SocialService social,
                           @Nullable net.mythicpvp.core.session.CrossShardPresenceService presence,
-                          @Nullable net.mythicpvp.core.transfer.ShardRegistry shardRegistry) {
+                          @Nullable net.mythicpvp.core.transfer.ShardRegistry shardRegistry,
+                          @Nullable net.mythicpvp.core.staff.StaffChatSqlRelay relay) {
         this.social = social;
         this.presence = presence;
         this.shardRegistry = shardRegistry;
+        this.relay = relay;
     }
 
     public FriendCommand(@NotNull SocialService social) {
-        this(social, null, null);
+        this(social, null, null, null);
     }
 
     @Default
@@ -209,6 +212,51 @@ public final class FriendCommand extends MythicCommand {
         if (hours < 24) return hours + "h";
         long days = hours / 24L;
         return days + "d";
+    }
+
+    @Subcommand("msg")
+    public void msg(@NotNull Player player, @NotNull String targetName, @NotNull String[] words) {
+        if (words.length == 0) {
+            player.sendMessage(MythicHex.colorize("&#FF8A8AUsage: &f/friend msg <friend> <message>"));
+            return;
+        }
+        OfflinePlayer offline = Bukkit.getOfflinePlayer(targetName);
+        UUID targetUuid = offline.getUniqueId();
+        Set<UUID> friends = social.friendsOf(player.getUniqueId());
+        if (!friends.contains(targetUuid)) {
+            player.sendMessage(MythicHex.colorize(
+                    "&#FF8A8A" + targetName + " &#FF8A8Ais not on your friends list."));
+            return;
+        }
+        String message = String.join(" ", words);
+        Player target = Bukkit.getPlayer(targetUuid);
+        if (target != null && target.isOnline()) {
+            target.sendMessage(MythicHex.colorize(
+                    "&#F529BE[Friend] &#FFFFFF" + player.getName() + " &8» &#FFFFFF" + message));
+            player.sendMessage(MythicHex.colorize(
+                    "&#F529BE[Friend → " + targetName + "] &#FFFFFF" + message));
+            return;
+        }
+        if (relay == null) {
+            player.sendMessage(MythicHex.colorize(
+                    "&#FF8A8A" + targetName + " &#FF8A8Aisn't online and cross-shard dispatch is offline."));
+            return;
+        }
+        String shardId = presence != null ? presence.shardOf(targetName) : null;
+        if (shardId == null) {
+            player.sendMessage(MythicHex.colorize(
+                    "&#FF8A8A" + targetName + " &#FF8A8Ais offline."));
+            return;
+        }
+        relay.publish("FRIEND_DM", player.getUniqueId(), player.getName(), "", "", "",
+                targetUuid + "::" + message);
+        player.sendMessage(MythicHex.colorize(
+                "&#F529BE[Friend → " + targetName + "] &#FFFFFF" + message));
+    }
+
+    @Subcommand("dm")
+    public void dm(@NotNull Player player, @NotNull String targetName, @NotNull String[] words) {
+        msg(player, targetName, words);
     }
 
     @Subcommand("requests")

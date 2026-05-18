@@ -39,10 +39,9 @@ public final class DisplayService {
     private StaffModeService staffModeService;
     private Function<UUID, Integer> queuePositionLookup;
     private Function<UUID, net.mythicpvp.core.transfer.TransferQueueService.QueueStatus> queueStatusLookup;
-    private net.mythicpvp.core.transfer.ShardRegistry shardRegistry;
 
     public void setShardRegistry(@NotNull net.mythicpvp.core.transfer.ShardRegistry registry) {
-        this.shardRegistry = registry;
+        // legacy hook; presence counter takes precedence
     }
 
     public DisplayService(
@@ -304,26 +303,20 @@ public final class DisplayService {
     @NotNull
     IntSupplier onlineCounter() {
         return () -> {
-            if (shardRegistry == null) {
-                return Bukkit.getOnlinePlayers().size();
-            }
-            int total = 0;
-            boolean foundLocal = false;
-            for (var row : shardRegistry.all()) {
-                if (!"HEALTHY".equalsIgnoreCase(row.status())) continue;
-                if (row.shard_id() != null && row.shard_id().regionMatches(true, 0, "proxy", 0, 5)) continue;
-                if (serverId.equalsIgnoreCase(row.shard_id())) {
-                    foundLocal = true;
-                    total += Bukkit.getOnlinePlayers().size();
-                } else {
-                    total += row.player_count();
+            if (presenceCounter != null) {
+                int network = presenceCounter.getAsInt();
+                if (network > 0) {
+                    return network;
                 }
             }
-            if (!foundLocal) {
-                total += Bukkit.getOnlinePlayers().size();
-            }
-            return total;
+            return Bukkit.getOnlinePlayers().size();
         };
+    }
+
+    private IntSupplier presenceCounter;
+
+    public void setPresenceCounter(@NotNull IntSupplier counter) {
+        this.presenceCounter = counter;
     }
 
     private int onlineCount() {

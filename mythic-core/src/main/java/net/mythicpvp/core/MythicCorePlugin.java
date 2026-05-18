@@ -190,6 +190,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new net.mythicpvp.core.session.CrossShardPresenceService(
                         rankService, grantService, serverIdentity.id(), getLogger());
         crossShardPresence.start();
+        displayService.setPresenceCounter(crossShardPresence::totalOnline);
         getServer().getPluginManager().registerEvents(
                 new net.mythicpvp.core.session.SessionPresenceListener(serverIdentity.id()), this);
         net.mythicpvp.core.punishment.PunishmentMenuText menuText =
@@ -325,7 +326,9 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new HelpCommand(essentialsService));
         commandManager.register(new net.mythicpvp.core.command.ListCommand(rankService, grantService));
         commandManager.register(new DiscordCommand(essentialsService));
-        commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry));
+        commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry, staffChatRelay));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand());
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand.Undisguise());
         commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
         commandManager.register(new MailCommand(socialService, messages));
         PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
