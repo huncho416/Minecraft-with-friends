@@ -44,8 +44,23 @@ public final class BukkitPacketRenderer implements PacketRenderer {
     private void renderScoreboard(@NotNull Player viewer, @NotNull PacketAction.ScoreboardState state)
             throws ReflectiveOperationException {
         ScoreboardState previous = scoreboards.get(viewer.getUniqueId());
-        Object objective = newObjective(state.title());
+        List<Component> lines = state.lines().stream().limit(MAX_LINES).toList();
+        int contentHash = contentHash(state.title(), lines);
 
+        if (previous != null && previous.contentHash() == contentHash) {
+            return;
+        }
+
+        if (previous != null && previous.lineCount() == lines.size()) {
+            for (int index = 0; index < lines.size(); index++) {
+                String owner = lineOwner(index);
+                send(viewer, setScorePacket(owner, lines.get(index), lines.size() - index));
+            }
+            scoreboards.put(viewer.getUniqueId(), new ScoreboardState(previous.owners(), contentHash, lines.size()));
+            return;
+        }
+
+        Object objective = newObjective(state.title());
         if (previous != null) {
             for (String owner : previous.owners()) {
                 send(viewer, resetScorePacket(owner));
@@ -57,13 +72,20 @@ public final class BukkitPacketRenderer implements PacketRenderer {
         send(viewer, displayObjectivePacket(objective));
 
         List<String> owners = new ArrayList<>();
-        List<Component> lines = state.lines().stream().limit(MAX_LINES).toList();
         for (int index = 0; index < lines.size(); index++) {
             String owner = lineOwner(index);
             owners.add(owner);
             send(viewer, setScorePacket(owner, lines.get(index), lines.size() - index));
         }
-        scoreboards.put(viewer.getUniqueId(), new ScoreboardState(owners));
+        scoreboards.put(viewer.getUniqueId(), new ScoreboardState(owners, contentHash, lines.size()));
+    }
+
+    private static int contentHash(@NotNull Component title, @NotNull List<Component> lines) {
+        int result = PlainTextComponentSerializer.plainText().serialize(title).hashCode();
+        for (Component line : lines) {
+            result = result * 31 + PlainTextComponentSerializer.plainText().serialize(line).hashCode();
+        }
+        return result;
     }
 
     private void renderNametag(@NotNull Player viewer, @NotNull PacketAction.NametagState state)
@@ -215,5 +237,5 @@ public final class BukkitPacketRenderer implements PacketRenderer {
         }
     }
 
-    private record ScoreboardState(@NotNull List<String> owners) {}
+    private record ScoreboardState(@NotNull List<String> owners, int contentHash, int lineCount) {}
 }

@@ -140,10 +140,14 @@ public final class DisguiseMenuService {
                             "&7Skin of &f" + preset.sourceName,
                             "&#D2D8E0Click to pick"))
                     .build(), event -> {
-                session(player).skinValue = chosen.value;
-                session(player).skinSignature = chosen.signature;
-                session(player).skinSource = chosen.displayName;
-                openNamePicker(player);
+                if (chosen.value != null && chosen.signature != null) {
+                    session(player).skinValue = chosen.value;
+                    session(player).skinSignature = chosen.signature;
+                    session(player).skinSource = chosen.displayName;
+                    openNamePicker(player);
+                } else {
+                    resolveSkinFromName(player, chosen.sourceName);
+                }
             });
         }
 

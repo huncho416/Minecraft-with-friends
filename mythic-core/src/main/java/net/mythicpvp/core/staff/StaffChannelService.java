@@ -55,6 +55,10 @@ public final class StaffChannelService {
         if (originShard.equalsIgnoreCase(serverId)) {
             return;
         }
+        if ("ADMIN_NOTIFY".equalsIgnoreCase(channelName)) {
+            net.mythicpvp.core.staff.AdminNotifyService.deliverFromRemote(originShard, message);
+            return;
+        }
         if ("HELPOP_NOTIFY".equalsIgnoreCase(channelName)) {
             net.mythicpvp.core.report.StaffNotifier.notifyHelpopByName(senderName, originShard, message);
             return;

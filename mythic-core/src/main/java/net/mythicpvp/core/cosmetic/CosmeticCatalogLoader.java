@@ -50,9 +50,10 @@ public final class CosmeticCatalogLoader {
                 boolean tradable = entry.getBoolean("tradable", true);
                 boolean limited = entry.getBoolean("limited", false);
                 String format = entry.getString("format");
+                boolean animated = entry.getBoolean("animated", false);
 
                 manager.register(new CosmeticManager.Cosmetic(
-                        id, displayName, type, description, itemModel, rarity, tradable, limited, format));
+                        id, displayName, type, description, itemModel, rarity, tradable, limited, format, animated));
                 count++;
             }
         }

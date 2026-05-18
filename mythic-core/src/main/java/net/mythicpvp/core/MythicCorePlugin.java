@@ -105,6 +105,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private GrantService grantService;
     private GrantFlowService grantFlowService;
     private ChatPromptService chatPromptService;
+    private net.mythicpvp.core.staff.AdminNotifyService adminNotifyService;
     private CoreMessages messages;
     private CoreEssentialsService essentialsService;
     private PersistenceGateway persistenceGateway;
@@ -339,6 +340,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                         staffChannelService, serverIdentity.id(), getLogger());
         staffChannelService.setRelay(staffChatRelay);
         staffChatRelay.start();
+        adminNotifyService = new net.mythicpvp.core.staff.AdminNotifyService(staffChatRelay, serverIdentity.id());
+        net.mythicpvp.suite.scheduler.MythicScheduler.runLater(this, () -> adminNotifyService.announceStartup(), 40L);
 
         commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry, staffChatRelay));
         net.mythicpvp.core.disguise.DisguiseApplier disguiseApplier =
@@ -541,6 +544,14 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
     @Override
     public void disable() {
+
+        if (adminNotifyService != null) {
+            try {
+                adminNotifyService.announceShutdown();
+            } catch (RuntimeException e) {
+                getLogger().warning("[admin-notify] shutdown announce failed: " + e.getMessage());
+            }
+        }
 
         if (persistenceSchema != null && serverIdentity != null) {
             try {

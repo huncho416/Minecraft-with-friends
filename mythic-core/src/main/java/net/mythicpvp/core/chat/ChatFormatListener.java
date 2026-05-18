@@ -29,6 +29,7 @@ public final class ChatFormatListener implements Listener {
     private final GrantService grants;
     private final MythicConfig coreConfig;
     private final ChatColorService chatColors;
+    private final java.util.Map<UUID, Integer> chatFrames = new java.util.concurrent.ConcurrentHashMap<>();
 
     public ChatFormatListener(@NotNull RankService ranks,
                               @NotNull GrantService grants,
@@ -44,7 +45,7 @@ public final class ChatFormatListener implements Listener {
     public void onChat(@NotNull AsyncChatEvent event) {
         Player sender = event.getPlayer();
         UUID uuid = sender.getUniqueId();
-        CoreRank rank = activeRank(uuid);
+        CoreRank rank = effectiveDisplayRank(uuid);
         String template = defaultTemplate();
         String message = PlainTextComponentSerializer.plainText().serialize(event.message());
         String chosenColor = chatColors == null ? null : chatColors.colorFor(uuid);
@@ -52,8 +53,9 @@ public final class ChatFormatListener implements Listener {
         String prefix = rankPrefix(rank);
         String playerColor = playerNameColor(rank);
         String cleanMessage = stripColorCodes(sanitize(message));
-        String chatTagSegment = cosmeticTagSegment(uuid);
-        String renderedMessage = cosmeticColorMessage(uuid, cleanMessage);
+        int frame = nextFrame(uuid);
+        String chatTagSegment = cosmeticTagSegment(uuid, frame);
+        String renderedMessage = cosmeticColorMessage(uuid, cleanMessage, frame);
         if (renderedMessage == null) {
             renderedMessage = messageColor + cleanMessage;
         }
@@ -69,20 +71,40 @@ public final class ChatFormatListener implements Listener {
         event.renderer((source, displayName, msg, viewer) -> component);
     }
 
+    @Nullable
+    private CoreRank effectiveDisplayRank(@NotNull UUID uuid) {
+        String disguiseRankId = DisguiseManager.getInstance().getRankOverride(uuid);
+        if (disguiseRankId != null && !disguiseRankId.isBlank()) {
+            CoreRank disguised = ranks.get(disguiseRankId);
+            if (disguised != null) return disguised;
+        }
+        return activeRank(uuid);
+    }
+
+    private int nextFrame(@NotNull UUID uuid) {
+        return chatFrames.merge(uuid, 1, Integer::sum);
+    }
+
     @NotNull
-    private String cosmeticTagSegment(@NotNull UUID uuid) {
-        String format = equippedFormat(uuid, CosmeticType.CHAT_TAG);
-        if (format == null || format.isBlank()) {
-            return "";
+    private String cosmeticTagSegment(@NotNull UUID uuid, int frame) {
+        CosmeticManager.Cosmetic cosmetic = equippedCosmetic(uuid, CosmeticType.CHAT_TAG);
+        if (cosmetic == null) return "";
+        String format = cosmetic.format();
+        if (format == null || format.isBlank()) return "";
+        if (cosmetic.animated()) {
+            format = rotateGradient(format, frame);
         }
         return format + " ";
     }
 
     @Nullable
-    private String cosmeticColorMessage(@NotNull UUID uuid, @NotNull String cleanMessage) {
-        String format = equippedFormat(uuid, CosmeticType.CHAT_COLOR);
-        if (format == null || format.isBlank()) {
-            return null;
+    private String cosmeticColorMessage(@NotNull UUID uuid, @NotNull String cleanMessage, int frame) {
+        CosmeticManager.Cosmetic cosmetic = equippedCosmetic(uuid, CosmeticType.CHAT_COLOR);
+        if (cosmetic == null) return null;
+        String format = cosmetic.format();
+        if (format == null || format.isBlank()) return null;
+        if (cosmetic.animated()) {
+            format = rotateGradient(format, frame);
         }
         if (!format.contains("%message%")) {
             return format + cleanMessage;
@@ -91,20 +113,31 @@ public final class ChatFormatListener implements Listener {
     }
 
     @Nullable
-    private String equippedFormat(@NotNull UUID uuid, @NotNull CosmeticType type) {
+    private CosmeticManager.Cosmetic equippedCosmetic(@NotNull UUID uuid, @NotNull CosmeticType type) {
         CosmeticManager manager = CosmeticManager.getInstance();
         String equippedId = manager.getEquipped(uuid, type);
-        if (equippedId == null) {
-            return null;
+        if (equippedId == null) return null;
+        if (!manager.ownsCosmetic(uuid, equippedId)) return null;
+        return manager.get(equippedId);
+    }
+
+    @NotNull
+    static String rotateGradient(@NotNull String format, int frame) {
+        int start = format.indexOf("<gradient:");
+        if (start < 0) return format;
+        int colorsStart = start + "<gradient:".length();
+        int end = format.indexOf('>', colorsStart);
+        if (end < 0) return format;
+        String[] colors = format.substring(colorsStart, end).split(":");
+        if (colors.length < 2) return format;
+        int shift = Math.floorMod(frame, colors.length);
+        if (shift == 0) return format;
+        StringBuilder rotated = new StringBuilder();
+        for (int i = 0; i < colors.length; i++) {
+            if (i > 0) rotated.append(':');
+            rotated.append(colors[(i + shift) % colors.length]);
         }
-        if (!manager.ownsCosmetic(uuid, equippedId)) {
-            return null;
-        }
-        CosmeticManager.Cosmetic cosmetic = manager.get(equippedId);
-        if (cosmetic == null) {
-            return null;
-        }
-        return cosmetic.format();
+        return format.substring(0, colorsStart) + rotated + format.substring(end);
     }
 
     @NotNull
