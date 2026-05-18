@@ -344,10 +344,23 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         net.mythicpvp.core.disguise.DisguiseApplier disguiseApplier =
                 new net.mythicpvp.core.disguise.DisguiseApplier(this);
         getServer().getPluginManager().registerEvents(disguiseApplier, this);
+        net.mythicpvp.core.disguise.MojangSkinService mojangSkinService =
+                new net.mythicpvp.core.disguise.MojangSkinService(this);
+        net.mythicpvp.core.disguise.DisguiseTypeRegistry disguiseTypeRegistry =
+                new net.mythicpvp.core.disguise.DisguiseTypeRegistry();
         net.mythicpvp.core.command.DisguiseMenuService disguiseMenuService =
                 new net.mythicpvp.core.command.DisguiseMenuService(this, rankService, chatPromptService, disguiseApplier);
         commandManager.register(new net.mythicpvp.core.command.DisguiseCommand(disguiseMenuService, disguiseApplier));
         commandManager.register(new net.mythicpvp.core.command.DisguiseCommand.Undisguise(disguiseApplier));
+        commandManager.register(new net.mythicpvp.core.command.DisguisePlayerCommand(disguiseApplier, disguiseTypeRegistry, mojangSkinService, this));
+        commandManager.register(new net.mythicpvp.core.command.UndisguisePlayerCommand(disguiseApplier));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseRadiusCommand(disguiseApplier, disguiseTypeRegistry, mojangSkinService, this));
+        commandManager.register(new net.mythicpvp.core.command.UndisguiseRadiusCommand(disguiseApplier));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCloneCommand(disguiseApplier, mojangSkinService, this));
+        commandManager.register(new net.mythicpvp.core.command.CopyDisguiseCommand(disguiseApplier));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseModifyCommand(disguiseApplier, mojangSkinService, this));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseHelpCommand());
+        commandManager.register(new net.mythicpvp.core.command.DisguiseViewSelfCommand());
         commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
         commandManager.register(new MailCommand(socialService, messages));
         PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
