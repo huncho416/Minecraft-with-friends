@@ -59,6 +59,7 @@ async fn main() -> anyhow::Result<()> {
 
     let registry = RegistryView::new();
     mythiccord_plugin_routing::registry_view::spawn(handle.clone(), registry.clone());
+    mythiccord_plugin_routing::registry_view::spawn_http_poll(cfg.stdb.uri.clone(), registry.clone());
 
     let status = Arc::new(RwLock::new(ServerStatus::Starting));
     let state = Arc::new(ProxyState {
