@@ -245,30 +245,68 @@ public final class DisguiseMenuService {
 
     private void applyRandom(@NotNull Player player) {
         sessions.remove(player.getUniqueId());
-        String name = namePresets.isEmpty()
-                ? "Mythic" + ThreadLocalRandom.current().nextInt(1000, 9999)
-                : namePresets.get(ThreadLocalRandom.current().nextInt(namePresets.size()));
-        SkinPreset skin = pickRandomLoadedSkin();
-        String skinValue = skin == null ? null : skin.value;
-        String skinSig = skin == null ? null : skin.signature;
-        applier.apply(player, name, skinValue, skinSig, null);
+        if (RANDOM_REAL_USERNAMES.isEmpty()) {
+            applier.apply(player, "Mythic" + ThreadLocalRandom.current().nextInt(1000, 9999),
+                    null, null, null);
+            player.closeInventory();
+            return;
+        }
         player.closeInventory();
         player.sendMessage(MythicHex.colorize(
-                "&#9CFF9CRandom disguise applied: &#FFFFFF" + name
-                        + (skin == null ? "" : " &#D2D8E0(skin: " + skin.displayName + ")")
-                        + "&#9CFF9C."));
+                "&#D2D8E0Rolling a random Minecraft account…"));
+        rollRandomRealAccount(player, 0);
     }
 
-    @Nullable
-    private SkinPreset pickRandomLoadedSkin() {
-        List<SkinPreset> loaded = skinPresets.values().stream()
-                .filter(p -> p.value != null && p.signature != null)
-                .toList();
-        if (loaded.isEmpty()) {
-            return null;
+    private void rollRandomRealAccount(@NotNull Player player, int attempt) {
+        if (attempt >= 5) {
+            String fallback = RANDOM_REAL_USERNAMES.get(
+                    ThreadLocalRandom.current().nextInt(RANDOM_REAL_USERNAMES.size()));
+            applier.apply(player, fallback, null, null, null);
+            player.sendMessage(MythicHex.colorize(
+                    "&#FFD700Mojang lookup unavailable. Disguised name-only as &#FFFFFF"
+                            + fallback + "&#FFD700."));
+            return;
         }
-        return loaded.get(ThreadLocalRandom.current().nextInt(loaded.size()));
+        String name = RANDOM_REAL_USERNAMES.get(
+                ThreadLocalRandom.current().nextInt(RANDOM_REAL_USERNAMES.size()));
+        MythicScheduler.runAsync(plugin, () -> {
+            try {
+                PlayerProfile profile = Bukkit.createProfile(name);
+                profile = profile.update().get();
+                if (profile.getUniqueId() == null) {
+                    MythicScheduler.runSync(plugin, () -> rollRandomRealAccount(player, attempt + 1));
+                    return;
+                }
+                PlayerTextures textures = profile.getTextures();
+                URL skinUrl = textures.getSkin();
+                String resolvedName = profile.getName() == null ? name : profile.getName();
+                String skinValue = skinUrl == null ? null : encodeTextureValue(skinUrl.toString());
+                String skinSig = skinValue == null ? null : "";
+                MythicScheduler.runSync(plugin, () -> {
+                    applier.apply(player, resolvedName, skinValue, skinSig, null);
+                    player.sendMessage(MythicHex.colorize(
+                            "&#9CFF9CRandom disguise applied: &#FFFFFF" + resolvedName
+                                    + (skinValue == null ? " &#D2D8E0(no skin)" : " &#D2D8E0(with skin)")
+                                    + "&#9CFF9C."));
+                });
+            } catch (Exception ex) {
+                MythicScheduler.runSync(plugin, () -> rollRandomRealAccount(player, attempt + 1));
+            }
+        });
     }
+
+    private static final List<String> RANDOM_REAL_USERNAMES = List.of(
+            "Notch", "jeb_", "Dinnerbone", "Grumm", "Searge", "EvilSeph", "Marc_IRL",
+            "Cojomax99", "Captain_Chaossss", "MollyStarlight", "ProfMobius",
+            "Dream", "GeorgeNotFound", "Sapnap", "BadBoyHalo", "Skeppy",
+            "PhilzaMinecraft", "Ph1LzA", "Tubbo_", "TommyInnit", "WilburSoot",
+            "Ranboo", "TinaKitten", "Punz", "Fundy",
+            "MumboJumbo", "Grian", "Iskall85", "EthosLab", "Xisumavoid",
+            "Docm77", "FalseSymmetry", "GoodTimesWithScar", "ImpulseSV",
+            "TangoTek", "ZedaphPlays", "Bdoubleo100", "Cubfan135",
+            "Hypixel", "Rezzus", "Vikkstar123", "PrestonPlayz",
+            "CaptainSparklez", "LDShadowLady", "AntVenom", "DanTDM"
+    );
 
     private void close(@NotNull Player player) {
         sessions.remove(player.getUniqueId());
