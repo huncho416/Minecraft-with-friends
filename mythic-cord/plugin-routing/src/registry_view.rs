@@ -19,11 +19,13 @@ where
     #[serde(untagged)]
     enum TimestampRaw {
         Int(i64),
+        Arr(Vec<i64>),
         Map { __timestamp_micros_since_unix_epoch__: i64 },
     }
 
     match TimestampRaw::deserialize(deserializer)? {
         TimestampRaw::Int(i) => Ok(i),
+        TimestampRaw::Arr(v) => Ok(v.into_iter().next().unwrap_or(0)),
         TimestampRaw::Map { __timestamp_micros_since_unix_epoch__ } => Ok(__timestamp_micros_since_unix_epoch__),
     }
 }
