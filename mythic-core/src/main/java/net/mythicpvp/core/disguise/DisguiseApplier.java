@@ -127,18 +127,18 @@ public final class DisguiseApplier implements Listener {
     }
 
     private void rehideShow(@NotNull Player viewer, @NotNull Player target) {
-        MythicScheduler.runSync(plugin, () -> {
+        MythicScheduler.runOnEntity(plugin, viewer, () -> {
             try {
-                viewer.hidePlayer(plugin, target);
+                net.mythicpvp.suite.packet.PacketAction.send(viewer,
+                        new net.mythicpvp.suite.packet.PacketAction.EntityRefresh(
+                                "disguise-refresh:" + target.getUniqueId(),
+                                target.getUniqueId(),
+                                target.getName(),
+                                null,
+                                null));
             } catch (Throwable ignored) {
             }
         });
-        MythicScheduler.runLater(plugin, () -> MythicScheduler.runSync(plugin, () -> {
-            try {
-                viewer.showPlayer(plugin, target);
-            } catch (Throwable ignored) {
-            }
-        }), 20L);
     }
 
     private record OriginalIdentity(@NotNull String name,
