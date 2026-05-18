@@ -159,7 +159,7 @@ public final class ChatFormatListener implements Listener {
         if (prefix == null || prefix.isBlank()) {
             return "";
         }
-        return MythicHex.normalizeBareHex(prefix) + " ";
+        return MythicHex.normalizeBareHex(prefix.stripTrailing()) + " ";
     }
 
     @NotNull

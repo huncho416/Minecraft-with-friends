@@ -35,10 +35,76 @@ public final class BukkitPacketRenderer implements PacketRenderer {
                 renderScoreboard(viewer, scoreboard);
             } else if (action instanceof PacketAction.NametagState nametag) {
                 renderNametag(viewer, nametag);
+            } else if (action instanceof PacketAction.EntityRefresh refresh) {
+                renderEntityRefresh(viewer, refresh);
             }
         } catch (ReflectiveOperationException | RuntimeException failure) {
             warnOnce(action.getClass().getSimpleName(), failure);
         }
+    }
+
+    private void renderEntityRefresh(@NotNull Player viewer, @NotNull PacketAction.EntityRefresh state)
+            throws ReflectiveOperationException {
+        Player target = Bukkit.getPlayer(state.target());
+        if (target == null || !target.isOnline()) return;
+        if (viewer.getUniqueId().equals(target.getUniqueId())) return;
+
+        int entityId = target.getEntityId();
+        UUID targetUuid = target.getUniqueId();
+
+        Class<?> removeCls = Class.forName("net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket");
+        Object removePacket = removeCls.getConstructor(int[].class).newInstance((Object) new int[]{entityId});
+        send(viewer, removePacket);
+
+        Class<?> infoRemoveCls = Class.forName("net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket");
+        Object infoRemovePacket = infoRemoveCls.getConstructor(List.class).newInstance(List.of(targetUuid));
+        send(viewer, infoRemovePacket);
+
+        Object targetHandle = target.getClass().getMethod("getHandle").invoke(target);
+        Class<?> serverPlayerCls = Class.forName("net.minecraft.server.level.ServerPlayer");
+        Class<?> infoUpdateCls = Class.forName("net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket");
+        Method initFactory;
+        try {
+            initFactory = infoUpdateCls.getMethod("createPlayerInitializing", java.util.Collection.class);
+        } catch (NoSuchMethodException ex) {
+            initFactory = null;
+        }
+        Object infoUpdatePacket;
+        if (initFactory != null) {
+            java.util.Collection<Object> wrapper = java.util.List.of(serverPlayerCls.cast(targetHandle));
+            infoUpdatePacket = initFactory.invoke(null, wrapper);
+        } else {
+            Class<?> actionEnumCls = Class.forName("net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket$Action");
+            Object actionEnumSet = java.util.EnumSet.allOf(actionEnumCls.asSubclass(Enum.class));
+            Constructor<?> infoUpdateCtor = infoUpdateCls.getConstructor(java.util.EnumSet.class, java.util.Collection.class);
+            infoUpdatePacket = infoUpdateCtor.newInstance(actionEnumSet, java.util.List.of(targetHandle));
+        }
+        send(viewer, infoUpdatePacket);
+
+        Class<?> addCls = Class.forName("net.minecraft.network.protocol.game.ClientboundAddEntityPacket");
+        Class<?> entityTypeCls = Class.forName("net.minecraft.world.entity.EntityType");
+        Class<?> vec3Cls = Class.forName("net.minecraft.world.phys.Vec3");
+        Object playerType = entityTypeCls.getField("PLAYER").get(null);
+        Object zeroVec = vec3Cls.getField("ZERO").get(null);
+        org.bukkit.Location loc = target.getLocation();
+        Object addPacket;
+        try {
+            Constructor<?> ctor = addCls.getConstructor(
+                    int.class, UUID.class,
+                    double.class, double.class, double.class,
+                    float.class, float.class,
+                    entityTypeCls, int.class, vec3Cls, double.class);
+            addPacket = ctor.newInstance(
+                    entityId, targetUuid,
+                    loc.getX(), loc.getY(), loc.getZ(),
+                    loc.getPitch(), loc.getYaw(),
+                    playerType, 0, zeroVec, (double) loc.getYaw());
+        } catch (NoSuchMethodException ex) {
+            Class<?> entityCls = Class.forName("net.minecraft.world.entity.Entity");
+            Constructor<?> ctor = addCls.getConstructor(entityCls, int.class);
+            addPacket = ctor.newInstance(targetHandle, 0);
+        }
+        send(viewer, addPacket);
     }
 
     private void renderScoreboard(@NotNull Player viewer, @NotNull PacketAction.ScoreboardState state)
@@ -92,7 +158,12 @@ public final class BukkitPacketRenderer implements PacketRenderer {
             throws ReflectiveOperationException {
         Object team = newPlayerTeam(teamName(state.sortWeight(), state.target()), state.prefix(), state.suffix());
         Player target = Bukkit.getPlayer(state.target());
-        addPlayerToTeam(team, target == null ? state.displayName() : target.getName());
+        String entryName = state.displayName();
+        if ((entryName == null || entryName.isBlank()) && target != null) {
+            entryName = target.getName();
+        }
+        if (entryName == null) entryName = state.target().toString();
+        addPlayerToTeam(team, entryName);
         send(viewer, playerTeamPacket(team, true));
     }
 

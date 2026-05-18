@@ -88,6 +88,7 @@ public final class NametagManager {
         if (!visibilityPredicate.test(viewer, target)) {
             return;
         }
+        String disguisedName = DisguiseManager.getInstance().getDisplayName(target.getUniqueId(), target.getName());
         if (!FOLIA) {
             Scoreboard board = viewer.getScoreboard();
             String teamName = teamName(data.sortWeight(), target.getUniqueId());
@@ -97,11 +98,15 @@ public final class NametagManager {
             }
             team.prefix(MythicHex.colorize(data.prefix()));
             team.suffix(MythicHex.colorize(data.suffix()));
-            if (!team.hasEntry(target.getName())) {
-                team.addEntry(target.getName());
+            for (String existing : new java.util.ArrayList<>(team.getEntries())) {
+                if (!existing.equals(disguisedName)) {
+                    team.removeEntry(existing);
+                }
+            }
+            if (!team.hasEntry(disguisedName)) {
+                team.addEntry(disguisedName);
             }
         }
-        String displayName = DisguiseManager.getInstance().getVisibleName(viewer.getUniqueId(), target.getUniqueId(), target.getName());
         PacketAction.send(viewer, new PacketAction.NametagState(
                 "nametag:" + target.getUniqueId(),
                 target.getUniqueId(),
@@ -109,7 +114,7 @@ public final class NametagManager {
                 MythicHex.colorize(data.suffix()),
                 data.sortWeight(),
                 data.glowColor(),
-                displayName
+                disguisedName
         ));
     }
 

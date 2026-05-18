@@ -200,7 +200,9 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         seedPunishments(configManager.getOrCreate("punishments"));
 
         hydrationSink = new CoreHydrationSink(getLogger(), rankService, grantService, punishmentService, socialService);
-        persistenceGateway.hydrate(new MainThreadHydrationSink(this, hydrationSink));
+        MainThreadHydrationSink mainThreadSink = new MainThreadHydrationSink(this, hydrationSink);
+        persistenceGateway.hydrate(mainThreadSink);
+        new net.mythicpvp.core.cosmetic.CosmeticSqlRefresher(mainThreadSink, getLogger()).start();
         announceServerRegistry();
 
         getServer().getPluginManager().registerEvents(
@@ -275,8 +277,9 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new net.mythicpvp.core.command.SendCommand(transferService, crossShardPresence, transferDispatch));
         commandManager.register(new net.mythicpvp.core.command.SummonCommand(crossShardPresence, transferDispatch, serverIdentity.id()));
         net.mythicpvp.core.mode.PlayerModeService modeService = new net.mythicpvp.core.mode.PlayerModeService();
+        boolean enforcePvpToggle = "hub".equalsIgnoreCase(serverIdentity.type());
         getServer().getPluginManager().registerEvents(
-                new net.mythicpvp.core.mode.BuildPvpListener(modeService), this);
+                new net.mythicpvp.core.mode.BuildPvpListener(modeService, enforcePvpToggle), this);
         commandManager.register(new net.mythicpvp.core.command.BuildModeCommand(modeService));
         commandManager.register(new net.mythicpvp.core.command.PvpModeCommand(modeService));
         if ("skyblock".equalsIgnoreCase(serverIdentity.type())) {
@@ -346,6 +349,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry, staffChatRelay));
         net.mythicpvp.core.disguise.DisguiseApplier disguiseApplier =
                 new net.mythicpvp.core.disguise.DisguiseApplier(this);
+        disguiseApplier.setDisplayRefresh(displayService::applyAll);
         getServer().getPluginManager().registerEvents(disguiseApplier, this);
         net.mythicpvp.core.disguise.MojangSkinService mojangSkinService =
                 new net.mythicpvp.core.disguise.MojangSkinService(this);

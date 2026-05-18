@@ -24,9 +24,14 @@ public final class DisguiseApplier implements Listener {
 
     private final JavaPlugin plugin;
     private final Map<UUID, OriginalIdentity> originals = new ConcurrentHashMap<>();
+    private volatile Runnable displayRefresh = () -> {};
 
     public DisguiseApplier(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
+    }
+
+    public void setDisplayRefresh(@NotNull Runnable refresh) {
+        this.displayRefresh = refresh;
     }
 
     public void apply(@NotNull Player player,
@@ -104,7 +109,11 @@ public final class DisguiseApplier implements Listener {
                 plugin.getLogger().warning("[disguise] failed to apply profile for "
                         + player.getName() + ": " + t.getClass().getSimpleName() + ": " + t.getMessage());
             }
-            MythicScheduler.runLater(plugin, () -> refreshObservers(player), 5L);
+            try {
+                displayRefresh.run();
+            } catch (Throwable ignored) {
+            }
+            MythicScheduler.runLater(plugin, () -> refreshObservers(player), 10L);
         });
     }
 
@@ -120,16 +129,16 @@ public final class DisguiseApplier implements Listener {
     private void rehideShow(@NotNull Player viewer, @NotNull Player target) {
         MythicScheduler.runOnEntity(plugin, viewer, () -> {
             try {
-                viewer.hidePlayer(plugin, target);
+                net.mythicpvp.suite.packet.PacketAction.send(viewer,
+                        new net.mythicpvp.suite.packet.PacketAction.EntityRefresh(
+                                "disguise-refresh:" + target.getUniqueId(),
+                                target.getUniqueId(),
+                                target.getName(),
+                                null,
+                                null));
             } catch (Throwable ignored) {
             }
         });
-        MythicScheduler.runLater(plugin, () -> MythicScheduler.runOnEntity(plugin, viewer, () -> {
-            try {
-                viewer.showPlayer(plugin, target);
-            } catch (Throwable ignored) {
-            }
-        }), 6L);
     }
 
     private record OriginalIdentity(@NotNull String name,
