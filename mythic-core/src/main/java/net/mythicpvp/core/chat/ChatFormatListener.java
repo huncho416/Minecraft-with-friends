@@ -9,6 +9,7 @@ import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.cosmetic.CosmeticManager;
 import net.mythicpvp.suite.cosmetic.CosmeticType;
+import net.mythicpvp.suite.disguise.DisguiseManager;
 import net.mythicpvp.suite.hex.MythicHex;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -56,8 +57,9 @@ public final class ChatFormatListener implements Listener {
         if (renderedMessage == null) {
             renderedMessage = messageColor + cleanMessage;
         }
+        String visibleName = DisguiseManager.getInstance().getDisplayName(uuid, sender.getName());
         String rendered = template
-                .replace("%player%", chatTagSegment + prefix + playerColor + sender.getName())
+                .replace("%player%", chatTagSegment + prefix + playerColor + visibleName)
                 .replace("%message%", renderedMessage)
                 .replace("%chat_prefix%", sanitize(prefix))
                 .replace("%chat_tag%", chatTagSegment)

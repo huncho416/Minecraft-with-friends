@@ -341,10 +341,13 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         staffChatRelay.start();
 
         commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry, staffChatRelay));
+        net.mythicpvp.core.disguise.DisguiseApplier disguiseApplier =
+                new net.mythicpvp.core.disguise.DisguiseApplier(this);
+        getServer().getPluginManager().registerEvents(disguiseApplier, this);
         net.mythicpvp.core.command.DisguiseMenuService disguiseMenuService =
-                new net.mythicpvp.core.command.DisguiseMenuService(this, rankService, chatPromptService);
-        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand(disguiseMenuService));
-        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand.Undisguise());
+                new net.mythicpvp.core.command.DisguiseMenuService(this, rankService, chatPromptService, disguiseApplier);
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand(disguiseMenuService, disguiseApplier));
+        commandManager.register(new net.mythicpvp.core.command.DisguiseCommand.Undisguise(disguiseApplier));
         commandManager.register(new PartyCommand(socialService, serverIdentity.id()));
         commandManager.register(new MailCommand(socialService, messages));
         PrivateMessageCommand privateMessages = new PrivateMessageCommand(rankService, grantService);
@@ -403,6 +406,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         net.mythicpvp.core.cosmetic.CosmeticMenuService cosmeticMenuService =
                 new net.mythicpvp.core.cosmetic.CosmeticMenuService(cosmeticService, crateService, cosmeticMenuText);
         commandManager.register(new net.mythicpvp.core.command.CosmeticsCommand(cosmeticMenuService));
+        commandManager.register(new net.mythicpvp.core.command.CosmeticCommand(cosmeticService));
         getServer().getPluginManager().registerEvents(
                 new net.mythicpvp.core.cosmetic.CosmeticRedeemListener(cosmeticService), this);
 

@@ -1,5 +1,6 @@
 package net.mythicpvp.core.command;
 
+import net.mythicpvp.core.disguise.DisguiseApplier;
 import net.mythicpvp.core.prompt.ChatPromptService;
 import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.RankService;
@@ -26,22 +27,26 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class DisguiseMenuService {
 
     private final JavaPlugin plugin;
     private final RankService ranks;
     private final ChatPromptService prompts;
+    private final DisguiseApplier applier;
     private final Map<UUID, PendingDisguise> sessions = new ConcurrentHashMap<>();
     private final Map<String, SkinPreset> skinPresets = new LinkedHashMap<>();
     private final List<String> namePresets;
 
     public DisguiseMenuService(@NotNull JavaPlugin plugin,
                                @NotNull RankService ranks,
-                               @NotNull ChatPromptService prompts) {
+                               @NotNull ChatPromptService prompts,
+                               @NotNull DisguiseApplier applier) {
         this.plugin = plugin;
         this.ranks = ranks;
         this.prompts = prompts;
+        this.applier = applier;
         this.namePresets = List.copyOf(DisguiseManager.getInstance().getRandomNames());
         seedDefaultSkinPresets();
     }
@@ -60,6 +65,14 @@ public final class DisguiseMenuService {
 
     public void openRankPicker(@NotNull Player player) {
         PaginatedMenu menu = PaginatedMenu.create(6, "&#FF00F8Disguise &8» &#D2D8E0Rank");
+
+        menu.addItem(MythicItem.create(Material.NETHER_STAR)
+                .name("&#FFD700Random Disguise")
+                .lore(List.of(
+                        "&7Roll a random name (and skin if available)",
+                        "&7and apply instantly. No rank override.",
+                        "&#D2D8E0Click to randomise"))
+                .build(), event -> applyRandom(player));
 
         menu.addItem(MythicItem.create(Material.BARRIER)
                 .name("&#FF8A8ANo rank override")
@@ -223,16 +236,38 @@ public final class DisguiseMenuService {
         if (pending.displayName == null) {
             return;
         }
-        DisguiseManager.SkinProperties skin = null;
-        if (pending.skinValue != null && pending.skinSignature != null) {
-            skin = new DisguiseManager.SkinProperties(pending.skinValue, pending.skinSignature);
-        }
-        DisguiseManager.getInstance().disguiseAs(
-                player.getUniqueId(), pending.displayName, skin, pending.rankId);
+        applier.apply(player, pending.displayName, pending.skinValue, pending.skinSignature, pending.rankId);
         sessions.remove(player.getUniqueId());
         player.closeInventory();
         player.sendMessage(MythicHex.colorize(
                 "&#9CFF9CDisguised as &#FFFFFF" + pending.displayName + "&#9CFF9C."));
+    }
+
+    private void applyRandom(@NotNull Player player) {
+        sessions.remove(player.getUniqueId());
+        String name = namePresets.isEmpty()
+                ? "Mythic" + ThreadLocalRandom.current().nextInt(1000, 9999)
+                : namePresets.get(ThreadLocalRandom.current().nextInt(namePresets.size()));
+        SkinPreset skin = pickRandomLoadedSkin();
+        String skinValue = skin == null ? null : skin.value;
+        String skinSig = skin == null ? null : skin.signature;
+        applier.apply(player, name, skinValue, skinSig, null);
+        player.closeInventory();
+        player.sendMessage(MythicHex.colorize(
+                "&#9CFF9CRandom disguise applied: &#FFFFFF" + name
+                        + (skin == null ? "" : " &#D2D8E0(skin: " + skin.displayName + ")")
+                        + "&#9CFF9C."));
+    }
+
+    @Nullable
+    private SkinPreset pickRandomLoadedSkin() {
+        List<SkinPreset> loaded = skinPresets.values().stream()
+                .filter(p -> p.value != null && p.signature != null)
+                .toList();
+        if (loaded.isEmpty()) {
+            return null;
+        }
+        return loaded.get(ThreadLocalRandom.current().nextInt(loaded.size()));
     }
 
     private void close(@NotNull Player player) {
