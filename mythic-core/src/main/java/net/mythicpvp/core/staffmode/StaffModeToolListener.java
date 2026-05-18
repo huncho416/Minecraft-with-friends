@@ -12,7 +12,6 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
@@ -105,19 +104,6 @@ public final class StaffModeToolListener implements Listener {
                         "&#9CFF9CStaff mode disabled."));
             }
             default -> {  }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onMove(@NotNull PlayerMoveEvent event) {
-        if (!staff.isFrozen(event.getPlayer().getUniqueId())) {
-            return;
-        }
-
-        if (event.getFrom().getX() != event.getTo().getX()
-                || event.getFrom().getY() != event.getTo().getY()
-                || event.getFrom().getZ() != event.getTo().getZ()) {
-            event.setCancelled(true);
         }
     }
 

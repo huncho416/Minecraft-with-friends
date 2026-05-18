@@ -5,9 +5,12 @@ import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.core.rank.RankService;
 import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.hex.MythicHex;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -88,20 +91,51 @@ public final class StaffModeService {
         if (snapshot != null) {
             restore(player, snapshot);
         }
-        frozen.remove(player.getUniqueId());
+        if (frozen.remove(player.getUniqueId())) {
+            restoreMovement(player);
+        }
     }
 
     public boolean toggleFreeze(@NotNull UUID target) {
+        Player online = Bukkit.getPlayer(target);
         if (frozen.contains(target)) {
             frozen.remove(target);
+            if (online != null) restoreMovement(online);
             return false;
         }
         frozen.add(target);
+        if (online != null) lockMovement(online);
         return true;
     }
 
     public boolean isFrozen(@NotNull UUID target) {
         return frozen.contains(target);
+    }
+
+    private void lockMovement(@NotNull Player player) {
+        AttributeInstance speed = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (speed != null) {
+            speed.setBaseValue(0.0d);
+        }
+        AttributeInstance jump = player.getAttribute(Attribute.JUMP_STRENGTH);
+        if (jump != null) {
+            jump.setBaseValue(0.0d);
+        }
+        player.setWalkSpeed(0.0f);
+        player.setFlySpeed(0.0f);
+    }
+
+    private void restoreMovement(@NotNull Player player) {
+        AttributeInstance speed = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (speed != null) {
+            speed.setBaseValue(speed.getDefaultValue());
+        }
+        AttributeInstance jump = player.getAttribute(Attribute.JUMP_STRENGTH);
+        if (jump != null) {
+            jump.setBaseValue(jump.getDefaultValue());
+        }
+        player.setWalkSpeed(0.2f);
+        player.setFlySpeed(0.1f);
     }
 
     @NotNull
