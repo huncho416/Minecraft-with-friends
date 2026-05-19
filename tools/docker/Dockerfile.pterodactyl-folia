@@ -51,7 +51,8 @@ RUN set -eux; \
     }; \
     fetch_modrinth_latest viaversion ViaVersion.jar; \
     fetch_modrinth_latest viabackwards ViaBackwards.jar; \
-    fetch_modrinth_latest floodgate floodgate.jar
+    curl -fsSL -o floodgate.jar \
+        "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot"
 
 FROM eclipse-temurin:21-jre-jammy AS voice-plugin-fetch
 ARG VOICE_PLUGINS=true
