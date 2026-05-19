@@ -41,3 +41,4 @@ tools/docker/servers/
 # not redistributed as part of MythicPvP. Keep them on disk locally for diffing,
 # but they don't belong in the repo.
 TexturePack/Texture Pack Examples/
+scratch/

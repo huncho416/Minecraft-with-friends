@@ -153,6 +153,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         saveResourceIfMissing("command-blocker.yml");
         saveResourceIfMissing("announcements.yml");
         saveResourceIfMissing("motd.yml");
+        saveResourceIfMissing("resourcepack.yml");
         saveResourceIfMissing("spawn.yml");
         saveResourceIfMissing("staff-mode.yml");
         saveResourceIfMissing("reports.yml");
@@ -359,6 +360,7 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         staffChatRelay.start();
         adminNotifyService = new net.mythicpvp.core.staff.AdminNotifyService(staffChatRelay, serverIdentity.id());
         net.mythicpvp.suite.scheduler.MythicScheduler.runLater(this, () -> adminNotifyService.announceStartup(), 40L);
+        net.mythicpvp.core.resourcepack.ResourcePackListener.configure(this, configManager.getOrCreate("resourcepack"));
 
         commandManager.register(new FriendCommand(socialService, crossShardPresence, shardRegistry, staffChatRelay));
         net.mythicpvp.core.disguise.DisguiseApplier disguiseApplier =

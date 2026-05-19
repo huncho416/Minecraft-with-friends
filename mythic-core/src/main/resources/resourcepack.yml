@@ -1,0 +1,16 @@
+# MythicPvP resource pack delivery.
+#
+# The pack zip is hosted as a GitHub release asset. Update url + sha1 when
+# you publish a new release (rebuild via PackBuild.java in /scratch, attach
+# to a fresh `gh release create`, copy the new URL + SHA-1 here).
+#
+# force: true  - reject clients that refuse the pack
+# force: false - send the pack but let the client decline
+
+resource-pack:
+  enabled: true
+  url: "https://github.com/huncho416/Minecraft-with-friends/releases/download/v1.0.0-pack/MythicPvP.zip"
+  sha1: "71f505592ab187bca96fc88da14b1cbd411d6f6a"
+  force: false
+  send-on-join: true
+  send-delay-ticks: 40
