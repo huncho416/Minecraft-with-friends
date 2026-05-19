@@ -36,3 +36,8 @@ tools/docker/servers/
 # NOTE: mythic-cord/infrarust/ is intentionally NOT ignored — the vendored
 # subtree is committed so fresh clones and CI build without re-running the
 # vendor script. Re-baselining is `tools/vendor-infrarust.{sh,ps1} <ref>`.
+
+# Texture pack reference bases — third-party packs we use as visual references,
+# not redistributed as part of MythicPvP. Keep them on disk locally for diffing,
+# but they don't belong in the repo.
+TexturePack/Texture Pack Examples/

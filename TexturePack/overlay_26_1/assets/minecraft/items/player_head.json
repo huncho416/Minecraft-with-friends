@@ -1,0 +1,28 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "fallback": {
+      "type": "minecraft:special",
+      "base": "minecraft:item/template_skull",
+      "model": { "type": "minecraft:player_head" },
+      "transformation": {
+        "left_rotation": [1.0, 0.0, 0.0, -0.0],
+        "right_rotation": [0.0, 0.0, 0.0, 1.0],
+        "scale": [1.0, 1.0, 1.0],
+        "translation": [0.5, 0.0, 0.5]
+      }
+    },
+    "entries": [
+      { "threshold": 10000, "model": { "type": "minecraft:special", "base": "heads:item/player_head_gui_size_1",            "model": { "type": "minecraft:player_head" }, "transformation": { "left_rotation": [1.0,0.0,0.0,-0.0], "right_rotation": [0.0,0.0,0.0,1.0], "scale": [1.0,1.0,1.0], "translation": [0.5,0.0,0.5] } } },
+      { "threshold": 10001, "model": { "type": "minecraft:special", "base": "heads:item/player_head_gui_size_4",            "model": { "type": "minecraft:player_head" }, "transformation": { "left_rotation": [1.0,0.0,0.0,-0.0], "right_rotation": [0.0,0.0,0.0,1.0], "scale": [1.0,1.0,1.0], "translation": [0.5,0.0,0.5] } } },
+      { "threshold": 10002, "model": { "type": "minecraft:special", "base": "heads:item/player_head_gui_size_6",            "model": { "type": "minecraft:player_head" }, "transformation": { "left_rotation": [1.0,0.0,0.0,-0.0], "right_rotation": [0.0,0.0,0.0,1.0], "scale": [1.0,1.0,1.0], "translation": [0.5,0.0,0.5] } } },
+      { "threshold": 10003, "model": { "type": "minecraft:special", "base": "heads:item/player_head_block_size_item_frame", "model": { "type": "minecraft:player_head" }, "transformation": { "left_rotation": [1.0,0.0,0.0,-0.0], "right_rotation": [0.0,0.0,0.0,1.0], "scale": [1.0,1.0,1.0], "translation": [0.5,0.0,0.5] } } },
+      { "threshold": 10004, "model": { "type": "minecraft:special", "base": "heads:item/player_head_hand_size_2",           "model": { "type": "minecraft:player_head" }, "transformation": { "left_rotation": [1.0,0.0,0.0,-0.0], "right_rotation": [0.0,0.0,0.0,1.0], "scale": [1.0,1.0,1.0], "translation": [0.5,0.0,0.5] } } },
+      { "threshold": 10005, "model": { "type": "minecraft:special", "base": "heads:item/player_head_gui_size_3",            "model": { "type": "minecraft:player_head" }, "transformation": { "left_rotation": [1.0,0.0,0.0,-0.0], "right_rotation": [0.0,0.0,0.0,1.0], "scale": [1.0,1.0,1.0], "translation": [0.5,0.0,0.5] } } },
+      { "threshold": 10006, "model": { "type": "minecraft:special", "base": "item/player_head",                             "model": { "type": "minecraft:player_head" }, "transformation": { "left_rotation": [1.0,0.0,0.0,-0.0], "right_rotation": [0.0,0.0,0.0,1.0], "scale": [1.0,1.0,1.0], "translation": [0.5,0.0,0.5] } } }
+    ]
+  },
+  "oversized_in_gui": true
+}

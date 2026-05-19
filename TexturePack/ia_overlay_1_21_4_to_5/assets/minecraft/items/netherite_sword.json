@@ -1,0 +1,1 @@
+{"model":{"type":"range_dispatch","property":"custom_model_data","index":0,"fallback":{"type":"minecraft:model","model":"minecraft:item/netherite_sword"},"entries":[{"threshold":10002,"model":{"type":"model","model":"armor:item/ia_auto/iridium_sword"}},{"threshold":10003,"model":{"type":"model","model":"item/netherite_sword"}}]},"oversized_in_gui":true}

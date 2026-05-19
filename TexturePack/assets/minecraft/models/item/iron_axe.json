@@ -1,0 +1,1 @@
+{"parent":"minecraft:item/handheld","textures":{"layer0":"minecraft:item/iron_axe"},"overrides":[{"predicate":{"custom_model_data":10000},"model":"detailed_tools:item/ia_auto/purple_axe"},{"predicate":{"custom_model_data":10001},"model":"easter2024set:axe"},{"predicate":{"custom_model_data":10002},"model":"item/iron_axe"}]}

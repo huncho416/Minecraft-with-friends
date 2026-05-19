@@ -1,0 +1,1 @@
+{"parent":"minecraft:block/stone","overrides":[{"predicate":{"custom_model_data":10000},"model":"hoe_textures:item/ia_auto/common"},{"predicate":{"custom_model_data":10001},"model":"item/stone"}]}

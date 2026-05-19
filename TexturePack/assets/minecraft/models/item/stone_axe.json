@@ -1,0 +1,1 @@
+{"parent":"minecraft:item/handheld","textures":{"layer0":"minecraft:item/stone_axe"},"overrides":[{"predicate":{"custom_model_data":10000},"model":"detailed_tools:item/ia_auto/ice_axe"},{"predicate":{"custom_model_data":10001},"model":"detailed_tools:item/ia_auto/rainbow_axe"},{"predicate":{"custom_model_data":10002},"model":"item/stone_axe"}]}
