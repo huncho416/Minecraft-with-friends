@@ -211,7 +211,9 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 new net.mythicpvp.core.motd.MotdListener.MotdService();
         motdService.load(configManager.getOrCreate("motd"));
         getServer().getPluginManager().registerEvents(
-                new net.mythicpvp.core.motd.MotdListener(motdService), this);
+                new net.mythicpvp.core.motd.MotdListener(motdService, crossShardPresence::totalOnline), this);
+        getServer().getPluginManager().registerEvents(
+                new net.mythicpvp.core.version.LegacyVersionNotifyListener(this), this);
         net.mythicpvp.core.maintenance.MaintenanceService maintenanceService =
                 new net.mythicpvp.core.maintenance.MaintenanceService(getLogger(), getDataFolder());
         getServer().getPluginManager().registerEvents(

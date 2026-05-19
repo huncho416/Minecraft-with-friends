@@ -31,6 +31,27 @@ RUN set -eux; \
     test "$DOWNLOAD_URL" != "null"; \
     curl -fsSL -o folia.jar "$DOWNLOAD_URL"
 
+FROM eclipse-temurin:21-jre-jammy AS via-plugin-fetch
+WORKDIR /via-plugins
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl jq ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    fetch_modrinth_latest() { \
+        project="$1"; output="$2"; \
+        meta=$(curl -fsSL -H "User-Agent: MythicPvP Docker build" \
+            "https://api.modrinth.com/v2/project/${project}/version?loaders=%5B%22paper%22%5D"); \
+        url=$(printf '%s' "${meta}" | jq -r '.[0].files[] | select(.primary == true) | .url'); \
+        if [ -z "${url}" ] || [ "${url}" = "null" ]; then \
+            url=$(printf '%s' "${meta}" | jq -r '.[0].files[0].url'); \
+        fi; \
+        test -n "${url}"; \
+        test "${url}" != "null"; \
+        curl -fsSL -o "${output}" "${url}"; \
+    }; \
+    fetch_modrinth_latest viaversion ViaVersion.jar; \
+    fetch_modrinth_latest viabackwards ViaBackwards.jar
+
 FROM eclipse-temurin:21-jre-jammy AS voice-plugin-fetch
 ARG VOICE_PLUGINS=true
 ARG SIMPLE_VOICE_CHAT_VERSION=Qnk9puxN
@@ -82,6 +103,7 @@ COPY --from=folia-fetch /folia/folia.jar /opt/folia/folia.jar
 COPY --from=plugin-build /build/mythic-suite/suite-plugin/target/suite-plugin-*.jar /opt/folia/plugins/
 COPY --from=plugin-build /build/mythic-core/target/mythic-core-*.jar /opt/folia/plugins/
 COPY --from=plugin-build /build/mythic-hub/target/mythic-hub-*.jar /opt/folia/plugins/
+COPY --from=via-plugin-fetch /via-plugins/ /opt/folia/plugins/
 COPY --from=voice-plugin-fetch /voice-plugins/ /opt/folia/voice-plugins/
 COPY tools/docker/folia/entrypoint.sh /opt/folia/entrypoint.sh
 COPY tools/docker/folia/eula.txt /opt/folia/defaults/eula.txt
