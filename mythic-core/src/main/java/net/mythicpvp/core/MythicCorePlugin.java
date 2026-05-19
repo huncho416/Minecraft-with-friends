@@ -369,6 +369,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
         getServer().getPluginManager().registerEvents(disguiseApplier, this);
         net.mythicpvp.core.disguise.MojangSkinService mojangSkinService =
                 new net.mythicpvp.core.disguise.MojangSkinService(this);
+        getServer().getPluginManager().registerEvents(
+                new net.mythicpvp.core.skin.ProfileSkinSyncListener(this, mojangSkinService), this);
         net.mythicpvp.core.disguise.DisguiseTypeRegistry disguiseTypeRegistry =
                 new net.mythicpvp.core.disguise.DisguiseTypeRegistry();
         net.mythicpvp.core.command.DisguiseMenuService disguiseMenuService =
