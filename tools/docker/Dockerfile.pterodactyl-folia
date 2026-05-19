@@ -50,7 +50,8 @@ RUN set -eux; \
         curl -fsSL -o "${output}" "${url}"; \
     }; \
     fetch_modrinth_latest viaversion ViaVersion.jar; \
-    fetch_modrinth_latest viabackwards ViaBackwards.jar
+    fetch_modrinth_latest viabackwards ViaBackwards.jar; \
+    fetch_modrinth_latest floodgate floodgate.jar
 
 FROM eclipse-temurin:21-jre-jammy AS voice-plugin-fetch
 ARG VOICE_PLUGINS=true
