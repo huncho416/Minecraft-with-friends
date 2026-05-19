@@ -2,9 +2,13 @@ package net.mythicpvp.suite.packet;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.mythicpvp.suite.compat.ClientProfile;
+import net.mythicpvp.suite.compat.ClientProfileService;
+import net.mythicpvp.suite.compat.ComponentTransformer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -27,6 +31,13 @@ public final class BukkitPacketRenderer implements PacketRenderer {
 
     private final Map<UUID, ScoreboardState> scoreboards = new ConcurrentHashMap<>();
     private final Set<String> warned = ConcurrentHashMap.newKeySet();
+    @Nullable private volatile ClientProfileService profileService;
+    @Nullable private volatile ComponentTransformer transformer;
+
+    public void bindCompat(@NotNull ClientProfileService profileService, @NotNull ComponentTransformer transformer) {
+        this.profileService = profileService;
+        this.transformer = transformer;
+    }
 
     @Override
     public void render(@NotNull Player viewer, @NotNull PacketAction action) {
@@ -110,8 +121,9 @@ public final class BukkitPacketRenderer implements PacketRenderer {
     private void renderScoreboard(@NotNull Player viewer, @NotNull PacketAction.ScoreboardState state)
             throws ReflectiveOperationException {
         ScoreboardState previous = scoreboards.get(viewer.getUniqueId());
-        List<Component> lines = state.lines().stream().limit(MAX_LINES).toList();
-        int contentHash = contentHash(state.title(), lines);
+        Component title = adapt(viewer, state.title());
+        List<Component> lines = adaptAll(viewer, state.lines().stream().limit(MAX_LINES).toList());
+        int contentHash = contentHash(title, lines);
 
         if (previous != null && previous.contentHash() == contentHash) {
             return;
@@ -126,7 +138,7 @@ public final class BukkitPacketRenderer implements PacketRenderer {
             return;
         }
 
-        Object objective = newObjective(state.title());
+        Object objective = newObjective(title);
         if (previous != null) {
             for (String owner : previous.owners()) {
                 send(viewer, resetScorePacket(owner));
@@ -146,6 +158,31 @@ public final class BukkitPacketRenderer implements PacketRenderer {
         scoreboards.put(viewer.getUniqueId(), new ScoreboardState(owners, contentHash, lines.size()));
     }
 
+    @NotNull
+    private Component adapt(@NotNull Player viewer, @NotNull Component component) {
+        ClientProfileService svc = profileService;
+        ComponentTransformer tx = transformer;
+        if (svc == null || tx == null) return component;
+        try {
+            ClientProfile profile = svc.profileFor(viewer);
+            return tx.transform(component, profile);
+        } catch (Throwable ignored) {
+            return component;
+        }
+    }
+
+    @NotNull
+    private List<Component> adaptAll(@NotNull Player viewer, @NotNull List<Component> components) {
+        ClientProfileService svc = profileService;
+        ComponentTransformer tx = transformer;
+        if (svc == null || tx == null) return components;
+        try {
+            return tx.transform(components, svc.profileFor(viewer));
+        } catch (Throwable ignored) {
+            return components;
+        }
+    }
+
     private static int contentHash(@NotNull Component title, @NotNull List<Component> lines) {
         int result = PlainTextComponentSerializer.plainText().serialize(title).hashCode();
         for (Component line : lines) {
@@ -156,7 +193,9 @@ public final class BukkitPacketRenderer implements PacketRenderer {
 
     private void renderNametag(@NotNull Player viewer, @NotNull PacketAction.NametagState state)
             throws ReflectiveOperationException {
-        Object team = newPlayerTeam(teamName(state.sortWeight(), state.target()), state.prefix(), state.suffix());
+        Component prefix = adapt(viewer, state.prefix());
+        Component suffix = adapt(viewer, state.suffix());
+        Object team = newPlayerTeam(teamName(state.sortWeight(), state.target()), prefix, suffix);
         Player target = Bukkit.getPlayer(state.target());
         String entryName = state.displayName();
         if ((entryName == null || entryName.isBlank()) && target != null) {

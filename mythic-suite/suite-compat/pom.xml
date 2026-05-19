@@ -10,8 +10,8 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>suite-packet</artifactId>
-    <name>Suite Packet</name>
+    <artifactId>suite-compat</artifactId>
+    <name>Suite Compat</name>
 
     <dependencies>
         <dependency>
@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>net.mythicpvp</groupId>
-            <artifactId>suite-compat</artifactId>
+            <artifactId>suite-hex</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

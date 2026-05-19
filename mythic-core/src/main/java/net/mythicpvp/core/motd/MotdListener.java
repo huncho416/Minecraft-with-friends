@@ -11,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,14 +54,20 @@ public final class MotdListener implements Listener {
         }
 
         if (!service.hidePlayerCount() && !service.hoverLines().isEmpty()) {
-            List<PlayerProfile> sample = event.getPlayerSample();
-            sample.clear();
-            for (String hoverLine : service.hoverLines()) {
-                String resolved = hoverLine
-                        .replace("%online%", Integer.toString(networkOnline))
-                        .replace("%max%", Integer.toString(event.getMaxPlayers()));
-                String legacy = LEGACY.serialize(MythicHex.colorize(resolved));
-                sample.add(Bukkit.createProfile(stableUuidFor(legacy), legacy));
+            try {
+                List<PlayerProfile> sample = event.getPlayerSample();
+                sample.clear();
+                for (String hoverLine : service.hoverLines()) {
+                    String resolved = hoverLine
+                            .replace("%online%", Integer.toString(networkOnline))
+                            .replace("%max%", Integer.toString(event.getMaxPlayers()));
+                    String legacy = LEGACY.serialize(MythicHex.colorize(resolved));
+                    PlayerProfile profile = createUncheckedProfile(stableUuidFor(legacy), legacy);
+                    if (profile != null) {
+                        sample.add(profile);
+                    }
+                }
+            } catch (RuntimeException ignored) {
             }
         }
     }
@@ -68,6 +75,21 @@ public final class MotdListener implements Listener {
     @NotNull
     private static UUID stableUuidFor(@NotNull String key) {
         return UUID.nameUUIDFromBytes(("mythic-motd:" + key).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    @Nullable
+    private static PlayerProfile createUncheckedProfile(@NotNull UUID uuid, @NotNull String name) {
+        try {
+            Class<?> gameProfileCls = Class.forName("com.mojang.authlib.GameProfile");
+            Object gameProfile = gameProfileCls.getConstructor(UUID.class, String.class)
+                    .newInstance(uuid, name);
+            Class<?> craftCls = Class.forName("com.destroystokyo.paper.profile.CraftPlayerProfile");
+            java.lang.reflect.Constructor<?> ctor = craftCls.getDeclaredConstructor(gameProfileCls);
+            ctor.setAccessible(true);
+            return (PlayerProfile) ctor.newInstance(gameProfile);
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     public static final class MotdService {

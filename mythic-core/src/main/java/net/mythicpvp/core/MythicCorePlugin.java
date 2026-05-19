@@ -106,6 +106,8 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
     private GrantFlowService grantFlowService;
     private ChatPromptService chatPromptService;
     private net.mythicpvp.core.staff.AdminNotifyService adminNotifyService;
+    private net.mythicpvp.suite.compat.ClientProfileService clientProfileService;
+    private net.mythicpvp.suite.compat.ComponentTransformer componentTransformer;
     private CoreMessages messages;
     private CoreEssentialsService essentialsService;
     private PersistenceGateway persistenceGateway;
@@ -129,8 +131,17 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
 
     @Override
     public void enable() {
-        net.mythicpvp.suite.packet.PacketSession.getInstance()
-                .setRenderer(new net.mythicpvp.suite.packet.BukkitPacketRenderer());
+        net.mythicpvp.suite.compat.ClientProfileService clientProfileService =
+                new net.mythicpvp.suite.compat.ClientProfileService();
+        net.mythicpvp.suite.compat.ComponentTransformer componentTransformer =
+                new net.mythicpvp.suite.compat.ComponentTransformer();
+        getServer().getPluginManager().registerEvents(clientProfileService, this);
+        net.mythicpvp.suite.packet.BukkitPacketRenderer bukkitPacketRenderer =
+                new net.mythicpvp.suite.packet.BukkitPacketRenderer();
+        bukkitPacketRenderer.bindCompat(clientProfileService, componentTransformer);
+        net.mythicpvp.suite.packet.PacketSession.getInstance().setRenderer(bukkitPacketRenderer);
+        this.clientProfileService = clientProfileService;
+        this.componentTransformer = componentTransformer;
         saveResourceIfMissing("messages.yml");
         saveResourceIfMissing("core.yml");
         saveResourceIfMissing("staff-channels.yml");
@@ -455,9 +466,11 @@ public class MythicCorePlugin extends JavaPlugin implements MythicPlugin {
                 serverIdentity.id(), chatFilterService);
         getServer().getPluginManager().registerEvents(chatGuard, this);
         chatColorService = new ChatColorService();
-        getServer().getPluginManager().registerEvents(
-                new ChatFormatListener(rankService, grantService, configManager.getOrCreate("core"), chatColorService),
-                this);
+        ChatFormatListener chatFormatListener = new ChatFormatListener(rankService, grantService, configManager.getOrCreate("core"), chatColorService);
+        if (clientProfileService != null && componentTransformer != null) {
+            chatFormatListener.bindCompat(clientProfileService, componentTransformer);
+        }
+        getServer().getPluginManager().registerEvents(chatFormatListener, this);
         ChatColorMenuService chatColorMenuService = new ChatColorMenuService(chatColorService);
         commandManager.register(new net.mythicpvp.core.command.ChatColorCommand(chatColorMenuService));
         commandManager.register(new net.mythicpvp.core.command.CcCommand(chatColorMenuService));

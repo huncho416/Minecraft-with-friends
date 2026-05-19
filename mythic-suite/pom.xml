@@ -41,6 +41,7 @@
         <module>suite-resourcepack</module>
         <module>suite-cosmetic</module>
         <module>suite-disguise</module>
+        <module>suite-compat</module>
     </modules>
 
     <dependencies>
