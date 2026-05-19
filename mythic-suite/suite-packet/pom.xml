@@ -19,6 +19,11 @@
             <artifactId>paper-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>net.mythicpvp</groupId>
+            <artifactId>suite-compat</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
         </dependency>

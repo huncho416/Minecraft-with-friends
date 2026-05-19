@@ -1,0 +1,1 @@
+{"parent":"minecraft:item/handheld","textures":{"layer0":"minecraft:item/wooden_axe"},"overrides":[{"predicate":{"custom_model_data":10000},"model":"detailed_tools:item/ia_auto/fire_axe"},{"predicate":{"custom_model_data":10001},"model":"item/wooden_axe"}]}

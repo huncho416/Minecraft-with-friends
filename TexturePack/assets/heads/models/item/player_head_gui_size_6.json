@@ -1,0 +1,1 @@
+{"gui_light":"front","parent":"minecraft:item/template_skull","display":{"gui":{"translation":[10,6,0],"scale":[6,6,6]},"fixed":{"rotation":[0,-180,0],"translation":[0,15,15],"scale":[4.5,4.5,4.5]}}}

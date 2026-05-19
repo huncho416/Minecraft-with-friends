@@ -1,0 +1,1 @@
+{"parent":"minecraft:item/handheld","textures":{"layer0":"minecraft:item/netherite_shovel"},"overrides":[{"predicate":{"custom_model_data":10002},"model":"armor:item/ia_auto/iridium_shovel"},{"predicate":{"custom_model_data":10003},"model":"item/netherite_shovel"}]}

@@ -1,10 +1,63 @@
 {
   "pack": {
-    "pack_format": 46,
+    "pack_format": 75,
+    "supported_formats": [1, 9999],
     "description": "§dMythicPvP §6Resource Pack",
-    "supported_formats": {
-      "min_inclusive": 4,
-      "max_inclusive": 71
-    }
-  }
+    "min_format": [1, 0],
+    "max_format": [9999, 0]
+  },
+  "overlays": {
+    "entries": [
+      {
+        "directory": "ia_overlay_1_21_2_plus",
+        "formats": [42, 9999],
+        "min_format": 42,
+        "max_format": 9999
+      },
+      {
+        "directory": "ia_overlay_1_21_4_to_5",
+        "formats": [46, 55],
+        "min_format": 46,
+        "max_format": 55
+      },
+      {
+        "directory": "ia_overlay_1_21_5",
+        "formats": [55, 55],
+        "min_format": 55,
+        "max_format": 55
+      },
+      {
+        "directory": "ia_overlay_1_21_6_plus",
+        "formats": [63, 75],
+        "min_format": 63,
+        "max_format": 75
+      },
+      {
+        "directory": "overlay_1_21_7",
+        "formats": [64, 75],
+        "min_format": 64,
+        "max_format": 75
+      },
+      {
+        "directory": "ia_overlay_legacy_atlas",
+        "formats": [1, 99],
+        "min_format": 1,
+        "max_format": 99
+      },
+      {
+        "directory": "ia_overlay_modern_atlas",
+        "formats": [75, 99],
+        "min_format": 75,
+        "max_format": 99
+      },
+      {
+        "directory": "overlay_26_1",
+         "formats": [84, 99],
+        "min_format": 84,
+        "max_format": 99
+      }
+    ]
+  },
+  "supported_formats": [1, 9999],
+  "gui_light": "front"
 }

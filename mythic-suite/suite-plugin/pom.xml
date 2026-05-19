@@ -105,6 +105,11 @@
         </dependency>
         <dependency>
             <groupId>net.mythicpvp</groupId>
+            <artifactId>suite-compat</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.mythicpvp</groupId>
             <artifactId>suite-permission</artifactId>
             <version>${project.version}</version>
         </dependency>

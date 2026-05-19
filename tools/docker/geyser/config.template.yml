@@ -16,9 +16,9 @@ remote:
 floodgate-key-file: key.pem
 saved-user-logins: []
 command-suggestions: true
-passthrough-motd: true
-passthrough-player-counts: true
-legacy-ping-passthrough: true
+passthrough-motd: false
+passthrough-player-counts: false
+legacy-ping-passthrough: false
 ping-passthrough-interval: 3
 forward-player-ping: true
 max-players: 500

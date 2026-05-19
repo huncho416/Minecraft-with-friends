@@ -6,6 +6,8 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mythicpvp.core.rank.CoreRank;
 import net.mythicpvp.core.rank.GrantService;
 import net.mythicpvp.core.rank.RankService;
+import net.mythicpvp.suite.compat.ClientProfileService;
+import net.mythicpvp.suite.compat.ComponentTransformer;
 import net.mythicpvp.suite.config.MythicConfig;
 import net.mythicpvp.suite.cosmetic.CosmeticManager;
 import net.mythicpvp.suite.cosmetic.CosmeticType;
@@ -30,6 +32,8 @@ public final class ChatFormatListener implements Listener {
     private final MythicConfig coreConfig;
     private final ChatColorService chatColors;
     private final java.util.Map<UUID, Integer> chatFrames = new java.util.concurrent.ConcurrentHashMap<>();
+    @Nullable private volatile ClientProfileService profileService;
+    @Nullable private volatile ComponentTransformer transformer;
 
     public ChatFormatListener(@NotNull RankService ranks,
                               @NotNull GrantService grants,
@@ -39,6 +43,11 @@ public final class ChatFormatListener implements Listener {
         this.grants = grants;
         this.coreConfig = coreConfig;
         this.chatColors = chatColors;
+    }
+
+    public void bindCompat(@NotNull ClientProfileService profileService, @NotNull ComponentTransformer transformer) {
+        this.profileService = profileService;
+        this.transformer = transformer;
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -68,7 +77,20 @@ public final class ChatFormatListener implements Listener {
                 .replace("%rank%", rank == null ? "" : rank.name())
                 .replace("%rank_color%", playerColor);
         Component component = MythicHex.colorize(rendered);
-        event.renderer((source, displayName, msg, viewer) -> component);
+        ClientProfileService svc = profileService;
+        ComponentTransformer tx = transformer;
+        if (svc == null || tx == null) {
+            event.renderer((source, displayName, msg, viewer) -> component);
+        } else {
+            event.renderer((source, displayName, msg, viewer) -> {
+                if (!(viewer instanceof Player p)) return component;
+                try {
+                    return tx.transform(component, svc.profileFor(p));
+                } catch (Throwable ignored) {
+                    return component;
+                }
+            });
+        }
     }
 
     @Nullable
