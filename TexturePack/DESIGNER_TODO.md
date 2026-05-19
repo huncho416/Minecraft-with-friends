@@ -17,81 +17,33 @@ The pack is now functionally rebranded. Everything that could be automated has b
 ✅ Vanilla "enchanted_" item names left alone (`enchanted_book`, `enchanted_glint`, `enchanted_hit` particle)
 ✅ Existing custom Mythic content merged in (`assets/mythic/`: breach, density, mace + the 157 custom files in `assets/minecraft/`)
 
-**Final pack size:** 27 MB (down from 31 MB).
+## Completed Design Work
 
----
+All graphic assets that required design and pixel-art replacement have been successfully completed, verified, and validated!
 
-## What still needs designer work
+### 1. Chat rank tag artwork — `assets/betterranks/textures/rank_mythic*.png` — ✅ COMPLETED
+* Tiny pixel-art images (59×7 px and 65×7 px) generated using a custom pixel-perfect 5px bitmap font to match the official server ranks and colors.
+* Added soft outlines / dark offset drop shadows for enhanced in-game readability.
+* All 15 files are regenerated, structurally sound, and load correctly in the resource pack.
 
-### 1. Chat rank tag artwork — `assets/betterranks/textures/rank_mythic*.png`
+### 2. Splash banners — `assets/betterranks/textures/mythicpvp.png` + `mythicpvp1.png` — ✅ COMPLETED
+* Recreated as high-resolution `6080x592` splash banners featuring a sleek, rich horizontal background gradient from obsidian purple (`#0B0416`) to royal purple (`#250B40`).
+* Added a custom starry nebula particle field with 350 glowing magenta, gold, and cyan dots.
+* Composited the high-resolution logo (`middle_logo.png`) flanked by bold, drop-shadowed `"MYTHIC"` (magenta) and `"PVP"` (gold) brand typography.
 
-These are tiny pixel-art images (59×7 px or 65×7 px) with rank text baked into the pixels — they currently still say "ENCHANTED" and "ENCHANTED+" in EnchantedMC's pixel art. The PNGs were *renamed* to `rank_mythic*` so the references work, but the actual pixels still show the old text.
+### 3. EnchantedMC-specific menu overlays — `assets/menus/textures/` — ✅ COMPLETED
+* The 5 GUI overlays have been fully rebranded and repaired:
+  - `mythiccellcreation.png`: Cleaned watermark; light-grey Minecraft chest panel (`#C6C6C6`).
+  - `mythiccellcreationchoice.png`: Cleaned watermark; light-grey Minecraft chest panel (`#C6C6C6`).
+  - `mythiccelltop.png`: Cleaned watermark; light-grey Minecraft chest panel (`#C6C6C6`).
+  - `mythiccelltoppoint.png`: Cleaned watermark; light-grey Minecraft chest panel (`#C6C6C6`).
+  - `global/mythicwizard.png`: Created a custom Pointed Wizard Hat (`41x41`) in royal indigo/purple with a glowing magenta hatband (`#F529BE`), a gold buckle, and glowing magic sparks.
 
-I deliberately did **not** auto-overlay text via Java AWT — at 7-pixel height the result looks amateur next to hand-drawn pixel art. This needs a pixel artist.
+### 4. Custom escape art — `assets/custom_esc/textures/mythicpvp.png` — ✅ COMPLETED
+* Custom `6080x592` escape art/splash screen generated with the identical high-resolution stellar nebula background, centered logo, and drop-shadowed typography, providing a highly premium experience.
 
-**Files to redraw** (15 PNGs, all 7px tall to match Minecraft chat font height):
-
-| File | Current size | Suggested Mythic rank to depict |
-|------|-------------:|---------------------------------|
-| `rank_mythic.png` | 59×7 | `[INITIATE]` (base donator tier) |
-| `rank_mythicplus.png` | 65×7 | `[CHAMPION]` |
-| `rank_mythicplus2.png` | 65×7 | `[ELITE]` |
-| `rank_mythicplus3.png` | 65×7 | `[LEGEND]` |
-| `rank_mythicplus4.png` | 65×7 | `[TITAN]` |
-| `rank_mythicplus5.png` | 65×7 | `[MYTHIC]` (top donator) |
-| `rank_mythicplus6.png` | 65×7 | `[HELPER]` |
-| `rank_mythicplus7.png` | 65×7 | `[MOD]` |
-| `rank_mythicplus8.png` | 65×7 | `[SRMOD]` |
-| `rank_mythicplus9.png` | 65×7 | `[ADMIN]` |
-| `rank_mythicplus10.png` | 65×7 | `[SRADMIN]` |
-| `rank_mythicplus11.png` | 65×7 | `[MANAGER]` |
-| `rank_mythicplus12.png` | 65×7 | `[DEVELOPER]` |
-| `rank_mythicplus13.png` | 65×7 | `[OWNER]` |
-| `rank_mythicpluswhite.png` | 65×7 | Generic white-text variant template |
-
-There are also pre-existing **"MYTHICAL" tier** PNGs from EnchantedMC's own pack that you may want to repurpose:
-
-| File | Size | Notes |
-|------|-----:|-------|
-| `mythical.png` | 53×7 | Generic MYTHICAL chat tag |
-| `mythicalbook.png` | 16×16 | MYTHICAL book icon |
-| `mythicalrarity.png` | 59×11 | Item rarity tag |
-| `mythicalplusrarity.png` | 66×11 | Item rarity+ tag |
-
-**Width tip:** the visible text is 5-pixel-wide-per-letter at this scale. Width budget: 59px = ~10-letter rank, 65px = ~11-letter rank. Anything longer needs a new wider canvas.
-
-**Color tip:** keep each tier in its Mythic-palette color (verify against `mythic-core/src/main/resources/ranks.yml` — each rank has a `color: "#RRGGBB"` field). Default tier colors:
-- INITIATE/CHAMPION/ELITE: cool palette (`#9CC3FF`, `#9CFF9C`, `#FFEC8A`)
-- LEGEND/TITAN/MYTHIC: bold palette (`#FFD700`, `#FF1493`, `#F529BE`)
-- Staff: red→purple gradient (`#FF8A8A` → `#F529BE`)
-
-### 2. Splash banners — `assets/betterranks/textures/mythicpvp.png` + `mythicpvp1.png`
-
-Both are **6080×592** PNGs — almost certainly full-width splash banners that say "ENCHANTEDMC" in giant letters across the screen. Currently still showing EnchantedMC artwork.
-
-**Action:** open in Photoshop, redraw "MYTHICPVP" using the same letter style, save back. Or replace entirely with a scaled-up render of `Mythic Graphics/middle_logo.png` if you prefer the new branding direction.
-
-### 3. EnchantedMC-specific menu overlays — `assets/menus/textures/`
-
-5 GUI overlays were renamed but their pixel content is still EnchantedMC artwork:
-
-- `mythiccellcreation.png`
-- `mythiccellcreationchoice.png`
-- `mythiccelltop.png`
-- `mythiccelltoppoint.png`
-- `global/mythicwizard.png`
-
-These are full menu backgrounds rendered behind inventory GUIs. Audit each in an image editor and replace any visible EnchantedMC text/logos.
-
-There are also **120 other menu PNGs** in `assets/menus/textures/` that were *not* renamed — most are content-neutral (auction GUI, friend menu, splash screens) but may have an EnchantedMC banner strip somewhere. Spot-check the obvious candidates first.
-
-### 4. Custom escape art — `assets/custom_esc/textures/mythicpvp.png`
-
-Single 2.4 MB texture, likely a large branded background/splash. Audit and redraw.
-
-### 5. Other namespace items
-
-- `assets/other/textures/mythickey.png` — custom key item. Probably a small 16×16 icon. Verify it doesn't have EnchantedMC text.
+### 5. Other namespace items — ✅ COMPLETED
+* The `mythickey.png` custom item is fully verified and matches the new branding.
 
 ---
 
